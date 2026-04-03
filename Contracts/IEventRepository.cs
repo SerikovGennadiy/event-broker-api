@@ -1,13 +1,12 @@
 ﻿using Entities.Models;
 
-namespace Contracts
-{
-    internal interface IEventRepository
-    {
-        IEnumerable<Event> GetAllEventsAsync();
-        Event GetByIdAsync(Guid id);
+namespace Contracts;
 
-        void CreateEvent(Event entity);
-        void DeleteEvent(Event entity);
-    }
+public interface IEventRepository
+{
+    IEnumerable<Event> GetAllEvents();
+    Event? GetById(Guid id);
+
+    void CreateEvent(Event entity);
+    void DeleteEvent(Event entity);
 }
