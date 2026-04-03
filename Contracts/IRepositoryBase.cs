@@ -1,6 +1,6 @@
 ﻿namespace Contracts;
 
-internal interface IRepositoryBase<T>
+public interface IRepositoryBase<T>
 {
     IEnumerable<T> FindAll();
     IEnumerable<T> FindByCondition(Func<T, bool> condition);

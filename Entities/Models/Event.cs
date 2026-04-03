@@ -1,7 +1,9 @@
-﻿namespace Entities.Models;
+﻿using Entities.Contract;
+
+namespace Entities.Models;
 
 /// <summary>Модель события - мероприятия</summary>
-public class Event
+public class Event : IdEntity
 {
     public Guid Id { get; init; }
 
