@@ -5,6 +5,8 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventBrokerAPI", "EventBrokerAPI\EventBrokerAPI.csproj", "{F79B2688-BB2B-A6E6-E83D-F1194E0C650B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Entities", "Entities\Entities.csproj", "{C9339C5D-ED9B-4D0D-994C-51F15FBC38FC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,8 +17,15 @@ Global
 		{F79B2688-BB2B-A6E6-E83D-F1194E0C650B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F79B2688-BB2B-A6E6-E83D-F1194E0C650B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F79B2688-BB2B-A6E6-E83D-F1194E0C650B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C9339C5D-ED9B-4D0D-994C-51F15FBC38FC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C9339C5D-ED9B-4D0D-994C-51F15FBC38FC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C9339C5D-ED9B-4D0D-994C-51F15FBC38FC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C9339C5D-ED9B-4D0D-994C-51F15FBC38FC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {415B115A-A1CC-4159-A63E-80B2DE2CC430}
 	EndGlobalSection
 EndGlobal
