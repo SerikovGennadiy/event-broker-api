@@ -4,6 +4,7 @@ namespace Service;
 
 internal class ServiceManager : IServiceManager
 {
-    private RepositoryCon _context;
-    private Mapper 
+
+    public IEventService EventService => throw new NotImplementedException();
+
 }
