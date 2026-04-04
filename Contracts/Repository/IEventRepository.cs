@@ -1,5 +1,4 @@
 ﻿using Entities.Models;
-
 namespace Contracts.Repository;
 
 public interface IEventRepository

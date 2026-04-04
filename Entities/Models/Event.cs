@@ -5,7 +5,7 @@ namespace Entities.Models;
 /// <summary>Модель события - мероприятия</summary>
 public class Event : IdEntity
 {
-    public Guid Id { get; init; }
+    public Guid Id { get; set; }
 
 
     /// <summary>Наименование мероприятия</summary>
