@@ -12,7 +12,7 @@ builder.Services.ConfigureRepositoryManager();
 builder.Services.ConfigureServiceManager();
 
 builder.Services.AddAutoMapper(cfg => { }, typeof(Program));
-
+builder.Services.AddSwaggerGen();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -23,5 +23,8 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.ConfigureExceptionHandler();
+
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.Run();
