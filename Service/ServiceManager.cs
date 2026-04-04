@@ -1,10 +1,16 @@
-﻿using Contracts.Service;
+﻿using AutoMapper;
+using Contracts.Repository;
+using Contracts.Service;
 
 namespace Service;
 
-internal class ServiceManager : IServiceManager
+public class ServiceManager : IServiceManager
 {
-
-    public IEventService EventService => throw new NotImplementedException();
+    private IEventService _evenService;
+    public ServiceManager(IRepositoryManager repositoryManager, IMapper mapper)
+    {
+        _evenService = new EventService(repositoryManager, mapper);
+    }
+    public IEventService EventService => _evenService;
 
 }

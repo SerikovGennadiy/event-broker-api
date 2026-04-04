@@ -2,6 +2,7 @@
 using Contracts.Service;
 using EventBrokerAPI.Controllers.ActionFilter;
 using Repository;
+using Service;
 
 namespace EventBrokerAPI.Extensions;
 
@@ -24,13 +25,13 @@ public static class ServiceExtensions
 
     public static IServiceCollection ConfigureRepositoryManager(this IServiceCollection services)
     {
-        services.AddScoped<IRepositoryManager, IRepositoryManager>();
+        services.AddScoped<IRepositoryManager, RepositoryManager>();
         return services;
     }
 
     public static IServiceCollection ConfigureServiceManager(this IServiceCollection services)
     {
-        services.AddScoped<IServiceManager, IServiceManager>();
+        services.AddScoped<IServiceManager, ServiceManager>();
         return services;
     }
 

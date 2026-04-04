@@ -40,6 +40,7 @@ public class EventService(IRepositoryManager repositoryManager, IMapper mapper) 
         ValidateEvent(eventDTO);
 
         var entity = GetEvent(eventId);
+        entity = mapper.Map<Event>(eventDTO);
 
         if(repositoryManager.Event is EventRepository repo)
         {
