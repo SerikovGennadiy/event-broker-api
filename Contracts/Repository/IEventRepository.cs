@@ -1,6 +1,6 @@
 ﻿using Entities.Models;
 
-namespace Contracts;
+namespace Contracts.Repository;
 
 public interface IEventRepository
 {

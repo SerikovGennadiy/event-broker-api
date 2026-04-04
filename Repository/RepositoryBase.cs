@@ -1,4 +1,4 @@
-﻿using Contracts;
+﻿using Contracts.Repository;
 using Entities.Contract;
 
 namespace Repository
@@ -15,20 +15,6 @@ namespace Repository
 
         public void Create(T entity) => _context.Set<T>().Add(entity);
         public void Delete(T entity) => _context.Set<T>().Remove(entity);
-        public void Update(T entity)
-        {
-            var stored = _context.Set<T>().Find(x => x.Id == entity.Id);
-            if (stored is null)
-                throw new InvalidOperationException($"Сущность с ID {entity.Id} не найдена.");
-
-            var properties = typeof(T).GetProperties()
-                .Where(prop => prop.CanRead && prop.CanWrite && prop.Name != "Id");
-
-            foreach(var prop in properties)
-            {
-                var value = prop.GetValue(entity);
-                prop.SetValue(stored, value);
-            }
-        }
+        public void Update(T entity) => _context.Set<T>().Update(entity);
     }
 }
