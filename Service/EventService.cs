@@ -41,6 +41,7 @@ public class EventService(IRepositoryManager repositoryManager, IMapper mapper) 
 
         var entity = GetEvent(eventId);
         entity = mapper.Map<Event>(eventDTO);
+        entity.Id = eventId;
 
         if(repositoryManager.Event is EventRepository repo)
         {
