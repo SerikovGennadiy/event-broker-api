@@ -1,26 +1,29 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.AspNetCore.Mvc.Controllers;
 
-namespace EventBrokerAPI.Controllers.ActionFilter;
-
-public class DTOValidationAttribute : IActionFilter
+/// <summary>Перехват до ModelBinding'а</summary>
+/// <remarks>проверка на пустой запрос для PUT и POST</remarks>
+[AttributeUsage(AttributeTargets.All)]
+public class ValidateDTOFilter : Attribute, IResourceFilter
 {
-    public DTOValidationAttribute() { }
-    public void OnActionExecuting(ActionExecutingContext context)
+    public void OnResourceExecuting(ResourceExecutingContext context)
     {
-        
+        var actionDescriptor = context.ActionDescriptor as ControllerActionDescriptor;
+        if (actionDescriptor == null) return;
+
         var action = context.RouteData.Values["action"];
         var controller = context.RouteData.Values["controller"];
 
-        var param = context.ActionArguments.SingleOrDefault(x => x.Value != null && x.Key.EndsWith("DTO")).Value;
-        if (param is null)
+        // TODO добавить проекрку на пустой объект
+        // Получаем параметры action
+        if (context.HttpContext.Request.ContentLength == 0)
         {
-            context.Result = new BadRequestObjectResult($"Переданный DTO объект null. Controller: {controller}, action: {action}");
+            context.Result = new BadRequestObjectResult(
+                $"Тело запроса не может быть пустым. Controller: {controller}, action: {action}");
             return;
         }
-
-        if (!context.ModelState.IsValid)
-            context.Result = new UnprocessableEntityObjectResult(context.ModelState);
     }
-    public void OnActionExecuted(ActionExecutedContext context) { }
+
+    public void OnResourceExecuted(ResourceExecutedContext context) { }
 }

@@ -1,5 +1,4 @@
 ﻿using Contracts.Service;
-using EventBrokerAPI.Controllers.ActionFilter;
 using Microsoft.AspNetCore.Mvc;
 using Shared.DTO;
 
@@ -24,7 +23,7 @@ public class EventController(IServiceManager services): ControllerBase
     }
 
     [HttpPost]
-    [ServiceFilter(typeof(DTOValidationAttribute))]
+    [ValidateDTOFilter]
     public IActionResult CreateEvent([FromBody] EventDTO eventDTO)
     {
         var _event = services.EventService.CreateEvent(eventDTO);
@@ -32,7 +31,7 @@ public class EventController(IServiceManager services): ControllerBase
     }
 
     [HttpPut("{id:guid}")]
-    [ServiceFilter(typeof(DTOValidationAttribute))]
+    [ValidateDTOFilter]
     public IActionResult UpdateEvent([FromRoute] Guid id, [FromBody] EventDTO eventDTO)
     {
         services.EventService.UpdateEvent(id, eventDTO);
