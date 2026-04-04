@@ -22,5 +22,6 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.ConfigureExceptionHandler();
 
 app.Run();
