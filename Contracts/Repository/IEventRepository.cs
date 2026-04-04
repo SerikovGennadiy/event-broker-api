@@ -1,4 +1,5 @@
-﻿using Entities.Models;
+﻿using Entities.Domain.Models;
+
 namespace Contracts.Repository;
 
 public interface IEventRepository

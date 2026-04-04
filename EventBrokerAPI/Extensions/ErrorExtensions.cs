@@ -1,36 +1,38 @@
-﻿using Entities.ErrorModel;
-using Entities.Exceptions;
+﻿using Entities.ErrorHandling.Exceptions;
+using Entities.ErrorHandling.Model;
 using Microsoft.AspNetCore.Diagnostics;
 
-namespace EventBrokerAPI.Extensions;
-
-public static class ExceptionMiddlewareExtensions
+namespace EventBrokerAPI.Extensions
 {
-    public static void ConfigureExceptionHandler(this WebApplication app)
+    public static class ExceptionMiddlewareExtensions
     {
-        app.UseExceptionHandler((IApplicationBuilder appError) =>
+        public static void ConfigureExceptionHandler(this WebApplication app)
         {
-            appError.Run(async context =>
+            app.UseExceptionHandler((IApplicationBuilder appError) =>
             {
-                context.Response.ContentType = "application/json";
-
-                var contextFeature = context.Features.Get<IExceptionHandlerFeature>();
-                if (contextFeature != null)
+                appError.Run(async context =>
                 {
-                    context.Response.StatusCode = contextFeature.Error switch
-                    {
-                        NotFoundException => StatusCodes.Status404NotFound,
-                        BadRequestException => StatusCodes.Status400BadRequest,
-                        _ => throw new NotImplementedException()
-                    };
+                    context.Response.ContentType = "application/json";
 
-                    await context.Response.WriteAsync(new ErrorDetail()
+                    var contextFeature = context.Features.Get<IExceptionHandlerFeature>();
+                    if (contextFeature != null)
                     {
-                        StatusCode = context.Response.StatusCode,
-                        Message = contextFeature.Error.Message
-                    }.ToString());          
-                }
+                        context.Response.StatusCode = contextFeature.Error switch
+                        {
+                            NotFoundException => StatusCodes.Status404NotFound,
+                            BadRequestException => StatusCodes.Status400BadRequest,
+                            _ => StatusCodes.Status500InternalServerError
+                        };
+
+                        await context.Response.WriteAsync(new ErrorDetail()
+                        {
+                            StatusCode = context.Response.StatusCode,
+                            Message = contextFeature.Error.Message
+                        }.ToString());
+                    }
+                });
             });
-        });
+        }
     }
+
 }

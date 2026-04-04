@@ -1,6 +1,6 @@
-﻿using Entities.Contract;
+﻿using Entities.Domain.Contract;
 
-namespace Entities.Models;
+namespace Entities.Domain.Models;
 
 /// <summary>Модель события - мероприятия</summary>
 public class Event : IdEntity

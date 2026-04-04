@@ -1,5 +1,6 @@
 ﻿using Contracts.Repository;
 using Contracts.Service;
+using EventBrokerAPI.Controllers.ActionFilter;
 using Repository;
 
 namespace EventBrokerAPI.Extensions;
@@ -38,4 +39,7 @@ public static class ServiceExtensions
         services.AddSingleton<RepositoryContext>();
         return services;
     }
+
+    public static IServiceCollection ConfigureActionFilters(this IServiceCollection services) =>
+        services.AddScoped<DTOValidationAttribute>();
 }

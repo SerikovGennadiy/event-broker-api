@@ -1,5 +1,5 @@
 ﻿using AutoMapper;
-using Entities.Models;
+using Entities.Domain.Models;
 using Shared.DTO;
 
 namespace EventBrokerAPI;
