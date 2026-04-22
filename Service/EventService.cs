@@ -5,14 +5,18 @@ using Contracts.Repository;
 using Repository;
 using Entities.Domain.Models;
 using Entities.ErrorHandling.Exceptions.Event;
+using Shared.RequestSpecification;
 
 namespace Service;
 
 public class EventService(IRepositoryManager repositoryManager, IMapper mapper) : IEventService
 {
-    public IEnumerable<EventDTO> GetAllEvents()
+    public IEnumerable<EventDTO> GetAllEvents(EventParameters eventParameters)
     {
-        var entitiesDTO = repositoryManager.Event.GetAllEvents();
+        if (eventParameters.ValidatePeriod)
+            throw new EventBadDateRangeException();
+
+        var entitiesDTO = repositoryManager.Event.GetAllEvents(eventParameters);
         return mapper.Map<IEnumerable<EventDTO>>(entitiesDTO);
     }
 

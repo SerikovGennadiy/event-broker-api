@@ -1,6 +1,7 @@
 ﻿using Contracts.Service;
 using Microsoft.AspNetCore.Mvc;
 using Shared.DTO;
+using Shared.RequestSpecification;
 
 namespace EventBrokerAPI.Controllers;
 
@@ -9,9 +10,9 @@ namespace EventBrokerAPI.Controllers;
 public class EventController(IServiceManager services): ControllerBase
 {
     [HttpGet]
-    public IActionResult GetAllEvents()
+    public IActionResult GetAllEvents([FromQuery] EventParameters eventParameters)
     {
-        var eventDTOs = services.EventService.GetAllEvents();
+        var eventDTOs = services.EventService.GetAllEvents(eventParameters);
         return Ok(eventDTOs);
     }
 
