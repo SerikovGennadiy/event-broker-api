@@ -20,7 +20,8 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
-app.ConfigureExceptionHandler();
+var logger = app.Services.GetRequiredService<ILogger<Program>>();
+app.ConfigureExceptionHandler(logger);
 
 app.UseSwagger();
 app.UseSwaggerUI();

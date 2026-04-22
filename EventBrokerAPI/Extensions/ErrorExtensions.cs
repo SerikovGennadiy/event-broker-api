@@ -6,7 +6,7 @@ namespace EventBrokerAPI.Extensions
 {
     public static class ExceptionMiddlewareExtensions
     {
-        public static void ConfigureExceptionHandler(this WebApplication app)
+        public static void ConfigureExceptionHandler(this WebApplication app, ILogger logger)
         {
             app.UseExceptionHandler((IApplicationBuilder appError) =>
             {
@@ -17,12 +17,15 @@ namespace EventBrokerAPI.Extensions
                     var contextFeature = context.Features.Get<IExceptionHandlerFeature>();
                     if (contextFeature != null)
                     {
-                        context.Response.StatusCode = contextFeature.Error switch
+                        var error = contextFeature.Error;
+                        context.Response.StatusCode = error switch
                         {
                             NotFoundException => StatusCodes.Status404NotFound,
                             BadRequestException => StatusCodes.Status400BadRequest,
                             _ => StatusCodes.Status500InternalServerError
                         };
+
+                        logger.LogError(error, "Произошла ошибка: {ErrorMessage}", error.Message);
 
                         await context.Response.WriteAsync(new ErrorDetail()
                         {
@@ -34,5 +37,4 @@ namespace EventBrokerAPI.Extensions
             });
         }
     }
-
 }
