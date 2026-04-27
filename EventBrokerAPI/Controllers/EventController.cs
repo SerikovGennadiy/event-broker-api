@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Shared.DTO;
 using Shared.RequestSpecification;
+using System.Text.Json;
 
 namespace EventBrokerAPI.Controllers;
 
@@ -12,8 +13,12 @@ public class EventController(IServiceManager services): ControllerBase
     [HttpGet]
     public IActionResult GetAllEvents([FromQuery] EventParameters eventParameters)
     {
-        var eventDTOs = services.EventService.GetAllEvents(eventParameters);
-        return Ok(eventDTOs);
+        var result = services.EventService.GetAllEvents(eventParameters);
+
+        Response.Headers.Append("X-Pagination",
+               JsonSerializer.Serialize(result.pageData));
+
+        return Ok(result.eventDTOs);
     }
 
     [HttpGet("{id:guid}", Name="EventById")]
