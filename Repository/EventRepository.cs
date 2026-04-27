@@ -13,12 +13,16 @@ public class EventRepository : RepositoryBase<Event>, IEventRepository
     public Event? GetById(Guid eventId) => FindByCondition(x => x.Id == eventId).SingleOrDefault();
 
     public IEnumerable<Event> GetAllEvents() => FindAll();
-    public IEnumerable<Event> GetAllEvents(EventParameters eventParameters) =>
-        // TODO все методы до фактического запроса готовят его через IQueryable? пока через IEnumerable
-                                                FindAll()
-                                               .FilterRangeEvents(eventParameters.From, eventParameters.To)
-                                               .FilterTitleEvents(eventParameters.Title)
-                                               .ToList();
+    public PaginatedList<Event> GetAllEvents(EventParameters eventParameters)
+    {
+       var events = FindAll()
+                   .FilterRangeEvents(eventParameters.From, eventParameters.To)
+                   .FilterTitleEvents(eventParameters.Title)
+                   .ToList();
+
+        return PaginatedList<Event>.ToPagedList(events, eventParameters.Page, eventParameters.PageSize);
+
+    }
 
     public void CreateEvent(Event entity) => Create(entity);
     public void DeleteEvent(Event entity) => Delete(entity);

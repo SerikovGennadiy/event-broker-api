@@ -5,7 +5,7 @@ namespace Contracts.Repository;
 
 public interface IEventRepository
 {
-    IEnumerable<Event> GetAllEvents(EventParameters eventParameters);
+    PaginatedList<Event> GetAllEvents(EventParameters eventParameters);
     Event? GetById(Guid id);
 
     void CreateEvent(Event entity);

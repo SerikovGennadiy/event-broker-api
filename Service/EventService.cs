@@ -11,13 +11,15 @@ namespace Service;
 
 public class EventService(IRepositoryManager repositoryManager, IMapper mapper) : IEventService
 {
-    public IEnumerable<EventDTO> GetAllEvents(EventParameters eventParameters)
+    public (IEnumerable<EventDTO> eventDTOs, PaginatedResult pageData) GetAllEvents(EventParameters eventParameters)
     {
-        if (eventParameters.ValidatePeriod)
+        if (!eventParameters.ValidatePeriod)
             throw new EventBadDateRangeException();
 
-        var entitiesDTO = repositoryManager.Event.GetAllEvents(eventParameters);
-        return mapper.Map<IEnumerable<EventDTO>>(entitiesDTO);
+        var events = repositoryManager.Event.GetAllEvents(eventParameters);
+        var eventDTOs = mapper.Map<IEnumerable<EventDTO>>(events);
+
+        return (eventDTOs, pageData: events.PageMetaData);
     }
 
     public EventDTO GetEventById(Guid eventId)

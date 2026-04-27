@@ -6,7 +6,7 @@ namespace Contracts.Service;
 public interface IEventService
 {
     // считать данные из хранилища
-    IEnumerable<EventDTO> GetAllEvents(EventParameters eventParameters);
+    (IEnumerable<EventDTO> eventDTOs, PaginatedResult pageData) GetAllEvents(EventParameters eventParameters);
 
     // получить событие по ID
     EventDTO GetEventById(Guid Id);
