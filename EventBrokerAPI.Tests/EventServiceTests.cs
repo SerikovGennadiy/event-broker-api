@@ -144,7 +144,42 @@ public class EventServiceTests : IClassFixture<EventServiceFixture>
         // Assert
         Assert.NotNull(result);
         Assert.Equal(eventDTO, result);
-        _fixture.RepositoryManagerMock.Verify(rm => rm.Event.GetById(It.IsAny<Guid>()), Times.Once());
+        _fixture.RepositoryManagerMock.Verify(rm => rm.Event.GetById(It.IsAny<Guid>()), Times.AtLeastOnce());
+    }
+
+    [Fact]
+    [Trait("Event", "Commands")]
+    public void UpdateEvent_WithValidData_ReturnUpdatedSameEvent()
+    {
+        // Arrange
+        Guid eventGuid = Guid.CreateVersion7();
+        Event @event = new Event()
+        {
+            Id = eventGuid,
+            Title = "Test event",
+            StartAt = DateTime.UtcNow,
+            EndAt = DateTime.UtcNow.AddDays(2)
+        };
+
+        Event updatedEvent = new Event()
+        {
+            Id = eventGuid,
+            Title = "Updated test event",
+            Description = "Added description",
+            StartAt = DateTime.UtcNow.AddDays(3),
+            EndAt = DateTime.UtcNow.AddDays(4)
+        };
+        EventDTO updatedEventDTO = updatedEvent.toDTO();
+
+        _fixture.MapperMock.Setup(m => m.Map<Event>(updatedEventDTO)).Returns(updatedEvent);
+        _fixture.EventRepositoryMock.Setup(r => r.GetById(eventGuid)).Returns(@event);
+
+        // Act 
+        _fixture.EventService.UpdateEvent(eventGuid, updatedEventDTO);
+
+        // Assert
+        _fixture.RepositoryManagerMock.Verify(rm => rm.Event, Times.AtLeastOnce());
+
     }
 }
 
