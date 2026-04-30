@@ -177,9 +177,33 @@ public class EventServiceTests : IClassFixture<EventServiceFixture>
         // Act 
         _fixture.EventService.UpdateEvent(eventGuid, updatedEventDTO);
 
-        // Assert
-        _fixture.RepositoryManagerMock.Verify(rm => rm.Event, Times.AtLeastOnce());
+        // Assert (подсчет не вызовов методов репозитория Event, а любых обращений к нему)
+        _fixture.RepositoryManagerMock.Verify(rm => rm.Event, Times.AtLeastOnce);
+    }
 
+    [Fact]
+    [Trait("Event", "Commands")]
+    public void DeleteEvent_ByGuidId_WithoutReturns()
+    {
+        // Arrange
+        Guid eventGuid = Guid.CreateVersion7();
+        Event @event = new Event()
+        {
+            Id = eventGuid,
+            Title = "Test event",
+            StartAt = DateTime.UtcNow,
+            EndAt = DateTime.UtcNow.AddDays(2)
+        };
+        EventDTO eventDTO = @event.toDTO();
+
+        _fixture.MapperMock.Setup(m => m.Map<Event>(eventDTO)).Returns(@event);
+        _fixture.EventRepositoryMock.Setup(r => r.GetById(eventGuid)).Returns(@event);
+
+        // Act
+        _fixture.EventService.DeleteEvent(eventGuid);
+
+        // Assert
+        _fixture.RepositoryManagerMock.Verify(rm => rm.Event.DeleteEvent(It.IsAny<Event>()), Times.Once());
     }
 }
 
