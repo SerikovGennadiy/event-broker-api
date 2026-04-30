@@ -1,4 +1,6 @@
-﻿namespace Shared.RequestSpecification;
+﻿using System.Text.Json.Serialization;
+
+namespace Shared.RequestSpecification;
 
 public class EventParameters : Parameters
 {
@@ -8,5 +10,9 @@ public class EventParameters : Parameters
     public DateTime? From { get; set; }
     public DateTime? To { get; set; }
 
-    public bool ValidatePeriod => From < To;
+    public bool ValidatePeriod { get; set; } = false;
+
+    [JsonIgnore]
+    public bool CheckPeriod =>
+          !ValidatePeriod || (From.HasValue && To.HasValue && From <= To);
 }

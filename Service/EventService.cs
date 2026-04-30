@@ -13,7 +13,7 @@ public class EventService(IRepositoryManager repositoryManager, IMapper mapper) 
 {
     public (IEnumerable<EventDTO> eventDTOs, PaginatedResult pageData) GetAllEvents(EventParameters eventParameters)
     {
-        if (!eventParameters.ValidatePeriod)
+        if (!eventParameters.CheckPeriod)
             throw new EventBadDateRangeException();
 
         var events = repositoryManager.Event.GetAllEvents(eventParameters);
@@ -46,7 +46,11 @@ public class EventService(IRepositoryManager repositoryManager, IMapper mapper) 
         ValidateEvent(eventDTO);
 
         var entity = GetEvent(eventId);
+
+        // обновление только измененных полей маппером
         entity = mapper.Map<Event>(eventDTO);
+        // пока что EventDTO общий
+        // TODO разбить EventDTO на CreateEventDTO и UpdateEventDTO
         entity.Id = eventId;
 
         if(repositoryManager.Event is EventRepository repo)

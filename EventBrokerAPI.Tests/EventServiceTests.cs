@@ -2,11 +2,12 @@
 using Contracts.Repository;
 using Contracts.Service;
 using Entities.Domain.Models;
-using Entities.ErrorHandling.Exceptions.Event;
-using Microsoft.AspNetCore.Mvc.Diagnostics;
 using Moq;
 using Service;
 using Shared.DTO;
+using Shared.ModelExtensions;
+using Shared.RequestSpecification;
+using System.Reflection.Metadata;
 
 namespace EventBrokerAPI.Tests;
 public class EventServiceFixture : IDisposable
@@ -44,6 +45,7 @@ public class EventServiceTests : IClassFixture<EventServiceFixture>
     public EventServiceTests(EventServiceFixture fixture) => _fixture = fixture;
 
     [Fact]
+    [Trait("Event", "Commands")]
     public void CreateEvent_ValidData_ReturnsEvent()
     {
         //Arrange
@@ -77,19 +79,72 @@ public class EventServiceTests : IClassFixture<EventServiceFixture>
         Assert.Equal(createdEventDTO, result);
         _fixture.RepositoryManagerMock.Verify(rm => rm.Event.CreateEvent(It.IsAny<Event>()), Times.Once());
     }
+
+    [Fact]
+    [Trait("Event", "Queries")]
+    public void GetAllEvents_WithValidParameters_ShouldReturnEvents()
+    {
+        // Arrange
+        var eventParameters = new EventParameters
+        {
+            Page = 1,
+            PageSize = 10
+        };
+
+        List<Event> events = [
+                new Event
+                {
+                    Id = Guid.NewGuid(),
+                    Title = "Event 1",
+                    StartAt = DateTime.UtcNow.AddDays(1),
+                    EndAt = DateTime.UtcNow.AddDays(2),
+                    Description = "Description 1"
+                },
+                new Event
+                {
+                    Id = Guid.NewGuid(),
+                    Title = "Event 2",
+                    StartAt = DateTime.UtcNow.AddDays(3),
+                    EndAt = DateTime.UtcNow.AddDays(4),
+                    Description = "Description 2"
+                }
+        ];
+
+        var eventDTOs = events.Select(e => e.toDTO()).ToList();
+        var paginatedList = PaginatedList<Event>.ToPagedList(events, eventParameters.Page, eventParameters.PageSize);
+
+        _fixture.EventRepositoryMock.Setup(r => r.GetAllEvents(eventParameters)).Returns(paginatedList);
+        _fixture.MapperMock.Setup(m => m.Map<IEnumerable<EventDTO>>(It.IsAny<IEnumerable<Event>>())).Returns(eventDTOs);
+
+        // Act
+        var (resultDTOs, pageData) = _fixture.EventService.GetAllEvents(eventParameters);
+
+        // Assert
+        Assert.NotNull(resultDTOs);
+        Assert.Equal(2, resultDTOs.Count());
+        Assert.NotNull(pageData);
+        Assert.Equal(1, pageData.CurrentPageNumber);
+    }
+
+    [Fact]
+    [Trait("Event", "Queries")]
+    public void GetEvent_GuidId_ReturnEvent()
+    {
+        // Arrage
+        var eventGuid = Guid.CreateVersion7();
+        Event @event = new() { Id = eventGuid, Title = "Event 1", StartAt = DateTime.UtcNow, EndAt = DateTime.UtcNow.AddDays(1) };
+        EventDTO eventDTO = @event.toDTO();
+
+        _fixture.EventRepositoryMock.Setup(r => r.GetById(eventGuid)).Returns(@event);
+        _fixture.MapperMock.Setup(m => m.Map<EventDTO>(@event)).Returns(eventDTO);
+
+        // Act 
+        var result = _fixture.EventService.GetEventById(eventGuid);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(eventDTO, result);
+        _fixture.RepositoryManagerMock.Verify(rm => rm.Event.GetById(It.IsAny<Guid>()), Times.Once());
+    }
 }
-   /// private void ValidateEvent(EventDTO eventDTO)
-    //{
-    //    if (string.IsNullOrEmpty(eventDTO.Title))
-    //        throw new EventNoTitleException();
 
-    //    if (eventDTO.EndAt <= eventDTO.StartAt)
-    //        throw new EventBadDateRangeException();
-    //}
-
-    //var entity = mapper.Map<Event>(eventDTO);
-    //   entity.Id = Guid.CreateVersion7();
-
-    //   repositoryManager.Event.CreateEvent(entity);
-
-    //   return mapper.Map<EventDTO>(entity);

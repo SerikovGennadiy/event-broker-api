@@ -3,7 +3,7 @@
 namespace Entities.Domain.Models;
 
 /// <summary>Модель события - мероприятия</summary>
-public class Event : IdEntity
+public class Event : IdEntity, IReadOnlyEvent
 {
     public Guid Id { get; set; }
 
@@ -19,5 +19,14 @@ public class Event : IdEntity
 
 
     /// <summary>Описание мероприятия</summary>
-    public string? Description { get; set; } 
+    public string? Description { get; set; }
+}
+
+public interface IReadOnlyEvent
+{
+    Guid Id { get; }
+    string Title { get; }
+    DateTime StartAt { get; }
+    DateTime EndAt { get; }
+    string? Description { get; }
 }
