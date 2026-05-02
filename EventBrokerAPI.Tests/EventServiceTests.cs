@@ -407,7 +407,7 @@ public class EventServiceTests : IClassFixture<EventServiceFixture>
     }
 
     [Fact]
-    [Trait("Event", "Queries")]
+    [Trait("Event", "Exceptions")]
     public void GetEvent_GetById_Unsuccessful_ReturnsNull()
     {
         // Arrange
@@ -426,6 +426,19 @@ public class EventServiceTests : IClassFixture<EventServiceFixture>
         // Assert
         Assert.NotNull(exception);
         Assert.IsType<EventNotFoundException>(exception);
+    }
+
+    [Fact]
+    [Trait("Event", "Exceptions")]
+    public void UpdateEvent_UpdateEvent_NonExistent_ThrowsEventNotFoundException()
+    {
+        // Arrange
+        var unexistingGuid = Guid.NewGuid();
+        var dto = new EventDTO(unexistingGuid, "Title", "Description", DateTime.UtcNow, DateTime.UtcNow.AddDays(1));
+        _fixture.EventRepositoryMock.Setup(r => r.GetById(unexistingGuid)).Returns((Event?)null);
+
+        // Act & Assert
+        Assert.Throws<EventNotFoundException>(() => _fixture.EventService.UpdateEvent(unexistingGuid, dto));
     }
 }
 
