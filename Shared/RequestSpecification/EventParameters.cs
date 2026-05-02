@@ -14,5 +14,5 @@ public class EventParameters : Parameters
 
     [JsonIgnore]
     public bool CheckPeriod =>
-          !ValidatePeriod || (From.HasValue && To.HasValue && From <= To);
+        ValidatePeriod && From.HasValue && (!To.HasValue || From <= To);
 }

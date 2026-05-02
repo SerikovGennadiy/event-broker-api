@@ -307,5 +307,42 @@ public class EventServiceTests : IClassFixture<EventServiceFixture>
         Assert.Equal("B", resultDTOs.First().Title);
         _fixture.EventRepositoryMock.Verify(r => r.GetAllEvents(It.IsAny<EventParameters>()), Times.Once());
     }
+
+    [Fact]
+    [Trait("Event", "Queries")]
+    public void GetEvents_Pagination_WorksCorrectly()
+    {
+        // Arrange
+        ResetCallCounters();
+
+        var events = Enumerable.Range(1, 25)
+            .Select(i => new Event
+            {
+                Id = Guid.NewGuid(),
+                Title = $"Event {i}",
+                StartAt = DateTime.UtcNow.AddDays(i),
+                EndAt = DateTime.UtcNow.AddDays(i + 1)
+            })
+            .ToList();
+
+        _fixture.EventRepositoryMock
+            .Setup(r => r.GetAllEvents(It.IsAny<EventParameters>()))
+            .Returns((EventParameters p) => PaginatedList<Event>.ToPagedList(events, p.Page, p.PageSize));
+        
+        _fixture.MapperMock.Setup(m => m.Map<IEnumerable<EventDTO>>(It.IsAny<IEnumerable<Event>>()))
+            .Returns((IEnumerable<Event> evs) => evs.Select(e => e.toDTO()).ToList());
+
+        var page1 = new EventParameters { Page = 1, PageSize = 10 };
+        var page3 = new EventParameters { Page = 3, PageSize = 10 };
+
+        // Act
+        var (eventsPage1, pageData1) = _fixture.EventService.GetAllEvents(page1);
+        var (eventsPage3, pageData3) = _fixture.EventService.GetAllEvents(page3);  
+        
+        // Assert
+        Assert.Equal(10, eventsPage1.Count());
+        Assert.Equal(5, eventsPage3.Count());
+        _fixture.EventRepositoryMock.Verify(r => r.GetAllEvents(It.IsAny<EventParameters>()), Times.Exactly(2));
+    }
 }
 

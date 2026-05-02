@@ -13,7 +13,7 @@ public class EventService(IRepositoryManager repositoryManager, IMapper mapper) 
 {
     public (IEnumerable<EventDTO> eventDTOs, PaginatedResult pageData) GetAllEvents(EventParameters eventParameters)
     {
-        if (!eventParameters.CheckPeriod)
+        if (eventParameters.CheckPeriod)
             throw new EventBadDateRangeException();
 
         var events = repositoryManager.Event.GetAllEvents(eventParameters);
