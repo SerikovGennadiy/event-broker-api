@@ -440,5 +440,20 @@ public class EventServiceTests : IClassFixture<EventServiceFixture>
         // Act & Assert
         Assert.Throws<EventNotFoundException>(() => _fixture.EventService.UpdateEvent(unexistingGuid, dto));
     }
+
+    [Fact]
+    [Trait("Event", "Exceptions")]
+    public void CreateEvent_WithInvalidData_ThrowsEventNoTitleException()
+    {
+        // Arrange
+        var eventDTO = new EventDTO(Id: Guid.Empty,
+                                    Title: string.Empty, // некорректный заголовок
+                                    Description: "Info about event",
+                                    StartAt: DateTime.UtcNow,
+                                    EndAt: DateTime.UtcNow.AddDays(1));
+        // Act & Assert
+       var expeption = Assert.Throws<EventNoTitleException>(() => _fixture.EventService.CreateEvent(eventDTO));
+       Assert.Equal("Отсуствует наименование события", expeption.Message);
+    }
 }
 
