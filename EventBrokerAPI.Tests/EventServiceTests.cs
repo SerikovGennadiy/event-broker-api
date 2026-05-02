@@ -3,6 +3,7 @@ using Contracts.Repository;
 using Contracts.Service;
 using Entities.Domain.Models;
 using Moq;
+using Repository;
 using Service;
 using Shared.DTO;
 using Shared.ModelExtensions;
@@ -42,7 +43,16 @@ public class EventServiceFixture : IDisposable
 public class EventServiceTests : IClassFixture<EventServiceFixture>
 {
     private readonly EventServiceFixture _fixture;
-    public EventServiceTests(EventServiceFixture fixture) => _fixture = fixture;
+    public EventServiceTests(EventServiceFixture fixture) { 
+        _fixture = fixture;
+    }
+
+    private void ResetCallCounters()
+    {
+        _fixture.RepositoryManagerMock.Invocations.Clear();
+        _fixture.EventRepositoryMock.Invocations.Clear();
+        _fixture.MapperMock.Invocations.Clear();
+    }
 
     [Fact]
     [Trait("Event", "Commands")]
@@ -131,6 +141,8 @@ public class EventServiceTests : IClassFixture<EventServiceFixture>
     public void GetEvent_GuidId_ReturnEvent()
     {
         // Arrage
+        ResetCallCounters();
+
         var eventGuid = Guid.CreateVersion7();
         Event @event = new() { Id = eventGuid, Title = "Event 1", StartAt = DateTime.UtcNow, EndAt = DateTime.UtcNow.AddDays(1) };
         EventDTO eventDTO = @event.toDTO();
@@ -144,7 +156,7 @@ public class EventServiceTests : IClassFixture<EventServiceFixture>
         // Assert
         Assert.NotNull(result);
         Assert.Equal(eventDTO, result);
-        _fixture.RepositoryManagerMock.Verify(rm => rm.Event.GetById(It.IsAny<Guid>()), Times.AtLeastOnce());
+        _fixture.RepositoryManagerMock.Verify(rm => rm.Event.GetById(It.IsAny<Guid>()), Times.Once());
     }
 
     [Fact]
@@ -204,6 +216,96 @@ public class EventServiceTests : IClassFixture<EventServiceFixture>
 
         // Assert
         _fixture.RepositoryManagerMock.Verify(rm => rm.Event.DeleteEvent(It.IsAny<Event>()), Times.Once());
+    }
+
+    [Fact]
+    [Trait("Event", "Queries")]
+    public void GetEvents_FilterByTitle_ReturnsMatchingEvents()
+    {
+        // Arrange
+        ResetCallCounters();
+        const string searchTitle = "hiking";
+        var events = new List<Event>
+        {
+            new() { Id = Guid.NewGuid(), Title = "Hiking trip", StartAt = DateTime.UtcNow, EndAt = DateTime.UtcNow.AddDays(1) },
+            new() { Id = Guid.NewGuid(), Title = "Conference", StartAt = DateTime.UtcNow, EndAt = DateTime.UtcNow.AddDays(1) },
+            new() { Id = Guid.NewGuid(), Title = "hiking festival", StartAt = DateTime.UtcNow, EndAt = DateTime.UtcNow.AddDays(1) }
+        };
+
+        var filteredEvents = events
+            .Where(e => e.Title.Contains(searchTitle, StringComparison.OrdinalIgnoreCase))
+            .ToList();
+
+        var filteredEventDTOs = filteredEvents.Select(e => e.toDTO()).ToList();
+
+        var paginatedFiltered = PaginatedList<Event>.ToPagedList(filteredEvents, pageNumber: 1, pageSize: 10);
+
+        _fixture.EventRepositoryMock
+            .Setup(r => r.GetAllEvents(It.Is<EventParameters>(p =>
+                p.Title == searchTitle && p.Page == 1 && p.PageSize == 10)))
+            .Returns(paginatedFiltered);
+
+        _fixture.MapperMock
+            .Setup(m => m.Map<IEnumerable<EventDTO>>(It.IsAny<IEnumerable<Event>>()))
+            .Returns(filteredEventDTOs);
+
+        var parameters = new EventParameters { Page = 1, PageSize = 10, Title = searchTitle };
+
+        // Act
+        var (resultDTOs, pageData) = _fixture.EventService.GetAllEvents(parameters);
+
+        // Assert
+        Assert.NotNull(resultDTOs);
+        Assert.Equal(filteredEvents.Count, resultDTOs.Count());
+        Assert.All(resultDTOs, e => Assert.Contains(searchTitle, e.Title, StringComparison.OrdinalIgnoreCase));
+        _fixture.EventRepositoryMock.Verify(r => r.GetAllEvents(It.IsAny<EventParameters>()), Times.Once());
+    }
+
+    [Fact]
+    [Trait("Event", "Queries")]
+    public void GetEvents_FilterByDateRange_ReturnsEventsWithinRange()
+    {
+        // Arrange
+        ResetCallCounters();
+
+        var now = DateTime.UtcNow.Date;
+        var from = now.AddDays(2);
+        var to = now.AddDays(5);
+
+        var events = new List<Event>
+        {
+            new() { Id = Guid.NewGuid(), Title = "A", StartAt = now.AddDays(1), EndAt = now.AddDays(2) },
+            new() { Id = Guid.NewGuid(), Title = "B", StartAt = now.AddDays(3), EndAt = now.AddDays(4) },
+            new() { Id = Guid.NewGuid(), Title = "C", StartAt = now.AddDays(5), EndAt = now.AddDays(6) }
+        };
+
+        var filteredEvents = events
+            .Where(e => e.StartAt >= from && e.EndAt <= to)
+            .ToList();
+
+        var filteredEventDTOs = filteredEvents.Select(e => e.toDTO()).ToList();
+
+        var paginatedResult = PaginatedList<Event>.ToPagedList(filteredEvents, pageNumber: 1, pageSize: 10);
+
+        var parameters = new EventParameters { Page = 1, PageSize = 10, From = from, To = to };
+
+        _fixture.EventRepositoryMock
+            .Setup(r => r.GetAllEvents(It.Is<EventParameters>(p =>
+                p.From == from && p.To == to && p.Page == 1 && p.PageSize == 10)))
+            .Returns(paginatedResult);
+
+        _fixture.MapperMock
+            .Setup(m => m.Map<IEnumerable<EventDTO>>(It.IsAny<IEnumerable<Event>>()))
+            .Returns(filteredEventDTOs);
+
+        // Act
+        var (resultDTOs, pageData) = _fixture.EventService.GetAllEvents(parameters);
+
+        // Assert
+        Assert.NotNull(resultDTOs);
+        Assert.Single(resultDTOs);
+        Assert.Equal("B", resultDTOs.First().Title);
+        _fixture.EventRepositoryMock.Verify(r => r.GetAllEvents(It.IsAny<EventParameters>()), Times.Once());
     }
 }
 
