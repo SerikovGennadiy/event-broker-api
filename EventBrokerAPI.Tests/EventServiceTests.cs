@@ -2,6 +2,7 @@
 using Contracts.Repository;
 using Contracts.Service;
 using Entities.Domain.Models;
+using Entities.ErrorHandling.Exceptions.Event;
 using Moq;
 using Repository;
 using Service;
@@ -403,6 +404,28 @@ public class EventServiceTests : IClassFixture<EventServiceFixture>
         Assert.Single(resultDTOs);
         Assert.Equal("Hiking", resultDTOs.First().Title);
         _fixture.EventRepositoryMock.Verify(r => r.GetAllEvents(It.IsAny<EventParameters>()), Times.Once());
+    }
+
+    [Fact]
+    [Trait("Event", "Queries")]
+    public void GetEvent_GetById_Unsuccessful_ReturnsNull()
+    {
+        // Arrange
+        var unexistingGuid = Guid.CreateVersion7();
+        List<Event> events = [
+            new () { Id = Guid.CreateVersion7(), Title = "A", StartAt = DateTime.UtcNow, EndAt = DateTime.UtcNow.AddDays(2) },
+            new () { Id = Guid.CreateVersion7(), Title = "B", StartAt = DateTime.UtcNow.AddDays(2), EndAt = DateTime.UtcNow.AddDays(1) },
+            new () { Id = Guid.CreateVersion7(), Title = "C", StartAt = DateTime.UtcNow.AddDays(5), EndAt = DateTime.UtcNow.AddDays(1) }
+        ];
+
+        _fixture.EventRepositoryMock.Setup(r => r.GetById(unexistingGuid)).Returns((Event?)null);
+
+        // Act
+        var exception = Record.Exception(() => _fixture.EventService.GetEventById(unexistingGuid));
+
+        // Assert
+        Assert.NotNull(exception);
+        Assert.IsType<EventNotFoundException>(exception);
     }
 }
 
