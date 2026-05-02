@@ -44,7 +44,8 @@ public class EventServiceFixture : IDisposable
 public class EventServiceTests : IClassFixture<EventServiceFixture>
 {
     private readonly EventServiceFixture _fixture;
-    public EventServiceTests(EventServiceFixture fixture) { 
+    public EventServiceTests(EventServiceFixture fixture)
+    {
         _fixture = fixture;
     }
 
@@ -329,7 +330,7 @@ public class EventServiceTests : IClassFixture<EventServiceFixture>
         _fixture.EventRepositoryMock
             .Setup(r => r.GetAllEvents(It.IsAny<EventParameters>()))
             .Returns((EventParameters p) => PaginatedList<Event>.ToPagedList(events, p.Page, p.PageSize));
-        
+
         _fixture.MapperMock.Setup(m => m.Map<IEnumerable<EventDTO>>(It.IsAny<IEnumerable<Event>>()))
             .Returns((IEnumerable<Event> evs) => evs.Select(e => e.toDTO()).ToList());
 
@@ -338,8 +339,8 @@ public class EventServiceTests : IClassFixture<EventServiceFixture>
 
         // Act
         var (eventsPage1, pageData1) = _fixture.EventService.GetAllEvents(page1);
-        var (eventsPage3, pageData3) = _fixture.EventService.GetAllEvents(page3);  
-        
+        var (eventsPage3, pageData3) = _fixture.EventService.GetAllEvents(page3);
+
         // Assert
         Assert.Equal(10, eventsPage1.Count());
         Assert.Equal(5, eventsPage3.Count());
@@ -452,8 +453,36 @@ public class EventServiceTests : IClassFixture<EventServiceFixture>
                                     StartAt: DateTime.UtcNow,
                                     EndAt: DateTime.UtcNow.AddDays(1));
         // Act & Assert
-       var expeption = Assert.Throws<EventNoTitleException>(() => _fixture.EventService.CreateEvent(eventDTO));
-       Assert.Equal("Отсуствует наименование события", expeption.Message);
+        var expeption = Assert.Throws<EventNoTitleException>(() => _fixture.EventService.CreateEvent(eventDTO));
+        Assert.Equal("Отсуствует наименование события", expeption.Message);
+    }
+
+    [Fact]
+    [Trait("Event", "Exceptions")]
+    public void UpdateEvent_WithInvalidData_ThrowsEventNoTitleException()
+    {
+        // Arrange
+        var existingGuid = Guid.NewGuid();
+        var existingEvent = new Event
+        {
+            Id = existingGuid,
+            Title = "Existing Event",
+            StartAt = DateTime.UtcNow,
+            EndAt = DateTime.UtcNow.AddDays(1)
+        };
+
+        // Arrange
+        var updatedEventDTO = new EventDTO(Id: Guid.Empty,
+                                    Title: "Another one super event", 
+                                    Description: "Info about event",
+                                    StartAt: DateTime.UtcNow,
+                                    EndAt: DateTime.UtcNow.AddDays(-2)); // некорректная дата окончания
+
+        _fixture.EventRepositoryMock.Setup(r => r.GetById(existingGuid)).Returns(existingEvent);
+      
+        // Act & Assert
+        var exception = Assert.Throws<EventBadDateRangeException>(() => _fixture.EventService.UpdateEvent(existingGuid, updatedEventDTO));
+        Assert.Equal("Некорректные даты начала и завершения мероприятия", exception.Message);
     }
 }
 
