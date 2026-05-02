@@ -344,5 +344,65 @@ public class EventServiceTests : IClassFixture<EventServiceFixture>
         Assert.Equal(5, eventsPage3.Count());
         _fixture.EventRepositoryMock.Verify(r => r.GetAllEvents(It.IsAny<EventParameters>()), Times.Exactly(2));
     }
+
+    [Fact]
+    [Trait("Event", "Queries")]
+    public void GetEvents_CombinedFilter_TitleAndRange_ReturnsExpected()
+    {
+        // Arrange
+        ResetCallCounters();
+
+        var baseDate = DateTime.UtcNow.Date;
+        var events = new List<Event>
+        {
+            new() { Id = Guid.NewGuid(), Title = "Hiking", StartAt = baseDate.AddDays(1), EndAt = baseDate.AddDays(2) },
+            new() { Id = Guid.NewGuid(), Title = "Hiking Special", StartAt = baseDate.AddDays(10), EndAt = baseDate.AddDays(11) },
+            new() { Id = Guid.NewGuid(), Title = "Conference", StartAt = baseDate.AddDays(1), EndAt = baseDate.AddDays(2) }
+        };
+
+        // Данные для фильтрации по всем параметрам
+        var parameters = new EventParameters
+        {
+            Page = 1,
+            PageSize = 10,
+            Title = "hiking",
+            From = baseDate,
+            To = baseDate.AddDays(5)
+        };
+
+        // Локальная фильтрация для вычисления ожидаемого результата
+        var expectedEvents = events
+            .Where(e => e.Title.Contains(parameters.Title, StringComparison.OrdinalIgnoreCase)
+                     && e.StartAt >= parameters.From
+                     && e.EndAt <= parameters.To)
+            .ToList();
+
+        var expectedPaginatedEvents = PaginatedList<Event>.ToPagedList(expectedEvents, pageNumber: parameters.Page, pageSize: parameters.PageSize);
+
+        // Настройка моков
+        _fixture.EventRepositoryMock
+            .Setup(r => r.GetAllEvents(It.Is<EventParameters>(p =>
+                p.Title == parameters.Title
+                && p.From == parameters.From
+                && p.To == parameters.To
+                && p.Page == parameters.Page
+                && p.PageSize == parameters.PageSize)))
+            .Returns(expectedPaginatedEvents);
+
+        _fixture.MapperMock
+            .Setup(m => m.Map<IEnumerable<EventDTO>>(It.IsAny<IEnumerable<Event>>()))
+            .Returns((IEnumerable<Event> evs) => evs.Select(e => e.toDTO()).ToList());
+
+
+
+        // Act
+        var (resultDTOs, pageData) = _fixture.EventService.GetAllEvents(parameters);
+
+        // Assert
+        Assert.NotNull(resultDTOs);
+        Assert.Single(resultDTOs);
+        Assert.Equal("Hiking", resultDTOs.First().Title);
+        _fixture.EventRepositoryMock.Verify(r => r.GetAllEvents(It.IsAny<EventParameters>()), Times.Once());
+    }
 }
 
