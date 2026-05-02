@@ -13,7 +13,8 @@ public class EventService(IRepositoryManager repositoryManager, IMapper mapper) 
 {
     public (IEnumerable<EventDTO> eventDTOs, PaginatedResult pageData) GetAllEvents(EventParameters eventParameters)
     {
-        if (eventParameters.CheckPeriod)
+        // TODO этот инвариант должен сидеть в отдельном классе валидаторе, который будет использоваться в контроллере, а не в сервисе?
+        if (!eventParameters.IsDateRangeValid)
             throw new EventBadDateRangeException();
 
         var events = repositoryManager.Event.GetAllEvents(eventParameters);
@@ -74,6 +75,7 @@ public class EventService(IRepositoryManager repositoryManager, IMapper mapper) 
 
         return entity;
     }
+
     private void ValidateEvent(EventDTO eventDTO)
     {
         if (string.IsNullOrEmpty(eventDTO.Title))
