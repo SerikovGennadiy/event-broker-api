@@ -1,0 +1,39 @@
+﻿using Entities.Domain.Models;
+using Moq;
+using Shared.DTO;
+
+namespace EventBrokerAPI.Tests.BookingService.Commands;
+public class Tests(BookingServiceFixture fixture) : IClassFixture<BookingServiceFixture>
+{
+    private readonly BookingServiceFixture _fixture = fixture;
+
+    [Fact]
+    [Trait("Booking", "Commands")]
+    public async Task CreateBooking_ForExistingEvent_ReturnsPendingBooking()
+    {
+        // Arrange
+        var eventId = Guid.NewGuid();
+
+        _fixture.EventRepositoryMock.Setup(r => r.GetById(eventId)).Returns(new Event
+        {
+            Id = eventId,
+            Title = "Test",
+            StartAt = DateTime.UtcNow,
+            EndAt = DateTime.UtcNow.AddDays(1)
+        });
+
+        _fixture.MapperMock
+            .Setup(m => m.Map<BookingDTO>(It.IsAny<Booking>()))
+            .Returns((Booking b) => new BookingDTO(b.Id, b.EventId, b.Status, b.CreatedAt, b.ProcessedAt));
+
+        // Act
+        var bookingDto = await _fixture.BookingService.CreateBookingAsync(eventId, CancellationToken.None);
+
+        // Assert
+        Assert.NotNull(bookingDto);
+        Assert.Equal(eventId, bookingDto.EventId);
+        Assert.Equal(BookingStatus.Pending, bookingDto.Status);
+
+        _fixture.BookingRepositoryMock.Verify(rm => rm.CreateBooking(It.IsAny<Booking>()), Times.Once);
+    }
+}

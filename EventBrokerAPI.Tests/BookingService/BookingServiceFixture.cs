@@ -4,20 +4,24 @@ using Moq;
 using BookingServiceType = Service.BookingService;
 
 namespace EventBrokerAPI.Tests.BookingService;
-internal class BookingServiceFixture : IDisposable
+public class BookingServiceFixture : IDisposable
 {
-    public BookingServiceType EventService { get; }
+    public BookingServiceType BookingService { get; }
 
     public Mock<IRepositoryManager> RepositoryManagerMock { get; } = new();
+    public Mock<IEventRepository> EventRepositoryMock { get; } = new();
     public Mock<IBookingRepository> BookingRepositoryMock { get; } = new();
     public Mock<IMapper> MapperMock { get; } = new();
 
     public BookingServiceFixture()
     {
+        RepositoryManagerMock.Setup(x => x.Event)
+            .Returns(EventRepositoryMock.Object);
+
         RepositoryManagerMock.Setup(x => x.Booking)
             .Returns(BookingRepositoryMock.Object);
 
-        EventService = new BookingServiceType(
+        BookingService = new BookingServiceType(
             RepositoryManagerMock.Object,
             MapperMock.Object
         );
@@ -26,6 +30,7 @@ internal class BookingServiceFixture : IDisposable
     public void Dispose()
     {
         RepositoryManagerMock.Reset();
+        EventRepositoryMock.Reset();
         BookingRepositoryMock.Reset();
         MapperMock.Reset();
 
