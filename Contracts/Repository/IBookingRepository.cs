@@ -4,9 +4,8 @@ namespace Contracts.Repository;
 
 public interface IBookingRepository
 {
-    IEnumerable<Booking> GetAllBookings(); 
-    Booking? GetById(Guid id); 
+    IEnumerable<Booking> GetAllPendingBookings();
 
+    Booking? GetById(Guid id); 
     void CreateBooking(Booking entity); 
-    void DeleteBooking(Booking entity);
 }

@@ -3,5 +3,4 @@
 namespace Shared.DTO;
 
 public record BookingDTO(Guid Id, Guid EventId, BookingStatus Status, DateTime CreatedAt, DateTime? ProcessedAt);
-//public record CreateBookingDTO (Guid EventId);
-//public record UpdateBookingDTO(Guid Id);
+public record UpdateBookingDTO(DateTime ProcessedAt, BookingStatus Status);
