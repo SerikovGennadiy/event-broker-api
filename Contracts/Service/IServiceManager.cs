@@ -3,5 +3,6 @@
 public interface IServiceManager
 {
     IEventService EventService { get; }
+    IBookingService BookingService { get; }
 }
 
