@@ -3,6 +3,6 @@
 public class BookingNotFoundException : NotFoundException
 {
     public BookingNotFoundException(Guid bookingId) 
-        : base($"Booking with ID {bookingId} not found.")
+        : base($"Бронирование с ID {bookingId} отсутствует.")
     { }
 }

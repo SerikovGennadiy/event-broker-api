@@ -7,6 +7,6 @@ public interface IBookingService
     IEnumerable<BookingDTO> GetPendingBookings();
     void ConfirmBooking(Guid bookingId);
     void RejectBooking(Guid bookingId);
-    BookingDTO CreateBookingAsync(Guid eventId);
-    BookingDTO GetBookingByIdAsync(Guid bookingId);
+    Task<BookingDTO> CreateBookingAsync(Guid eventId, CancellationToken cancellationToken = default);
+    Task<BookingDTO> GetBookingByIdAsync(Guid bookingId, CancellationToken cancellationToken = default);
 }

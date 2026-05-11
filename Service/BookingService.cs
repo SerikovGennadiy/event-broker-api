@@ -11,8 +11,13 @@ namespace Service;
 
 public class BookingService(IRepositoryManager repositoryManager, IMapper mapper) : IBookingService
 {
-    public BookingDTO CreateBookingAsync(Guid eventId)
+    public async Task<BookingDTO> CreateBookingAsync(Guid eventId, CancellationToken cancellationToken)
     {
+        // TODO - переделать под ORM, поддерживающую асинхронные операции, чтобы не блокировать поток при работе с БД
+        if (cancellationToken.IsCancellationRequested)
+            throw new OperationCanceledException(cancellationToken);
+        await Task.Yield();
+
         ValidateBookingFor(eventId);
 
         var booking = new Booking
@@ -28,8 +33,13 @@ public class BookingService(IRepositoryManager repositoryManager, IMapper mapper
         return mapper.Map<BookingDTO>(booking);
     }
 
-    public BookingDTO GetBookingByIdAsync(Guid bookingId)
+    public async Task<BookingDTO> GetBookingByIdAsync(Guid bookingId, CancellationToken cancellationToken)
     {
+        // TODO - переделать под ORM, поддерживающую асинхронные операции, чтобы не блокировать поток при работе с БД
+        if (cancellationToken.IsCancellationRequested)
+            throw new OperationCanceledException(cancellationToken);
+        await Task.Yield();
+
         var booking = GetBooking(bookingId);
         return mapper.Map<BookingDTO>(booking);
     }

@@ -1,5 +1,6 @@
 ﻿using Contracts.Service;
 using Microsoft.AspNetCore.Mvc;
+using Service;
 using Shared.DTO;
 using Shared.RequestSpecification;
 using System.Text.Json;
@@ -37,10 +38,15 @@ public class EventController(IServiceManager services): ControllerBase
     }
 
     [HttpPost("{eventId}/book")]
-    public IActionResult CreateEventBooking(Guid eventId)
+    public async Task<IActionResult> CreateEventBooking(Guid eventId, CancellationToken token)
     {
-        var bookingDTO = services.BookingService.CreateBookingAsync(eventId);
-        return AcceptedAtRoute(routeName: "BookingById", new { bookingId = bookingDTO.Id }, bookingDTO);
+        var bookingDTO = await services.BookingService.CreateBookingAsync(eventId, token);
+
+        return AcceptedAtRoute(
+            routeName: "BookingById",
+            routeValues: new { eventId = eventId, bookingId = bookingDTO.Id },
+            value: bookingDTO
+        );
     }
 
     [HttpPut("{id:guid}")]

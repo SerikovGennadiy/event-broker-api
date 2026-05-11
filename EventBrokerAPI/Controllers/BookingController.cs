@@ -11,9 +11,9 @@ public class BookingController : ControllerBase
     public BookingController(IServiceManager serviceManager) => _serviceManager = serviceManager;
 
     [HttpGet("{bookingId}", Name = "BookingById")]
-    public IActionResult GetBooking(Guid bookingId)
+    public async Task<IActionResult> GetBooking(Guid bookingId, CancellationToken token)
     {
-        var booking = _serviceManager.BookingService.GetBookingByIdAsync(bookingId);
+        var booking = await _serviceManager.BookingService.GetBookingByIdAsync(bookingId, token);
         return Ok(booking);
     }
 }

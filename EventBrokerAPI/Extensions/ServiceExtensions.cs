@@ -43,4 +43,7 @@ public static class ServiceExtensions
 
     public static IServiceCollection ConfigureActionFilters(this IServiceCollection services) =>
         services.AddScoped<ValidateDTOFilter>();
+
+    public static IServiceCollection ConfigureBackgroundServices(this IServiceCollection services) =>
+        services.AddHostedService<BookingProcessor.Handler>();
 }

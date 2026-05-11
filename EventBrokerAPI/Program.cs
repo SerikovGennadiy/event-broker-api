@@ -8,6 +8,8 @@ builder.Services.ConfigureContext();
 builder.Services.ConfigureRepositoryManager();
 builder.Services.ConfigureServiceManager();
 builder.Services.ConfigureActionFilters();
+builder.Services.ConfigureBackgroundServices();
+
 builder.Services.AddControllers();
 
 builder.Services.AddAutoMapper(cfg => { }, typeof(Program));
