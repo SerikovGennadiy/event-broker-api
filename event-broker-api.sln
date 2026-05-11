@@ -17,6 +17,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Service", "Service\Service.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventBrokerAPI.Tests", "EventBrokerAPI.Tests\EventBrokerAPI.Tests.csproj", "{2D24CA1B-3BD5-47C8-94C1-0A4D1308B6FD}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BookingProcessor", "BookingProcessor\BookingProcessor.csproj", "{DBE0FBA2-1641-4F0C-B964-C9AED83F64F2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -51,6 +53,10 @@ Global
 		{2D24CA1B-3BD5-47C8-94C1-0A4D1308B6FD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2D24CA1B-3BD5-47C8-94C1-0A4D1308B6FD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2D24CA1B-3BD5-47C8-94C1-0A4D1308B6FD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DBE0FBA2-1641-4F0C-B964-C9AED83F64F2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DBE0FBA2-1641-4F0C-B964-C9AED83F64F2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DBE0FBA2-1641-4F0C-B964-C9AED83F64F2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DBE0FBA2-1641-4F0C-B964-C9AED83F64F2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
