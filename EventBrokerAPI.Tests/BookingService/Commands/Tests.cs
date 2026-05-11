@@ -68,4 +68,43 @@ public class Tests(BookingServiceFixture fixture) : IClassFixture<BookingService
 
         _fixture.RepositoryManagerMock.Verify(rm => rm.Booking.CreateBooking(It.IsAny<Booking>()), Times.Exactly(2));
     }
+
+    [Fact]
+    [Trait("Booking", "Commands")]
+    public async Task GetBooking_ChangeStatus_ReturnCorrectStatus()
+    {
+        // Arrange
+        var bookingId = Guid.NewGuid();
+        var booking = new Booking
+        {
+            Id = bookingId,
+            EventId = Guid.NewGuid(),
+            Status = BookingStatus.Pending,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        _fixture.BookingRepositoryMock.Setup(r => r.GetById(bookingId)).Returns(booking);
+
+        _fixture.MapperMock
+            .Setup(m => m.Map<BookingDTO>(It.IsAny<Booking>()))
+            .Returns((Booking b) => new BookingDTO(b.Id, b.EventId, b.Status, b.CreatedAt, b.ProcessedAt));
+
+        // Act - Confirm
+        _fixture.BookingService.ConfirmBooking(bookingId);
+        var confirmed = await _fixture.BookingService.GetBookingByIdAsync(bookingId, CancellationToken.None);
+
+        // Assert Confirmed
+        Assert.Equal(BookingStatus.Confirmed, confirmed.Status);
+        Assert.NotNull(confirmed.ProcessedAt);
+
+        // Act - Reset status to Pending then Reject
+        booking.Status = BookingStatus.Pending;
+        booking.ProcessedAt = null;
+        _fixture.BookingService.RejectBooking(bookingId);
+        var rejected = await _fixture.BookingService.GetBookingByIdAsync(bookingId, CancellationToken.None);
+
+        // Assert Rejected
+        Assert.Equal(BookingStatus.Rejected, rejected.Status);
+        Assert.NotNull(rejected.ProcessedAt);
+    }
 }
