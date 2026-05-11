@@ -3,7 +3,7 @@ using Entities.Domain.Models;
 
 namespace Repository;
 
-internal class BookingRepository : RepositoryBase<Booking>, IBookingRepository
+public class BookingRepository : RepositoryBase<Booking>, IBookingRepository
 {
     public BookingRepository(RepositoryContext context): base(context)
     { }

@@ -7,6 +7,7 @@ public class RepositoryContext
 {
     private readonly Dictionary<Type, object> _dbSets = new();
     public List<Event> Events { get; set; } = new();
+    public List<Booking> Bookings { get; set; } = new();
 
     public RepositoryContext()
     {

@@ -5,17 +5,16 @@ namespace Repository;
 public class RepositoryManager : IRepositoryManager
 {
     private IEventRepository Events { get; }
-    private IBookingRepository Booking { get; }
+    private IBookingRepository Bookings { get; }
 
     public RepositoryManager(RepositoryContext context)
     {
         Events = new EventRepository(context);
-        Booking = new BookingRepository(context);
+        Bookings = new BookingRepository(context);
     }
 
     public IEventRepository Event => Events;
-    public IBookingRepository Booking => Booking;
-
+    public IBookingRepository Booking => Bookings;
     // TODO : хранилище локальное
     public void Save() => throw new NotImplementedException();
 }
