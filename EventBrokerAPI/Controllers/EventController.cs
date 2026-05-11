@@ -36,6 +36,13 @@ public class EventController(IServiceManager services): ControllerBase
         return CreatedAtRoute(routeName: "EventById", new { id = _event.Id }, _event);
     }
 
+    [HttpPost("{eventId}/book")]
+    public IActionResult CreateEventBooking(Guid eventId)
+    {
+        var bookingDTO = services.BookingService.CreateBookingAsync(eventId);
+        return AcceptedAtRoute(routeName: "BookingById", new { bookingId = bookingDTO.Id }, bookingDTO);
+    }
+
     [HttpPut("{id:guid}")]
     [ValidateDTOFilter]
     public IActionResult UpdateEvent([FromRoute] Guid id, [FromBody] EventDTO eventDTO)
