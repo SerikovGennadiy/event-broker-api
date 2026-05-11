@@ -1,0 +1,25 @@
+﻿using Entities.Domain.Models;
+using Entities.ErrorHandling.Exceptions.Event;
+
+namespace EventBrokerAPI.Tests.BookingService.Exceptions;
+
+public class Tests(BookingServiceFixture fixture) : IClassFixture<BookingServiceFixture>
+{
+    private readonly BookingServiceFixture _fixture = fixture;
+    
+    [Fact]
+    [Trait("Booking", "Exceptions")]
+    public async Task CreateBooking_ForNonExistingEvent_ThrowsEventNotFoundException()
+    {
+        // Arrange
+        var eventId = Guid.NewGuid();
+        _fixture.EventRepositoryMock.Setup(r => r.GetById(eventId)).Returns((Event?)null);
+
+        // Act
+        var ex = await Record.ExceptionAsync(() => _fixture.BookingService.CreateBookingAsync(eventId, CancellationToken.None));
+
+        // Assert
+        Assert.NotNull(ex);
+        Assert.IsType<EventNotFoundException>(ex);
+    }
+}
