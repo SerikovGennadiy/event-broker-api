@@ -1,5 +1,6 @@
 ﻿using Entities.Domain.Models;
 using Entities.ErrorHandling.Exceptions.Event;
+using Moq;
 
 namespace EventBrokerAPI.Tests.BookingService.Exceptions;
 
@@ -13,6 +14,23 @@ public class Tests(BookingServiceFixture fixture) : IClassFixture<BookingService
     {
         // Arrange
         var eventId = Guid.NewGuid();
+        _fixture.EventRepositoryMock.Setup(r => r.GetById(eventId)).Returns((Event?)null);
+
+        // Act
+        var ex = await Record.ExceptionAsync(() => _fixture.BookingService.CreateBookingAsync(eventId, CancellationToken.None));
+
+        // Assert
+        Assert.NotNull(ex);
+        Assert.IsType<EventNotFoundException>(ex);
+    }
+
+    [Fact]
+    [Trait("Booking", "Exceptions")]
+    public async Task CreateBooking_ForDeletedEvent_ThrowsEventNotFoundException()
+    {
+        // Arrange
+        var eventId = Guid.NewGuid();
+        // Симулируем удалённое событие тем же поведением репозитория (null)
         _fixture.EventRepositoryMock.Setup(r => r.GetById(eventId)).Returns((Event?)null);
 
         // Act
