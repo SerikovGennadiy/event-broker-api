@@ -6,7 +6,7 @@ namespace Repository;
 public class RepositoryContext
 {
     private readonly Dictionary<Type, object> _dbSets = new();
-    public List<Event> Events { get; set; } = [];
+    public List<Event> Events { get; set; } = new();
 
     public RepositoryContext()
     {
@@ -20,7 +20,8 @@ public class RepositoryContext
         dbSets.ForEach(prop =>
         {
             var dbSetType = prop.PropertyType.GetGenericArguments()[0];
-            _dbSets[dbSetType] = prop.GetValue(this);
+            var value = prop.GetValue(this) ?? Activator.CreateInstance(prop.PropertyType)!;
+            _dbSets[dbSetType] = value;
         });
     }
 
@@ -30,7 +31,7 @@ public class RepositoryContext
         {
             return (List<T>)dbSet;
         }
-        throw new ArgumentException($"В хранилище данных не зарегистрирована модель {nameof(T)}");
+        throw new ArgumentException($"В хранилище данных не зарегистрирована модель {typeof(T).Name}");
     }
 }
 

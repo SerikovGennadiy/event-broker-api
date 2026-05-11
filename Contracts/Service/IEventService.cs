@@ -1,11 +1,12 @@
 ﻿using Shared.DTO;
+using Shared.RequestSpecification;
 
 namespace Contracts.Service;
 
 public interface IEventService
 {
     // считать данные из хранилища
-    IEnumerable<EventDTO> GetAllEvents();
+    (IEnumerable<EventDTO> eventDTOs, PaginatedResult pageData) GetAllEvents(EventParameters eventParameters);
 
     // получить событие по ID
     EventDTO GetEventById(Guid Id);

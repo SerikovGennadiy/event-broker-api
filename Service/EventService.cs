@@ -5,15 +5,22 @@ using Contracts.Repository;
 using Repository;
 using Entities.Domain.Models;
 using Entities.ErrorHandling.Exceptions.Event;
+using Shared.RequestSpecification;
 
 namespace Service;
 
 public class EventService(IRepositoryManager repositoryManager, IMapper mapper) : IEventService
 {
-    public IEnumerable<EventDTO> GetAllEvents()
+    public (IEnumerable<EventDTO> eventDTOs, PaginatedResult pageData) GetAllEvents(EventParameters eventParameters)
     {
-        var entitiesDTO = repositoryManager.Event.GetAllEvents();
-        return mapper.Map<IEnumerable<EventDTO>>(entitiesDTO);
+        // TODO этот инвариант должен сидеть в отдельном классе валидаторе, который будет использоваться в контроллере, а не в сервисе?
+        if (!eventParameters.IsDateRangeValid)
+            throw new EventBadDateRangeException();
+
+        var events = repositoryManager.Event.GetAllEvents(eventParameters);
+        var eventDTOs = mapper.Map<IEnumerable<EventDTO>>(events);
+
+        return (eventDTOs, pageData: events.PageMetaData);
     }
 
     public EventDTO GetEventById(Guid eventId)
@@ -40,7 +47,11 @@ public class EventService(IRepositoryManager repositoryManager, IMapper mapper) 
         ValidateEvent(eventDTO);
 
         var entity = GetEvent(eventId);
+
+        // обновление только измененных полей маппером
         entity = mapper.Map<Event>(eventDTO);
+        // пока что EventDTO общий
+        // TODO разбить EventDTO на CreateEventDTO и UpdateEventDTO
         entity.Id = eventId;
 
         if(repositoryManager.Event is EventRepository repo)
@@ -64,6 +75,7 @@ public class EventService(IRepositoryManager repositoryManager, IMapper mapper) 
 
         return entity;
     }
+
     private void ValidateEvent(EventDTO eventDTO)
     {
         if (string.IsNullOrEmpty(eventDTO.Title))
