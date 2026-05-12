@@ -43,7 +43,7 @@ public class EventController(IEventService eventService, IBookingService booking
 
         return AcceptedAtRoute(
             routeName: "BookingById",
-            routeValues: new { eventId = eventId, bookingId = bookingDTO.Id },
+            routeValues: new { bookingId = bookingDTO.Id },
             value: bookingDTO
         );
     }
