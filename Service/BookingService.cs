@@ -20,14 +20,7 @@ public class BookingService(IRepositoryManager repositoryManager, IMapper mapper
 
         ValidateBookingFor(eventId);
 
-        var booking = new Booking
-        {
-            Id = Guid.NewGuid(),
-            EventId = eventId,
-            Status = BookingStatus.Pending,
-            CreatedAt = DateTime.Now
-        };
-
+        var booking = new Booking(Guid.NewGuid(), eventId);
         repositoryManager.Booking.CreateBooking(booking);
 
         return mapper.Map<BookingDTO>(booking);
@@ -67,12 +60,10 @@ public class BookingService(IRepositoryManager repositoryManager, IMapper mapper
                 throw new EventNotFoundException(eventId);
     }
 
-    public void UpdateBooking(Guid bookingId, UpdateBookingDTO updateDto)
+    public void ConfirmBooking(Guid bookingId)
     {
         var booking = GetBooking(bookingId);
-
-        booking.ProcessedAt = updateDto.ProcessedAt;
-        booking.Status = updateDto.Status;
+        booking.Confirm();
 
         if(repositoryManager.Booking is BookingRepository repo)
         {
@@ -80,23 +71,14 @@ public class BookingService(IRepositoryManager repositoryManager, IMapper mapper
         }
     }
 
-    public void ConfirmBooking(Guid bookingId)
-    {
-        var updateDto = new UpdateBookingDTO(
-            ProcessedAt: DateTime.UtcNow,
-            Status: BookingStatus.Confirmed
-        );
-
-        UpdateBooking(bookingId, updateDto);
-    }
-
     public void RejectBooking(Guid bookingId)
     {
-        var updateDto = new UpdateBookingDTO(
-            ProcessedAt: DateTime.UtcNow,
-            Status: BookingStatus.Rejected
-        );
+        var booking = GetBooking(bookingId);
+        booking.Reject();
 
-        UpdateBooking(bookingId, updateDto);
+        if(repositoryManager.Booking is BookingRepository repo)
+        {
+            repo.Update(booking);
+        }
     }
 }

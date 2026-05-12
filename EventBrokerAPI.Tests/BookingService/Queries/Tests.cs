@@ -14,13 +14,7 @@ public class Tests(BookingServiceFixture fixture) : IClassFixture<BookingService
     {
         // Arrange
         var bookingId = Guid.NewGuid();
-        var booking = new Booking
-        {
-            Id = bookingId,
-            EventId = Guid.NewGuid(),
-            Status = BookingStatus.Pending,
-            CreatedAt = DateTime.UtcNow
-        };
+        var booking = new Booking(bookingId, Guid.NewGuid());
 
         _fixture.BookingRepositoryMock.Setup(r => r.GetById(bookingId)).Returns(booking);
 
