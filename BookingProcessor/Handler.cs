@@ -33,6 +33,7 @@ public class Handler : BackgroundService
             catch(Exception ex)
             {
                 _logger.LogError(ex, "Ошибка при обработке подтверждений бронирования");
+
             }
             finally
             {
@@ -46,9 +47,9 @@ public class Handler : BackgroundService
     private async Task ConfirmPendingBookingsAsync(CancellationToken stoppingToken)
     {
         using var scope = _serviceScopeFactory.CreateScope();
-        var serviceManager = scope.ServiceProvider.GetRequiredService<IServiceManager>();
+        var bookingService = scope.ServiceProvider.GetRequiredService<IBookingService>();
 
-        var pendingBookings = serviceManager.BookingService.GetPendingBookings();
+        var pendingBookings = bookingService.GetPendingBookings();
 
         if (!pendingBookings.Any())
         {
@@ -62,12 +63,15 @@ public class Handler : BackgroundService
         {
             try
             {
-                serviceManager.BookingService.ConfirmBooking(pendingBook.Id);
+                bookingService.ConfirmBooking(pendingBook.Id);
                 _logger.LogInformation("Бронирование {BookingId} успешно подтверждено", pendingBook.Id);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Не удалось подтвердить бронирование {BookingId}", pendingBook.Id);
+                // TODO : В реальной системе можно было бы добавить логику
+                // повторных попыток или пометить бронирование для ручной проверки
+                bookingService.RejectBooking(pendingBook.Id);
+                _logger.LogError(ex, "Не удалось подтвердить, бронирование {BookingId} отклонено", pendingBook.Id);
             }
 
             await Task.Delay(TimeSpan.FromSeconds(2), stoppingToken);
