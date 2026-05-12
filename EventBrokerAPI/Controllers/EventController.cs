@@ -1,6 +1,5 @@
 ﻿using Contracts.Service;
 using Microsoft.AspNetCore.Mvc;
-using Service;
 using Shared.DTO;
 using Shared.RequestSpecification;
 using System.Text.Json;
@@ -8,13 +7,13 @@ using System.Text.Json;
 namespace EventBrokerAPI.Controllers;
 
 [ApiController]
-[Route("api/events")]
-public class EventController(IServiceManager services): ControllerBase
+[Route("events")]
+public class EventController(IEventService eventService, IBookingService bookingService): ControllerBase
 {
     [HttpGet]
     public IActionResult GetAllEvents([FromQuery] EventParameters eventParameters)
     {
-        var result = services.EventService.GetAllEvents(eventParameters);
+        var result = eventService.GetAllEvents(eventParameters);
 
         Response.Headers.Append("X-Pagination",
                JsonSerializer.Serialize(result.pageData));
@@ -25,7 +24,7 @@ public class EventController(IServiceManager services): ControllerBase
     [HttpGet("{id:guid}", Name="EventById")]
     public IActionResult GetEvent(Guid id)
     {
-        var eventDTO = services.EventService.GetEventById(id);
+        var eventDTO = eventService.GetEventById(id);
         return Ok(eventDTO);
     }
 
@@ -33,14 +32,14 @@ public class EventController(IServiceManager services): ControllerBase
     [ValidateDTOFilter]
     public IActionResult CreateEvent([FromBody] EventDTO eventDTO)
     {
-        var _event = services.EventService.CreateEvent(eventDTO);
+        var _event = eventService.CreateEvent(eventDTO);
         return CreatedAtRoute(routeName: "EventById", new { id = _event.Id }, _event);
     }
 
     [HttpPost("{eventId}/book")]
     public async Task<IActionResult> CreateEventBooking(Guid eventId, CancellationToken token)
     {
-        var bookingDTO = await services.BookingService.CreateBookingAsync(eventId, token);
+        var bookingDTO = await bookingService.CreateBookingAsync(eventId, token);
 
         return AcceptedAtRoute(
             routeName: "BookingById",
@@ -53,14 +52,14 @@ public class EventController(IServiceManager services): ControllerBase
     [ValidateDTOFilter]
     public IActionResult UpdateEvent([FromRoute] Guid id, [FromBody] EventDTO eventDTO)
     {
-        services.EventService.UpdateEvent(id, eventDTO);
+        eventService.UpdateEvent(id, eventDTO);
         return Ok();
     }
 
     [HttpDelete("{id:guid}")]
     public IActionResult DeleteEvent(Guid id)
     {
-        services.EventService.DeleteEvent(id);
+        eventService.DeleteEvent(id);
         return Ok();
     }
 }

@@ -6,7 +6,7 @@ builder.Services.AddOpenApi();
 builder.Services.ConfigureCors();
 builder.Services.ConfigureContext();
 builder.Services.ConfigureRepositoryManager();
-builder.Services.ConfigureServiceManager();
+builder.Services.ConfigureAPIServices();
 builder.Services.ConfigureActionFilters();
 builder.Services.ConfigureBackgroundServices();
 

@@ -29,12 +29,20 @@ public static class ServiceExtensions
         return services;
     }
 
+    [Obsolete("Используйте ConfigureAPIServices вместо ConfigureServiceManager")]
     public static IServiceCollection ConfigureServiceManager(this IServiceCollection services)
     {
         services.AddScoped<IServiceManager, ServiceManager>();
         return services;
     }
+    
+    public static IServiceCollection ConfigureAPIServices(this IServiceCollection services)
+    {
+        services.AddScoped<IEventService, EventService>();
+        services.AddScoped<IBookingService, BookingService>();
 
+        return services;
+    }
     public static IServiceCollection ConfigureContext(this IServiceCollection services)
     {
         services.AddSingleton<RepositoryContext>();
