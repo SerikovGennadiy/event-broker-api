@@ -1,12 +1,14 @@
 ﻿using Entities.Domain.Contract;
 using Entities.Domain.Models;
+using System.Collections.Concurrent;
 
 namespace Repository;
 
 public class RepositoryContext
 {
-    private readonly Dictionary<Type, object> _dbSets = new();
+    private readonly ConcurrentDictionary<Type, object> _dbSets = new();
     public List<Event> Events { get; set; } = new();
+    public List<Booking> Bookings { get; set; } = new();
 
     public RepositoryContext()
     {
@@ -21,7 +23,7 @@ public class RepositoryContext
         {
             var dbSetType = prop.PropertyType.GetGenericArguments()[0];
             var value = prop.GetValue(this) ?? Activator.CreateInstance(prop.PropertyType)!;
-            _dbSets[dbSetType] = value;
+            _dbSets.TryAdd(dbSetType, value);
         });
     }
 
