@@ -6,16 +6,16 @@ namespace Contracts.Service;
 public interface IEventService
 {
     // считать данные из хранилища
-    (IEnumerable<EventDTO> eventDTOs, PaginatedResult pageData) GetAllEvents(EventParameters eventParameters);
+    (IEnumerable<EventInfo> eventDTOs, PaginatedResult pageData) GetAllEvents(EventParameters eventParameters);
 
     // получить событие по ID
-    EventDTO GetEventById(Guid Id);
+    EventInfo GetEventById(Guid Id);
 
     // создать событие
-    EventDTO CreateEvent(EventDTO eventDTO);
+    EventInfo CreateEvent(CreateEvent eventDTO);
 
     // обновить данные конкретного события
-    void UpdateEvent(Guid eventId, EventDTO eventDTO);
+    void UpdateEvent(Guid eventId, EventInfo eventDTO);
 
     // событие 
     void DeleteEvent(Guid eventId);
