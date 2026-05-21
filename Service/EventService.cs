@@ -11,26 +11,26 @@ namespace Service;
 
 public class EventService(IRepositoryManager repositoryManager, IMapper mapper) : IEventService
 {
-    public (IEnumerable<EventDTO> eventDTOs, PaginatedResult pageData) GetAllEvents(EventParameters eventParameters)
+    public (IEnumerable<EventInfo> eventDTOs, PaginatedResult pageData) GetAllEvents(EventParameters eventParameters)
     {
         // TODO этот инвариант должен сидеть в отдельном классе валидаторе, который будет использоваться в контроллере, а не в сервисе?
         if (!eventParameters.IsDateRangeValid)
             throw new EventBadDateRangeException();
 
         var events = repositoryManager.Event.GetAllEvents(eventParameters);
-        var eventDTOs = mapper.Map<IEnumerable<EventDTO>>(events);
+        var eventDTOs = mapper.Map<IEnumerable<EventInfo>>(events);
 
         return (eventDTOs, pageData: events.PageMetaData);
     }
 
-    public EventDTO GetEventById(Guid eventId)
+    public EventInfo GetEventById(Guid eventId)
     {
         var entity = GetEvent(eventId);
-        return mapper.Map<EventDTO>(entity);
+        return mapper.Map<EventInfo>(entity);
     }
 
 
-    public EventDTO CreateEvent(EventDTO eventDTO)
+    public EventInfo CreateEvent(CreateEvent eventDTO)
     {
        ValidateEvent(eventDTO);
 
@@ -39,7 +39,7 @@ public class EventService(IRepositoryManager repositoryManager, IMapper mapper) 
 
        repositoryManager.Event.CreateEvent(entity);
 
-       return mapper.Map<EventDTO>(entity);
+       return mapper.Map<EventInfo>(entity);
     }
 
     public void UpdateEvent(Guid eventId, EventDTO eventDTO)

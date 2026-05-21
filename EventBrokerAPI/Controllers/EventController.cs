@@ -30,7 +30,7 @@ public class EventController(IEventService eventService, IBookingService booking
 
     [HttpPost]
     [ValidateDTOFilter]
-    public IActionResult CreateEvent([FromBody] EventDTO eventDTO)
+    public IActionResult CreateEvent([FromBody] CreateEvent eventDTO)
     {
         var _event = eventService.CreateEvent(eventDTO);
         return CreatedAtRoute(routeName: "EventById", new { id = _event.Id }, _event);

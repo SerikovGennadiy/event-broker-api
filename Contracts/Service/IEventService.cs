@@ -15,7 +15,7 @@ public interface IEventService
     EventInfo CreateEvent(CreateEvent eventDTO);
 
     // обновить данные конкретного события
-    void UpdateEvent(Guid eventId, EventInfo eventDTO);
+    void UpdateEvent(Guid eventId, EventDTO eventDTO);
 
     // событие 
     void DeleteEvent(Guid eventId);

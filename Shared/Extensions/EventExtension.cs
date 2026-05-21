@@ -11,7 +11,7 @@ public static class EventExtension
                              Title: @event.Title,
                              Description: @event.Description,
                              StartAt: @event.StartAt,
-                             EndA: @event.EndAt,
+                             EndAt: @event.EndAt,
                              TotalSeats: @event.TotalSeats,
                              AvailableSeats: @event.AvailableSeats);
     }
