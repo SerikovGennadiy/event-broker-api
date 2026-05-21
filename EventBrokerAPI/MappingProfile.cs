@@ -10,6 +10,9 @@ public class MappingProfile : Profile
     {
         CreateMap<EventDTO, Event>();
         CreateMap<Event, EventDTO>();
+        CreateMap<Event, EventInfo>();
+        CreateMap<CreateEvent, Event>();
+
         CreateMap<BookingDTO, Booking>();
         CreateMap<Booking, BookingDTO>();
     }
