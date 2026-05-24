@@ -39,7 +39,8 @@ public class Event : IdEntity, IReadOnlyEvent
             EndAt = EndAt, 
             Description = description, 
             TotalSeats = totalSeats,
-            AvailableSeats = totalSeats};
+            AvailableSeats = totalSeats
+        };
     }
 
     /// <summary>Попытка зарезервировать count мест. Если мест недостаточно — возвращает false.</summary>

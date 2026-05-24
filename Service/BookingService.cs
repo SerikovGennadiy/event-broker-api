@@ -11,6 +11,8 @@ namespace Service;
 
 public class BookingService(IRepositoryManager repositoryManager, IMapper mapper) : IBookingService
 {
+    private readonly object _bookingLock = new();
+
     public async Task<BookingDTO> CreateBookingAsync(Guid eventId, CancellationToken cancellationToken)
     {
         // TODO - переделать под ORM, поддерживающую асинхронные операции, чтобы не блокировать поток при работе с БД
@@ -18,10 +20,19 @@ public class BookingService(IRepositoryManager repositoryManager, IMapper mapper
             throw new OperationCanceledException(cancellationToken);
         await Task.Yield();
 
-        ValidateBookingFor(eventId);
+        Booking booking;
+        lock (_bookingLock)
+        {
+            var @event = repositoryManager.Event.GetById(eventId);
+            if (@event is null)
+                throw new EventNotFoundException(eventId);
 
-        var booking = new Booking(Guid.NewGuid(), eventId);
-        repositoryManager.Booking.CreateBooking(booking);
+            if (!@event.TryReserveSeats())
+                throw new NoAvailableSeatsException(eventId);
+
+            booking = new Booking(Guid.NewGuid(), eventId);
+            repositoryManager.Booking.CreateBooking(booking);
+        }
 
         return mapper.Map<BookingDTO>(booking);
     }
@@ -51,13 +62,6 @@ public class BookingService(IRepositoryManager repositoryManager, IMapper mapper
             throw new BookingNotFoundException(bookingId);
 
         return entity;
-    }
-
-    private void ValidateBookingFor(Guid eventId)
-    {
-       var @event = repositoryManager.Event.GetById(eventId);
-         if (@event is null)
-                throw new EventNotFoundException(eventId);
     }
 
     public void ConfirmBooking(Guid bookingId)
