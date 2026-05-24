@@ -1,17 +1,25 @@
-﻿using Shared.DTO;
-using Contracts.Service;
+﻿using AutoMapper;
 using Contracts.Repository;
-using AutoMapper;
-using Entities.ErrorHandling.Exceptions.Booking;
+using Contracts.Service;
 using Entities.Domain.Models;
-using Entities.ErrorHandling.Exceptions.Event;
+using Entities.ErrorHandling.Exceptions.Booking;
 using Repository;
+using Shared.DTO;
 
 namespace Service;
 
 public class BookingService(IRepositoryManager repositoryManager, IMapper mapper) : IBookingService
 {
     private readonly object _bookingLock = new();
+
+    /// <summary>Отбилось желание забронироваться на мероприятие</summary>
+    private static Action<(Guid eventId, int seats)>? Rejected;
+    internal static void OnRejected(Action<(Guid eventId, int seats)> handler) => Rejected ??= handler;
+
+    /// <summary>Выражаем желание забронироваться на мероприятие</summary>
+    private static Action<(Guid eventId, int seats)>? Booked;
+    internal static void OnBooked(Action<(Guid eventId, int seats)> handler) => Booked ??= handler;
+
 
     public async Task<BookingDTO> CreateBookingAsync(Guid eventId, CancellationToken cancellationToken)
     {
@@ -23,12 +31,7 @@ public class BookingService(IRepositoryManager repositoryManager, IMapper mapper
         Booking booking;
         lock (_bookingLock)
         {
-            var @event = repositoryManager.Event.GetById(eventId);
-            if (@event is null)
-                throw new EventNotFoundException(eventId);
-
-            if (!@event.TryReserveSeats())
-                throw new NoAvailableSeatsException(eventId);
+            Booked?.Invoke((eventId, seats: 1));
 
             booking = new Booking(Guid.NewGuid(), eventId);
             repositoryManager.Booking.CreateBooking(booking);
@@ -48,10 +51,10 @@ public class BookingService(IRepositoryManager repositoryManager, IMapper mapper
         return mapper.Map<BookingDTO>(booking);
     }
 
-    public IEnumerable<BookingDTO> GetPendingBookings()
+    public ICollection<BookingDTO> GetPendingBookings()
     {
         var bookings = repositoryManager.Booking.GetAllPendingBookings();
-        var pendingBookingDTOs = mapper.Map<IEnumerable<BookingDTO>>(bookings);
+        var pendingBookingDTOs = mapper.Map<ICollection<BookingDTO>>(bookings);
         return pendingBookingDTOs;
     }
 
@@ -80,7 +83,9 @@ public class BookingService(IRepositoryManager repositoryManager, IMapper mapper
         var booking = GetBooking(bookingId);
         booking.Reject();
 
-        if(repositoryManager.Booking is BookingRepository repo)
+        Rejected?.Invoke((eventId: booking.EventId, seats: 1));
+
+        if (repositoryManager.Booking is BookingRepository repo)
         {
             repo.Update(booking);
         }

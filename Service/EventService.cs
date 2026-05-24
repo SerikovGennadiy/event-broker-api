@@ -1,16 +1,30 @@
-﻿using Shared.DTO;
-using AutoMapper;
-using Contracts.Service;
+﻿using AutoMapper;
 using Contracts.Repository;
-using Repository;
+using Contracts.Service;
 using Entities.Domain.Models;
+using Entities.ErrorHandling.Exceptions.Booking;
 using Entities.ErrorHandling.Exceptions.Event;
+using Repository;
+using Shared.DTO;
 using Shared.RequestSpecification;
 
 namespace Service;
 
-public class EventService(IRepositoryManager repositoryManager, IMapper mapper) : IEventService
+public class EventService : IEventService
 {
+    private readonly IRepositoryManager repositoryManager;
+    private readonly IMapper mapper;
+    public EventService(IRepositoryManager _repositoryManager,
+                        IMapper _mapper)
+    {
+        repositoryManager = _repositoryManager;
+        mapper = _mapper;
+
+        // TODO перевести в статический конструктор потом, пока контроль в порядка контрактов сервисов в DI
+        BookingService.OnBooked(ReserveSeats);
+        BookingService.OnRejected(ReleaseSeats);
+    }
+
     public (IEnumerable<EventInfo> eventDTOs, PaginatedResult pageData) GetAllEvents(EventParameters eventParameters)
     {
         // TODO этот инвариант должен сидеть в отдельном классе валидаторе, который будет использоваться в контроллере, а не в сервисе?
@@ -77,6 +91,19 @@ public class EventService(IRepositoryManager repositoryManager, IMapper mapper) 
 
         if (eventDTO.EndAt <= eventDTO.StartAt)
             throw new EventBadDateRangeException();
+    }
+
+    private void ReserveSeats((Guid eventId, int seats) callFromBooking)
+    {
+        var @event = GetEvent(callFromBooking.eventId);
+        if (!@event.TryReserveSeats(callFromBooking.seats))
+            throw new NoAvailableSeatsException(callFromBooking.eventId);
+    }
+
+    private void ReleaseSeats((Guid eventId, int seats) recallFromBooking)
+    {
+        var @event = GetEvent(recallFromBooking.eventId);
+        @event.ReleaseSeats(recallFromBooking.seats);
     }
     #endregion
 }
