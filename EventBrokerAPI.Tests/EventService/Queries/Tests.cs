@@ -40,7 +40,8 @@ public class Tests : IClassFixture<EventServiceFixture>
                     Title = "Event 1",
                     StartAt = DateTime.UtcNow.AddDays(1),
                     EndAt = DateTime.UtcNow.AddDays(2),
-                    Description = "Description 1"
+                    Description = "Description 1",
+                    TotalSeats = default
                 },
                 new Event
                 {
@@ -48,7 +49,8 @@ public class Tests : IClassFixture<EventServiceFixture>
                     Title = "Event 2",
                     StartAt = DateTime.UtcNow.AddDays(3),
                     EndAt = DateTime.UtcNow.AddDays(4),
-                    Description = "Description 2"
+                    Description = "Description 2",
+                    TotalSeats = default
                 }
         ];
 
@@ -76,7 +78,7 @@ public class Tests : IClassFixture<EventServiceFixture>
         ResetCallCounters();
 
         var eventGuid = Guid.CreateVersion7();
-        Event @event = new() { Id = eventGuid, Title = "Event 1", StartAt = DateTime.UtcNow, EndAt = DateTime.UtcNow.AddDays(1) };
+        Event @event = new() { Id = eventGuid, Title = "Event 1", StartAt = DateTime.UtcNow, EndAt = DateTime.UtcNow.AddDays(1), TotalSeats = default };
         EventDTO eventDTO = @event.toDTO();
 
         _fixture.EventRepositoryMock.Setup(r => r.GetById(eventGuid)).Returns(@event);
@@ -102,9 +104,9 @@ public class Tests : IClassFixture<EventServiceFixture>
         const string searchTitle = "hiking";
         var events = new List<Event>
         {
-            new() { Id = Guid.NewGuid(), Title = "Hiking trip", StartAt = DateTime.UtcNow, EndAt = DateTime.UtcNow.AddDays(1) },
-            new() { Id = Guid.NewGuid(), Title = "Conference", StartAt = DateTime.UtcNow, EndAt = DateTime.UtcNow.AddDays(1) },
-            new() { Id = Guid.NewGuid(), Title = "hiking festival", StartAt = DateTime.UtcNow, EndAt = DateTime.UtcNow.AddDays(1) }
+            new() { Id = Guid.NewGuid(), Title = "Hiking trip", StartAt = DateTime.UtcNow, EndAt = DateTime.UtcNow.AddDays(1), TotalSeats = default },
+            new() { Id = Guid.NewGuid(), Title = "Conference", StartAt = DateTime.UtcNow, EndAt = DateTime.UtcNow.AddDays(1), TotalSeats = default },
+            new() { Id = Guid.NewGuid(), Title = "hiking festival", StartAt = DateTime.UtcNow, EndAt = DateTime.UtcNow.AddDays(1), TotalSeats = default }
         };
 
         var filteredEvents = events
@@ -149,9 +151,9 @@ public class Tests : IClassFixture<EventServiceFixture>
 
         var events = new List<Event>
         {
-            new() { Id = Guid.NewGuid(), Title = "A", StartAt = now.AddDays(1), EndAt = now.AddDays(2) },
-            new() { Id = Guid.NewGuid(), Title = "B", StartAt = now.AddDays(3), EndAt = now.AddDays(4) },
-            new() { Id = Guid.NewGuid(), Title = "C", StartAt = now.AddDays(5), EndAt = now.AddDays(6) }
+            new() { Id = Guid.NewGuid(), Title = "A", StartAt = now.AddDays(1), EndAt = now.AddDays(2), TotalSeats = default },
+            new() { Id = Guid.NewGuid(), Title = "B", StartAt = now.AddDays(3), EndAt = now.AddDays(4), TotalSeats = default },
+            new() { Id = Guid.NewGuid(), Title = "C", StartAt = now.AddDays(5), EndAt = now.AddDays(6), TotalSeats = default }
         };
 
         var filteredEvents = events
@@ -196,7 +198,8 @@ public class Tests : IClassFixture<EventServiceFixture>
                 Id = Guid.NewGuid(),
                 Title = $"Event {i}",
                 StartAt = DateTime.UtcNow.AddDays(i),
-                EndAt = DateTime.UtcNow.AddDays(i + 1)
+                EndAt = DateTime.UtcNow.AddDays(i + 1),
+                TotalSeats = default,
             })
             .ToList();
 
@@ -230,9 +233,9 @@ public class Tests : IClassFixture<EventServiceFixture>
         var baseDate = DateTime.UtcNow.Date;
         var events = new List<Event>
         {
-            new() { Id = Guid.NewGuid(), Title = "Hiking", StartAt = baseDate.AddDays(1), EndAt = baseDate.AddDays(2) },
-            new() { Id = Guid.NewGuid(), Title = "Hiking Special", StartAt = baseDate.AddDays(10), EndAt = baseDate.AddDays(11) },
-            new() { Id = Guid.NewGuid(), Title = "Conference", StartAt = baseDate.AddDays(1), EndAt = baseDate.AddDays(2) }
+            new() { Id = Guid.NewGuid(), Title = "Hiking", StartAt = baseDate.AddDays(1), EndAt = baseDate.AddDays(2), TotalSeats = default },
+            new() { Id = Guid.NewGuid(), Title = "Hiking Special", StartAt = baseDate.AddDays(10), EndAt = baseDate.AddDays(11), TotalSeats = default },
+            new() { Id = Guid.NewGuid(), Title = "Conference", StartAt = baseDate.AddDays(1), EndAt = baseDate.AddDays(2), TotalSeats = default }
         };
 
         // Данные для фильтрации по всем параметрам

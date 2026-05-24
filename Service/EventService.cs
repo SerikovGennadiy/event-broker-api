@@ -29,14 +29,11 @@ public class EventService(IRepositoryManager repositoryManager, IMapper mapper) 
         return mapper.Map<EventInfo>(entity);
     }
 
-
     public EventInfo CreateEvent(CreateEvent eventDTO)
     {
        ValidateEvent(eventDTO);
 
-       var entity = mapper.Map<Event>(eventDTO);   
-       entity.Id = Guid.CreateVersion7();
-
+       var entity = Event.Create(eventDTO.Title, eventDTO.StartAt, eventDTO.EndAt, eventDTO.Description, eventDTO.TotalSeats);
        repositoryManager.Event.CreateEvent(entity);
 
        return mapper.Map<EventInfo>(entity);
@@ -51,9 +48,6 @@ public class EventService(IRepositoryManager repositoryManager, IMapper mapper) 
         // обновление только измененных полей маппером
         entity = mapper.Map<Event>(eventDTO);
         // пока что EventDTO общий
-        // TODO разбить EventDTO на CreateEventDTO и UpdateEventDTO
-        entity.Id = eventId;
-
         if(repositoryManager.Event is EventRepository repo)
         {
             repo.Update(entity);

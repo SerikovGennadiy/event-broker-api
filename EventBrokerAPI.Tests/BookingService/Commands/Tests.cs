@@ -20,7 +20,8 @@ public class Tests(BookingServiceFixture fixture) : IClassFixture<BookingService
             Id = eventId,
             Title = "Test",
             StartAt = DateTime.UtcNow,
-            EndAt = DateTime.UtcNow.AddDays(1)
+            EndAt = DateTime.UtcNow.AddDays(1),
+            TotalSeats = default
         });
 
         _fixture.MapperMock
@@ -50,7 +51,8 @@ public class Tests(BookingServiceFixture fixture) : IClassFixture<BookingService
             Id = eventId,
             Title = "Test",
             StartAt = DateTime.UtcNow,
-            EndAt = DateTime.UtcNow.AddDays(1)
+            EndAt = DateTime.UtcNow.AddDays(1),
+            TotalSeats = default
         });
 
         _fixture.MapperMock
