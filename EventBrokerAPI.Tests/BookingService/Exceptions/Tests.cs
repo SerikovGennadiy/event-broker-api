@@ -95,5 +95,4 @@ public class Tests(BookingServiceFixture fixture) : IClassFixture<BookingService
             () => _fixture.BookingService.CreateBookingAsync(eventId, CancellationToken.None)
         );
     }
-
 }

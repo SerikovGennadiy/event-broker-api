@@ -121,6 +121,69 @@ public class Tests(BookingServiceFixture fixture) : IClassFixture<BookingService
 
     [Fact]
     [Trait("Booking", "Commands")]
+    public async Task RejectBooking_AllowsNewBooking_OnSameSeat()
+    {
+        // Arrange
+        var eventId = Guid.NewGuid();
+        var testEvent = new Event
+        {
+            Id = eventId,
+            Title = "Test Event",
+            Description = "Test Description",
+            StartAt = DateTime.UtcNow,
+            EndAt = DateTime.UtcNow.AddDays(1),
+            TotalSeats = 1,
+            AvailableSeats = 1
+        };
+
+        // Настраиваем маппер
+        _fixture.MapperMock
+            .Setup(m => m.Map<BookingDTO>(It.IsAny<Booking>()))
+            .Returns((Booking b) => new BookingDTO(
+                b.Id,
+                b.EventId,
+                b.Status,
+                b.CreatedAt,
+                b.ProcessedAt
+            ));
+
+        _fixture.TestEvents[eventId] = testEvent;
+
+        var capturedBookings = new List<Booking>();
+        _fixture.BookingRepositoryMock
+            .Setup(r => r.CreateBooking(It.IsAny<Booking>()))
+            .Callback<Booking>(b =>
+            {
+                capturedBookings.Add(b);
+                _fixture.BookingRepositoryMock
+                    .Setup(r => r.GetById(b.Id))
+                    .Returns(b);
+            });
+
+        // Act - создаем бронь и отменяем её
+        var firstBooking = await _fixture.BookingService.CreateBookingAsync(
+            eventId,
+            CancellationToken.None
+        );
+
+        _fixture.BookingService.RejectBooking(firstBooking.Id);
+
+        // Создаем новую бронь после отмены
+        var secondBooking = await _fixture.BookingService.CreateBookingAsync(
+            eventId,
+            CancellationToken.None
+        );
+
+        // Assert
+        Assert.NotEqual(firstBooking.Id, secondBooking.Id);
+        Assert.Equal(0, testEvent.AvailableSeats);
+        Assert.Equal(BookingStatus.Rejected, capturedBookings.First().Status);
+        Assert.Equal(BookingStatus.Pending, secondBooking.Status);
+    }
+
+
+    [Fact]
+    [Trait("Booking", "Commands")]
     public async Task CreateBooking_DecreasesAvailableSeats_ByOne()
     {
         // Arrange
