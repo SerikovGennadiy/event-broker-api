@@ -125,16 +125,7 @@ public class Tests(BookingServiceFixture fixture) : IClassFixture<BookingService
     {
         // Arrange
         var eventId = Guid.NewGuid();
-        var testEvent = new Event
-        {
-            Id = eventId,
-            Title = "Test Event",
-            Description = "Test Description",
-            StartAt = DateTime.UtcNow,
-            EndAt = DateTime.UtcNow.AddDays(1),
-            TotalSeats = 1,
-            AvailableSeats = 1
-        };
+        var testEvent = CreateTestEvent(eventId, totalSeats: 1);
 
         // Настраиваем маппер
         _fixture.MapperMock
@@ -188,16 +179,7 @@ public class Tests(BookingServiceFixture fixture) : IClassFixture<BookingService
     {
         // Arrange
         var eventId = Guid.NewGuid();
-        var testEvent = new Event
-        {
-            Id = eventId,
-            Title = "Test Event",
-            Description = "Test Description",
-            StartAt = DateTime.UtcNow,
-            EndAt = DateTime.UtcNow.AddDays(1),
-            TotalSeats = 10,
-            AvailableSeats = 10
-        };
+        var testEvent = CreateTestEvent(eventId, totalSeats: 10);
 
         // Настраиваем маппер
         _fixture.MapperMock
@@ -239,16 +221,7 @@ public class Tests(BookingServiceFixture fixture) : IClassFixture<BookingService
         // Arrange
         var eventId = Guid.NewGuid();
         var totalSeats = 5;
-        var testEvent = new Event
-        {
-            Id = eventId,
-            Title = "Test Event",
-            Description = "Test Description",
-            StartAt = DateTime.UtcNow,
-            EndAt = DateTime.UtcNow.AddDays(1),
-            TotalSeats = totalSeats,
-            AvailableSeats = totalSeats
-        };
+        var testEvent = CreateTestEvent(eventId, totalSeats);
 
         // Настраиваем маппер
         _fixture.MapperMock
@@ -286,5 +259,17 @@ public class Tests(BookingServiceFixture fixture) : IClassFixture<BookingService
           Times.Exactly(totalSeats)
        );
     }
-
+    private static Event CreateTestEvent(Guid eventId, int totalSeats)
+    {
+        return new Event
+        {
+            Id = eventId,
+            Title = "Test Event",
+            Description = "Test Description",
+            StartAt = DateTime.UtcNow,
+            EndAt = DateTime.UtcNow.AddDays(1),
+            TotalSeats = totalSeats,
+            AvailableSeats = totalSeats
+        };
+    }
 }
