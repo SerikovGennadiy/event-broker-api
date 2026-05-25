@@ -77,7 +77,7 @@ public class Tests : IClassFixture<EventServiceFixture>
         // Arrage
         ResetCallCounters();
 
-        var eventGuid = Guid.CreateVersion7();
+        var eventGuid = Guid.NewGuid();
         Event @event = new() { Id = eventGuid, Title = "Event 1", StartAt = DateTime.UtcNow, EndAt = DateTime.UtcNow.AddDays(1), TotalSeats = default };
         EventDTO eventDTO = @event.toDTO();
 

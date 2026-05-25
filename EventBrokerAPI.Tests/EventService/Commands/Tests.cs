@@ -19,7 +19,7 @@ public class Tests : IClassFixture<EventServiceFixture>
     public void CreateEvent_ValidData_ReturnsEvent()
     {
         // Arrange
-        var createdEventGuid = Guid.CreateVersion7();
+        var createdEventGuid = Guid.NewGuid();
 
         // Создаем EventInfo без Id
         var createEventDTO = new CreateEvent(
@@ -67,7 +67,7 @@ public class Tests : IClassFixture<EventServiceFixture>
     public void UpdateEvent_WithValidData_ReturnUpdatedSameEvent()
     {
         // Arrange
-        Guid eventGuid = Guid.CreateVersion7();
+        Guid eventGuid = Guid.NewGuid();
         Event @event = new Event()
         {
             Id = eventGuid,
@@ -103,7 +103,7 @@ public class Tests : IClassFixture<EventServiceFixture>
     public void DeleteEvent_ByGuidId_WithoutReturns()
     {
         // Arrange
-        Guid eventGuid = Guid.CreateVersion7();
+        Guid eventGuid = Guid.NewGuid();
         Event @event = new Event()
         {
             Id = eventGuid,

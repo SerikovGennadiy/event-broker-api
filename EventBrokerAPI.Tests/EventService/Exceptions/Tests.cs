@@ -18,11 +18,11 @@ public class Tests : IClassFixture<EventServiceFixture>
     public void GetEventById_NotExistId_ThrowsEventNotFoundException()
     {
         // Arrange
-        var unexistingGuid = Guid.CreateVersion7();
+        var unexistingGuid = Guid.NewGuid();
         List<Event> events = [
-            new () { Id = Guid.CreateVersion7(), Title = "A", StartAt = DateTime.UtcNow, EndAt = DateTime.UtcNow.AddDays(2), TotalSeats = default },
-            new () { Id = Guid.CreateVersion7(), Title = "B", StartAt = DateTime.UtcNow.AddDays(2), EndAt = DateTime.UtcNow.AddDays(1), TotalSeats = default },
-            new () { Id = Guid.CreateVersion7(), Title = "C", StartAt = DateTime.UtcNow.AddDays(5), EndAt = DateTime.UtcNow.AddDays(1), TotalSeats = default}
+            new () { Id = Guid.NewGuid(), Title = "A", StartAt = DateTime.UtcNow, EndAt = DateTime.UtcNow.AddDays(2), TotalSeats = default },
+            new () { Id = Guid.NewGuid(), Title = "B", StartAt = DateTime.UtcNow.AddDays(2), EndAt = DateTime.UtcNow.AddDays(1), TotalSeats = default },
+            new () { Id = Guid.NewGuid(), Title = "C", StartAt = DateTime.UtcNow.AddDays(5), EndAt = DateTime.UtcNow.AddDays(1), TotalSeats = default}
         ];
 
         _fixture.EventRepositoryMock.Setup(r => r.GetById(unexistingGuid)).Returns((Event?)null);
