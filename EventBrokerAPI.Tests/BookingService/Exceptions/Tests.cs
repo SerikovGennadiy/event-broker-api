@@ -5,6 +5,7 @@ using Moq;
 
 namespace EventBrokerAPI.Tests.BookingService.Exceptions;
 
+[Collection("BookingServiceTests")]
 public class Tests(BookingServiceFixture fixture) : IClassFixture<BookingServiceFixture>
 {
     private readonly BookingServiceFixture _fixture = fixture;

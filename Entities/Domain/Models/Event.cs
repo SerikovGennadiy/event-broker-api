@@ -25,7 +25,7 @@ public class Event : IdEntity, IReadOnlyEvent
     public required int TotalSeats { get; set; }
 
     /// <summary>Количество оставшихся свободных мест на мероприятии</summary>
-    public int AvailableSeats { get; private set; }
+    public int AvailableSeats { get; internal set; }
 
     public static Event Create(string Title, DateTime StartAt, DateTime EndAt, string? description, int totalSeats)
     {

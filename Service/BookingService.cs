@@ -12,6 +12,7 @@ public class BookingService(IRepositoryManager repositoryManager, IMapper mapper
 {
     private readonly object _bookingLock = new();
 
+    #region Управление уведомлениями
     /// <summary>Отбилось желание забронироваться на мероприятие</summary>
     private static Action<(Guid eventId, int seats)>? Rejected;
     internal static void OnRejected(Action<(Guid eventId, int seats)> handler) => Rejected ??= handler;
@@ -20,6 +21,12 @@ public class BookingService(IRepositoryManager repositoryManager, IMapper mapper
     private static Action<(Guid eventId, int seats)>? Booked;
     internal static void OnBooked(Action<(Guid eventId, int seats)> handler) => Booked ??= handler;
 
+    internal static void ClearHandlers()
+    {
+        Booked = null;
+        Rejected = null;
+    }
+    #endregion
 
     public async Task<BookingDTO> CreateBookingAsync(Guid eventId, CancellationToken cancellationToken)
     {

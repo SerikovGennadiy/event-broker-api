@@ -1,8 +1,11 @@
 ﻿using Entities.Domain.Models;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Shared.DTO;
 
 namespace EventBrokerAPI.Tests.BookingService.Commands;
+
+[Collection("BookingServiceTests")]
 public class Tests(BookingServiceFixture fixture) : IClassFixture<BookingServiceFixture>
 {
     private readonly BookingServiceFixture _fixture = fixture;
@@ -11,18 +14,23 @@ public class Tests(BookingServiceFixture fixture) : IClassFixture<BookingService
     [Trait("Booking", "Commands")]
     public async Task CreateBooking_ForExistingEvent_ReturnsPendingBooking()
     {
-        _fixture.BookingRepositoryMock.Invocations.Clear();
+        _fixture.ResetAllMocks();
         // Arrange
         var eventId = Guid.NewGuid();
-
-        _fixture.EventRepositoryMock.Setup(r => r.GetById(eventId)).Returns(new Event
+        var @event = new Event
         {
             Id = eventId,
             Title = "Test",
             StartAt = DateTime.UtcNow,
             EndAt = DateTime.UtcNow.AddDays(1),
-            TotalSeats = default
-        });
+            // при default (0) тест падает (не хватает мест)
+            TotalSeats = 10,
+            AvailableSeats = 10
+        };
+
+        _fixture.TestEvents[eventId] = @event;
+
+        _fixture.EventRepositoryMock.Setup(r => r.GetById(eventId)).Returns(@event);
 
         _fixture.MapperMock
             .Setup(m => m.Map<BookingDTO>(It.IsAny<Booking>()))
@@ -43,17 +51,23 @@ public class Tests(BookingServiceFixture fixture) : IClassFixture<BookingService
     [Trait("Booking", "Commands")]
     public async Task CreateBookings_UniqueIds_AllCreated()
     {
-        _fixture.RepositoryManagerMock.Invocations.Clear(); 
+        _fixture.ResetAllMocks();
         // Arrange
         var eventId = Guid.NewGuid();
-        _fixture.EventRepositoryMock.Setup(r => r.GetById(eventId)).Returns(new Event
+        var @event = new Event
         {
             Id = eventId,
             Title = "Test",
             StartAt = DateTime.UtcNow,
             EndAt = DateTime.UtcNow.AddDays(1),
-            TotalSeats = default
-        });
+            // при default (0) тест падает (не хватает мест)
+            TotalSeats = 10,
+            AvailableSeats = 10
+        };
+
+        _fixture.TestEvents[eventId] = @event;
+
+        _fixture.EventRepositoryMock.Setup(r => r.GetById(eventId)).Returns(@event);
 
         _fixture.MapperMock
             .Setup(m => m.Map<BookingDTO>(It.IsAny<Booking>()))
@@ -102,5 +116,53 @@ public class Tests(BookingServiceFixture fixture) : IClassFixture<BookingService
         // Assert Rejected
         Assert.Equal(BookingStatus.Rejected, rejected.Status);
         Assert.NotNull(rejected.ProcessedAt);
+    }
+
+    [Fact]
+    [Trait("Booking", "Commands")]
+    public async Task CreateBooking_DecreasesAvailableSeats_ByOne()
+    {
+        // Arrange
+        var eventId = Guid.NewGuid();
+        var testEvent = new Event
+        {
+            Id = eventId,
+            Title = "Test Event",
+            Description = "Test Description",
+            StartAt = DateTime.UtcNow,
+            EndAt = DateTime.UtcNow.AddDays(1),
+            TotalSeats = 10,
+            AvailableSeats = 10
+        };
+
+        // Настраиваем маппер
+        _fixture.MapperMock
+            .Setup(m => m.Map<BookingDTO>(It.IsAny<Booking>()))
+            .Returns((Booking b) => new BookingDTO(
+                b.Id,
+                b.EventId,
+                b.Status,
+                b.CreatedAt,
+                b.ProcessedAt
+            ));
+
+        _fixture.TestEvents[eventId] = testEvent;
+       
+        // Act
+        var booking = await _fixture.BookingService.CreateBookingAsync(
+            eventId,
+            CancellationToken.None
+        );
+
+        // Assert
+        Assert.NotNull(booking);
+        Assert.Equal(9, testEvent.AvailableSeats);
+        Assert.Equal(BookingStatus.Pending, booking.Status);
+        Assert.Equal(eventId, booking.EventId);
+
+        _fixture.BookingRepositoryMock.Verify(
+            r => r.CreateBooking(It.IsAny<Booking>()),
+            Times.Once
+        );
     }
 }
