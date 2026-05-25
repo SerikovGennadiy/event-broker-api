@@ -41,7 +41,7 @@ public class Tests : IClassFixture<EventServiceFixture>
     {
         // Arrange
         var unexistingGuid = Guid.NewGuid();
-        var dto = new EventDTO("Title", "Description", DateTime.UtcNow, DateTime.UtcNow.AddDays(1), TotalSeats: default);
+        var dto = new EventDTO("Title", "Description", DateTime.UtcNow, DateTime.UtcNow.AddDays(1), TotalSeats: 10);
         _fixture.EventRepositoryMock.Setup(r => r.GetById(unexistingGuid)).Returns((Event?)null);
 
         // Act & Assert
@@ -57,11 +57,27 @@ public class Tests : IClassFixture<EventServiceFixture>
                                        Description: "Info about event",
                                        StartAt: DateTime.UtcNow,
                                        EndAt: DateTime.UtcNow.AddDays(1),
-                                       TotalSeats: default);
+                                       TotalSeats: 10);
         // Act & Assert
         var expeption = Assert.Throws<EventNoTitleException>(() => _fixture.EventService.CreateEvent(eventDTO));
         Assert.Equal("Отсуствует наименование события", expeption.Message);
     }
+
+    [Fact]
+    [Trait("Event", "Exceptions")]
+    public void CreateEvent_IncorrectTotalSeats_ThrowsEventBadTotalSeatsQuantity()
+    {
+        // Arrange
+        var eventDTO = new CreateEvent(Title: "Event without seats", // некорректный заголовок
+                                       Description: "Info about event",
+                                       StartAt: DateTime.UtcNow,
+                                       EndAt: DateTime.UtcNow.AddDays(1),
+                                       TotalSeats: 0);
+        // Act & Assert
+        var expeption = Assert.Throws<EventBadTotalSeatsQuantity>(() => _fixture.EventService.CreateEvent(eventDTO));
+        Assert.Equal("Общее количество мест на мероприятии должно быть больше 0", expeption.Message);
+    }
+
 
     [Fact]
     [Trait("Event", "Exceptions")]
@@ -75,7 +91,7 @@ public class Tests : IClassFixture<EventServiceFixture>
             Title = "Existing Event",
             StartAt = DateTime.UtcNow,
             EndAt = DateTime.UtcNow.AddDays(1),
-            TotalSeats = default
+            TotalSeats = 10
         };
 
         // Arrange
@@ -84,7 +100,7 @@ public class Tests : IClassFixture<EventServiceFixture>
                                     Description: "Info about event",
                                     StartAt: DateTime.UtcNow,
                                     EndAt: DateTime.UtcNow.AddDays(-2),
-                                    TotalSeats: default
+                                    TotalSeats: 10
                                     ); // некорректная дата окончания
 
         _fixture.EventRepositoryMock.Setup(r => r.GetById(existingGuid)).Returns(existingEvent);

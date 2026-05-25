@@ -29,6 +29,9 @@ public class Event : IdEntity, IReadOnlyEvent
 
     public static Event Create(string Title, DateTime StartAt, DateTime EndAt, string? description, int totalSeats)
     {
+        if (totalSeats <= 0)
+            throw new ValidationException("Общее количество мест на мероприятие должно быть больше 0");
+
         return new Event() {
             Id = Guid.CreateVersion7(),
             Title = Title,
