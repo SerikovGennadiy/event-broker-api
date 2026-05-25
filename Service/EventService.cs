@@ -7,6 +7,7 @@ using Entities.ErrorHandling.Exceptions.Event;
 using Repository;
 using Shared.DTO;
 using Shared.RequestSpecification;
+using System.ComponentModel.DataAnnotations;
 
 namespace Service;
 
@@ -91,6 +92,9 @@ public class EventService : IEventService
 
         if (eventDTO.EndAt <= eventDTO.StartAt)
             throw new EventBadDateRangeException();
+
+        if (eventDTO.TotalSeats <= 0)
+            throw new EventBadTotalSeatsQuantity();
     }
 
     private void ReserveSeats((Guid eventId, int seats) callFromBooking)

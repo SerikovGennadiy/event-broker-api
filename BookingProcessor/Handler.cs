@@ -10,6 +10,9 @@ public class Handler : BackgroundService
     private readonly IServiceScopeFactory _serviceScopeFactory;
     private readonly ILogger<Handler> _logger;
     private readonly SemaphoreSlim _processingSemaphore = new(1, 1);
+
+    private const int ITERATION_DELAY = 3;
+    private const int EXTERNAL_API_CALL_IMITATION_TIME = 2;
     public Handler(IServiceScopeFactory scopeFactory, ILogger<Handler> logger)
     {
         _serviceScopeFactory = scopeFactory;
@@ -38,10 +41,9 @@ public class Handler : BackgroundService
             }
             finally
             {
-                await Task.Delay(TimeSpan.FromSeconds(3), stoppingToken);
+                await Task.Delay(TimeSpan.FromSeconds(ITERATION_DELAY), stoppingToken);
             }
         }
-
         _logger.LogInformation("Cервис обработки бронирования мероприятий остановлен");
     }
 
@@ -71,7 +73,7 @@ public class Handler : BackgroundService
         try
         {
             // Имитация внешнего вызова
-            await Task.Delay(TimeSpan.FromSeconds(2), stoppingToken);
+            await Task.Delay(TimeSpan.FromSeconds(EXTERNAL_API_CALL_IMITATION_TIME), stoppingToken);
 
             await _processingSemaphore.WaitAsync(stoppingToken);
             semaphoreAcquired = true;
