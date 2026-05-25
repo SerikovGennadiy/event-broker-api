@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging;
 using Moq;
 using Shared.DTO;
+using System.Collections.Concurrent;
 
 namespace EventBrokerAPI.Tests.BookingService.Commands;
 
@@ -165,4 +166,62 @@ public class Tests(BookingServiceFixture fixture) : IClassFixture<BookingService
             Times.Once
         );
     }
+
+    [Fact]
+    [Trait("Booking", "Commands")]
+    public async Task CreateMultipleBookings_UpToLimit_AllSuccessfulWithUniqueIds()
+    {
+        _fixture.ResetAllMocks();
+        // Arrange
+        // Arrange
+        var eventId = Guid.NewGuid();
+        var totalSeats = 5;
+        var testEvent = new Event
+        {
+            Id = eventId,
+            Title = "Test Event",
+            Description = "Test Description",
+            StartAt = DateTime.UtcNow,
+            EndAt = DateTime.UtcNow.AddDays(1),
+            TotalSeats = totalSeats,
+            AvailableSeats = totalSeats
+        };
+
+        // Настраиваем маппер
+        _fixture.MapperMock
+            .Setup(m => m.Map<BookingDTO>(It.IsAny<Booking>()))
+            .Returns((Booking b) => new BookingDTO(
+                b.Id,
+                b.EventId,
+                b.Status,
+                b.CreatedAt,
+                b.ProcessedAt
+            ));
+
+        _fixture.TestEvents[eventId] = testEvent;
+
+        var bookingIds = new ConcurrentBag<Guid>();
+
+        // Act
+        var tasks = Enumerable.Range(0, totalSeats).Select(async _ =>
+        {
+            var booking = await _fixture.BookingService.CreateBookingAsync(
+                eventId,
+                CancellationToken.None
+            );
+            bookingIds.Add(booking.Id);
+        });
+
+        await Task.WhenAll(tasks);
+
+        // Assert
+        Assert.Equal(totalSeats, bookingIds.Count);
+        Assert.Equal(totalSeats, bookingIds.Distinct().Count());
+        Assert.Equal(0, testEvent.AvailableSeats);
+        _fixture.BookingRepositoryMock.Verify(
+           r => r.CreateBooking(It.IsAny<Booking>()),
+          Times.Exactly(totalSeats)
+       );
+    }
+
 }
