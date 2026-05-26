@@ -2,9 +2,11 @@
 using Entities.ErrorHandling.Exceptions.Booking;
 using Entities.ErrorHandling.Exceptions.Event;
 using Moq;
+using Shared.DTO;
 
 namespace EventBrokerAPI.Tests.BookingService.Exceptions;
 
+[Collection("BookingServiceTests")]
 public class Tests(BookingServiceFixture fixture) : IClassFixture<BookingServiceFixture>
 {
     private readonly BookingServiceFixture _fixture = fixture;
@@ -52,5 +54,45 @@ public class Tests(BookingServiceFixture fixture) : IClassFixture<BookingService
 
         // Act & Assert
         await Assert.ThrowsAsync<BookingNotFoundException>(() => _fixture.BookingService.GetBookingByIdAsync(bookingId, CancellationToken.None));
+    }
+
+    [Fact]
+    [Trait("Booking", "Exceptions")]
+    public async Task CreateBooking_WhenNoSeatsAvailable_ThrowsNoAvailableSeatsException()
+    {
+        // Arrange
+        var eventId = Guid.NewGuid();
+        var onlyOneSeat = 1;
+        var testEvent = new Event
+        {
+            Id = eventId,
+            Title = "Test Event",
+            Description = "Test Description",
+            StartAt = DateTime.UtcNow,
+            EndAt = DateTime.UtcNow.AddDays(1),
+            TotalSeats = onlyOneSeat,
+            AvailableSeats = onlyOneSeat
+        };
+
+        // Настраиваем маппер
+        _fixture.MapperMock
+            .Setup(m => m.Map<BookingDTO>(It.IsAny<Booking>()))
+            .Returns((Booking b) => new BookingDTO(
+                b.Id,
+                b.EventId,
+                b.Status,
+                b.CreatedAt,
+                b.ProcessedAt
+            ));
+
+        _fixture.TestEvents[eventId] = testEvent;
+
+        // Занимаем единственное место
+        await _fixture.BookingService.CreateBookingAsync(eventId, CancellationToken.None);
+
+        // Act & Assert
+        var exception = await Assert.ThrowsAsync<NoAvailableSeatsException>(
+            () => _fixture.BookingService.CreateBookingAsync(eventId, CancellationToken.None)
+        );
     }
 }

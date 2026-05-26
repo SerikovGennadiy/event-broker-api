@@ -4,7 +4,7 @@ namespace Contracts.Service;
 
 public interface IBookingService
 {
-    IEnumerable<BookingDTO> GetPendingBookings();
+    ICollection<BookingDTO> GetPendingBookings();
     void ConfirmBooking(Guid bookingId);
     void RejectBooking(Guid bookingId);
     Task<BookingDTO> CreateBookingAsync(Guid eventId, CancellationToken cancellationToken = default);

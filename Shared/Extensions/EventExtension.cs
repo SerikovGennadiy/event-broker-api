@@ -5,12 +5,14 @@ namespace Shared.ModelExtensions;
 
 public static class EventExtension
 {
-    public static EventDTO toDTO(this IReadOnlyEvent @event)
+    public static EventInfo toDTO(this IReadOnlyEvent @event)
     {
-        return new EventDTO(Id: @event.Id,
-                            Title: @event.Title,
-                            Description: @event.Description,
-                            StartAt: @event.StartAt,
-                            @event.EndAt);
+        return new EventInfo(Id: @event.Id,
+                             Title: @event.Title,
+                             Description: @event.Description,
+                             StartAt: @event.StartAt,
+                             EndAt: @event.EndAt,
+                             TotalSeats: @event.TotalSeats,
+                             AvailableSeats: @event.AvailableSeats);
     }
 }
