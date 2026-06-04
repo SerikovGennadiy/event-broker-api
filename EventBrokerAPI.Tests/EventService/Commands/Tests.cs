@@ -18,35 +18,47 @@ public class Tests : IClassFixture<EventServiceFixture>
     [Trait("Event", "Commands")]
     public void CreateEvent_ValidData_ReturnsEvent()
     {
-        //Arrange
-        var createdEventGuid = Guid.CreateVersion7();
-        var eventDTO = new EventDTO(Id: Guid.Empty,
-                                    Title: "Event: hiking",
-                                    Description: "Info about event",
-                                    StartAt: new(2026, 5, 2),
-                                    EndAt: new(2026, 5, 3));
+        // Arrange
+        var createdEventGuid = Guid.NewGuid();
 
-        var eventEntity = new Event()
+        // Создаем EventInfo без Id
+        var createEventDTO = new CreateEvent(
+            Title: "Event: hiking",
+            Description: "Info about event",
+            StartAt: new DateTime(2026, 5, 2),
+            EndAt: new DateTime(2026, 5, 3),
+            TotalSeats: 100
+        );
+
+        // Добавляем Id через with (теперь работает!)
+        var @event = new Event()
         {
-            Id = Guid.Empty,
+            Id = createdEventGuid,
             Title = "Event: hiking",
             Description = "Info about event",
-            StartAt = new(2026, 5, 2),
-            EndAt = new(2026, 5, 3)
+            StartAt = new DateTime(2026, 5, 2),
+            EndAt = new DateTime(2026, 5, 3),
+            TotalSeats = 100
         };
 
-        var createdEventDTO = eventDTO with { Id = createdEventGuid };
+        var eventDTO = new EventInfo(Id: createdEventGuid,
+                                     Title: "Event: hiking",
+                                     Description: "Info about event",
+                                     StartAt: new DateTime(2026, 5, 2),
+                                     EndAt: new DateTime(2026, 5, 3),
+                                     TotalSeats: 100,
+                                     AvailableSeats: 100);
 
-        _fixture.MapperMock.Setup(m => m.Map<Event>(eventDTO)).Returns(eventEntity);
-        _fixture.MapperMock.Setup(m => m.Map<EventDTO>(It.IsAny<Event>())).Returns(createdEventDTO);
+        _fixture.MapperMock.Setup(m => m.Map<Event>(createEventDTO)).Returns(@event);
+        _fixture.MapperMock.Setup(m => m.Map<EventInfo>(It.IsAny<Event>())).Returns(eventDTO);
         _fixture.EventRepositoryMock.Setup(repo => repo.CreateEvent(It.IsAny<Event>())).Verifiable();
 
         // Act
-        var result = _fixture.EventService.CreateEvent(eventDTO);
+        var result = _fixture.EventService.CreateEvent(createEventDTO);
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(createdEventDTO, result);
+        Assert.Equal(eventDTO, result);
         _fixture.RepositoryManagerMock.Verify(rm => rm.Event.CreateEvent(It.IsAny<Event>()), Times.Once());
     }
 
@@ -55,13 +67,14 @@ public class Tests : IClassFixture<EventServiceFixture>
     public void UpdateEvent_WithValidData_ReturnUpdatedSameEvent()
     {
         // Arrange
-        Guid eventGuid = Guid.CreateVersion7();
+        Guid eventGuid = Guid.NewGuid();
         Event @event = new Event()
         {
             Id = eventGuid,
             Title = "Test event",
             StartAt = DateTime.UtcNow,
-            EndAt = DateTime.UtcNow.AddDays(2)
+            EndAt = DateTime.UtcNow.AddDays(2),
+            TotalSeats = 100
         };
 
         Event updatedEvent = new Event()
@@ -70,7 +83,8 @@ public class Tests : IClassFixture<EventServiceFixture>
             Title = "Updated test event",
             Description = "Added description",
             StartAt = DateTime.UtcNow.AddDays(3),
-            EndAt = DateTime.UtcNow.AddDays(4)
+            EndAt = DateTime.UtcNow.AddDays(4),
+            TotalSeats = 100
         };
         EventDTO updatedEventDTO = updatedEvent.toDTO();
 
@@ -89,13 +103,14 @@ public class Tests : IClassFixture<EventServiceFixture>
     public void DeleteEvent_ByGuidId_WithoutReturns()
     {
         // Arrange
-        Guid eventGuid = Guid.CreateVersion7();
+        Guid eventGuid = Guid.NewGuid();
         Event @event = new Event()
         {
             Id = eventGuid,
             Title = "Test event",
             StartAt = DateTime.UtcNow,
-            EndAt = DateTime.UtcNow.AddDays(2)
+            EndAt = DateTime.UtcNow.AddDays(2),
+            TotalSeats = 100
         };
         EventDTO eventDTO = @event.toDTO();
 

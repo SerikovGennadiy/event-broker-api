@@ -1,16 +1,33 @@
-﻿using Shared.DTO;
-using Contracts.Service;
+﻿using AutoMapper;
 using Contracts.Repository;
-using AutoMapper;
-using Entities.ErrorHandling.Exceptions.Booking;
+using Contracts.Service;
 using Entities.Domain.Models;
-using Entities.ErrorHandling.Exceptions.Event;
+using Entities.ErrorHandling.Exceptions.Booking;
 using Repository;
+using Shared.DTO;
 
 namespace Service;
 
 public class BookingService(IRepositoryManager repositoryManager, IMapper mapper) : IBookingService
 {
+    private readonly object _bookingLock = new();
+
+    #region Управление уведомлениями
+    /// <summary>Отбилось желание забронироваться на мероприятие</summary>
+    private static Action<(Guid eventId, int seats)>? Rejected;
+    internal static void OnRejected(Action<(Guid eventId, int seats)> handler) => Rejected ??= handler;
+
+    /// <summary>Выражаем желание забронироваться на мероприятие</summary>
+    private static Action<(Guid eventId, int seats)>? Booked;
+    internal static void OnBooked(Action<(Guid eventId, int seats)> handler) => Booked ??= handler;
+
+    internal static void ClearHandlers()
+    {
+        Booked = null;
+        Rejected = null;
+    }
+    #endregion
+
     public async Task<BookingDTO> CreateBookingAsync(Guid eventId, CancellationToken cancellationToken)
     {
         // TODO - переделать под ORM, поддерживающую асинхронные операции, чтобы не блокировать поток при работе с БД
@@ -18,10 +35,14 @@ public class BookingService(IRepositoryManager repositoryManager, IMapper mapper
             throw new OperationCanceledException(cancellationToken);
         await Task.Yield();
 
-        ValidateBookingFor(eventId);
+        Booking booking;
+        lock (_bookingLock)
+        {
+            Booked?.Invoke((eventId, seats: 1));
 
-        var booking = new Booking(Guid.NewGuid(), eventId);
-        repositoryManager.Booking.CreateBooking(booking);
+            booking = new Booking(Guid.NewGuid(), eventId);
+            repositoryManager.Booking.CreateBooking(booking);
+        }
 
         return mapper.Map<BookingDTO>(booking);
     }
@@ -37,10 +58,10 @@ public class BookingService(IRepositoryManager repositoryManager, IMapper mapper
         return mapper.Map<BookingDTO>(booking);
     }
 
-    public IEnumerable<BookingDTO> GetPendingBookings()
+    public ICollection<BookingDTO> GetPendingBookings()
     {
         var bookings = repositoryManager.Booking.GetAllPendingBookings();
-        var pendingBookingDTOs = mapper.Map<IEnumerable<BookingDTO>>(bookings);
+        var pendingBookingDTOs = mapper.Map<ICollection<BookingDTO>>(bookings);
         return pendingBookingDTOs;
     }
 
@@ -51,13 +72,6 @@ public class BookingService(IRepositoryManager repositoryManager, IMapper mapper
             throw new BookingNotFoundException(bookingId);
 
         return entity;
-    }
-
-    private void ValidateBookingFor(Guid eventId)
-    {
-       var @event = repositoryManager.Event.GetById(eventId);
-         if (@event is null)
-                throw new EventNotFoundException(eventId);
     }
 
     public void ConfirmBooking(Guid bookingId)
@@ -76,7 +90,9 @@ public class BookingService(IRepositoryManager repositoryManager, IMapper mapper
         var booking = GetBooking(bookingId);
         booking.Reject();
 
-        if(repositoryManager.Booking is BookingRepository repo)
+        Rejected?.Invoke((eventId: booking.EventId, seats: 1));
+
+        if (repositoryManager.Booking is BookingRepository repo)
         {
             repo.Update(booking);
         }

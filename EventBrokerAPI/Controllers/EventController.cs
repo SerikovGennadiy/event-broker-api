@@ -1,4 +1,5 @@
 ﻿using Contracts.Service;
+using Entities.ErrorHandling.Model;
 using Microsoft.AspNetCore.Mvc;
 using Shared.DTO;
 using Shared.RequestSpecification;
@@ -30,13 +31,16 @@ public class EventController(IEventService eventService, IBookingService booking
 
     [HttpPost]
     [ValidateDTOFilter]
-    public IActionResult CreateEvent([FromBody] EventDTO eventDTO)
+    public IActionResult CreateEvent([FromBody] CreateEvent eventDTO)
     {
         var _event = eventService.CreateEvent(eventDTO);
         return CreatedAtRoute(routeName: "EventById", new { id = _event.Id }, _event);
     }
 
     [HttpPost("{eventId}/book")]
+    [ProducesResponseType(typeof(BookingDTO), StatusCodes.Status202Accepted)]
+    [ProducesResponseType(typeof(ErrorDetail), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ErrorDetail), StatusCodes.Status409Conflict)]
     public async Task<IActionResult> CreateEventBooking(Guid eventId, CancellationToken token)
     {
         var bookingDTO = await bookingService.CreateBookingAsync(eventId, token);
