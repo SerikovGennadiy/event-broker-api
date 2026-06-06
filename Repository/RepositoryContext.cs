@@ -1,9 +1,11 @@
 ﻿using Entities.Domain.Contract;
 using Entities.Domain.Models;
+using System;
 using System.Collections.Concurrent;
 
 namespace Repository;
 
+[Obsolete($"Используйте {nameof(AppDbContext)} вместо {nameof(RepositoryContext)}")]
 public class RepositoryContext
 {
     private readonly ConcurrentDictionary<Type, object> _dbSets = new();
