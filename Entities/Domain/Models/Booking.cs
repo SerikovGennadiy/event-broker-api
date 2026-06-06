@@ -32,6 +32,12 @@ public class Booking : IdEntity
     /// <summary>Дата и время обработки брони</summary>
     public DateTime? ProcessedAt { get; private set; }
 
+    /// <summary> Навигация на событие </summary>
+    public Event Event { get; set; } = null!;
+
+    // приватный конструктор под EFCore
+    private Booking() { }
+
     /// <summary> Конструктор для создания новой брони</summary>
     /// <param name="bookingId">Идентификатор брони</param>
     /// <param name="eventId">Идентификатор мероприятия</param>
@@ -71,4 +77,5 @@ public class Booking : IdEntity
         Status = BookingStatus.Pending;
         ProcessedAt = DateTime.UtcNow;
     }
+
 }
