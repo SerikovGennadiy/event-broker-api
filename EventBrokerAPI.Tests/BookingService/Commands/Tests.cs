@@ -101,7 +101,7 @@ public class Tests(BookingServiceFixture fixture) : IClassFixture<BookingService
             .Returns((Booking b) => new BookingDTO(b.Id, b.EventId, b.Status, b.CreatedAt, b.ProcessedAt));
 
         // Act - Confirm
-        _fixture.BookingService.ConfirmBooking(bookingId);
+        _fixture.BookingService.ConfirmBookingAsync(bookingId);
         var confirmed = await _fixture.BookingService.GetBookingByIdAsync(bookingId, CancellationToken.None);
 
         // Assert Confirmed
@@ -111,7 +111,7 @@ public class Tests(BookingServiceFixture fixture) : IClassFixture<BookingService
         // Act - Reset status to Pending then Reject
         booking.OnPending();
 
-        _fixture.BookingService.RejectBooking(bookingId);
+        _fixture.BookingService.RejectBooingAsync(bookingId);
         var rejected = await _fixture.BookingService.GetBookingByIdAsync(bookingId, CancellationToken.None);
 
         // Assert Rejected
@@ -157,7 +157,7 @@ public class Tests(BookingServiceFixture fixture) : IClassFixture<BookingService
             CancellationToken.None
         );
 
-        _fixture.BookingService.RejectBooking(firstBooking.Id);
+        _fixture.BookingService.RejectBooingAsync(firstBooking.Id);
 
         // Создаем новую бронь после отмены
         var secondBooking = await _fixture.BookingService.CreateBookingAsync(

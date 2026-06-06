@@ -14,7 +14,7 @@ public class EventController(IEventService eventService, IBookingService booking
     [HttpGet]
     public IActionResult GetAllEvents([FromQuery] EventParameters eventParameters)
     {
-        var result = eventService.GetAllEvents(eventParameters);
+        var result = eventService.GetAllEventsAsync(eventParameters);
 
         Response.Headers.Append("X-Pagination",
                JsonSerializer.Serialize(result.pageData));
@@ -25,7 +25,7 @@ public class EventController(IEventService eventService, IBookingService booking
     [HttpGet("{id:guid}", Name="EventById")]
     public IActionResult GetEvent(Guid id)
     {
-        var eventDTO = eventService.GetEventById(id);
+        var eventDTO = eventService.GetEventByIdAsync(id);
         return Ok(eventDTO);
     }
 
@@ -33,7 +33,7 @@ public class EventController(IEventService eventService, IBookingService booking
     [ValidateDTOFilter]
     public IActionResult CreateEvent([FromBody] CreateEvent eventDTO)
     {
-        var _event = eventService.CreateEvent(eventDTO);
+        var _event = eventService.CreateEventAsync(eventDTO);
         return CreatedAtRoute(routeName: "EventById", new { id = _event.Id }, _event);
     }
 
@@ -56,14 +56,14 @@ public class EventController(IEventService eventService, IBookingService booking
     [ValidateDTOFilter]
     public IActionResult UpdateEvent([FromRoute] Guid id, [FromBody] EventDTO eventDTO)
     {
-        eventService.UpdateEvent(id, eventDTO);
+        eventService.UpdateEventAsync(id, eventDTO);
         return Ok();
     }
 
     [HttpDelete("{id:guid}")]
     public IActionResult DeleteEvent(Guid id)
     {
-        eventService.DeleteEvent(id);
+        eventService.DeleteEventAsync(id);
         return Ok();
     }
 }

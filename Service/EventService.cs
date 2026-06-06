@@ -7,7 +7,6 @@ using Entities.ErrorHandling.Exceptions.Event;
 using Repository;
 using Shared.DTO;
 using Shared.RequestSpecification;
-using System.ComponentModel.DataAnnotations;
 
 namespace Service;
 
@@ -26,7 +25,7 @@ public class EventService : IEventService
         BookingService.OnRejected(ReleaseSeats);
     }
 
-    public (IEnumerable<EventInfo> eventDTOs, PaginatedResult pageData) GetAllEvents(EventParameters eventParameters)
+    public (IEnumerable<EventInfo> eventDTOs, PaginatedResult pageData) GetAllEventsAsync(EventParameters eventParameters)
     {
         // TODO этот инвариант должен сидеть в отдельном классе валидаторе, который будет использоваться в контроллере, а не в сервисе?
         if (!eventParameters.IsDateRangeValid)
@@ -38,13 +37,13 @@ public class EventService : IEventService
         return (eventDTOs, pageData: events.PageMetaData);
     }
 
-    public EventInfo GetEventById(Guid eventId)
+    public EventInfo GetEventByIdAsync(Guid eventId)
     {
         var entity = GetEvent(eventId);
         return mapper.Map<EventInfo>(entity);
     }
 
-    public EventInfo CreateEvent(CreateEvent eventDTO)
+    public EventInfo CreateEventAsync(CreateEvent eventDTO)
     {
        ValidateEvent(eventDTO);
 
@@ -54,7 +53,7 @@ public class EventService : IEventService
        return mapper.Map<EventInfo>(entity);
     }
 
-    public void UpdateEvent(Guid eventId, EventDTO eventDTO)
+    public void UpdateEventAsync(Guid eventId, EventDTO eventDTO)
     {
         ValidateEvent(eventDTO);
 
@@ -69,7 +68,7 @@ public class EventService : IEventService
         }
     }
 
-    public void DeleteEvent(Guid eventId)
+    public void DeleteEventAsync(Guid eventId)
     {
         var entity = GetEvent(eventId);
         repositoryManager.Event.DeleteEvent(entity);

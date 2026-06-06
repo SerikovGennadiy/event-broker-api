@@ -53,7 +53,7 @@ public class Handler : BackgroundService
         var bookingService = scope.ServiceProvider.GetRequiredService<IBookingService>();
         var eventService = scope.ServiceProvider.GetRequiredService<IEventService>();
 
-        var pendingBookings = bookingService.GetPendingBookings().ToList();
+        var pendingBookings = bookingService.GetPendingBookingsAsync().ToList();
         if (!pendingBookings.Any())
         {
             _logger.LogInformation("Неподтвержденные брониварония отсутсвуют");
@@ -86,7 +86,7 @@ public class Handler : BackgroundService
                 try
                 {
                     // Проверяем, что событие существует
-                    eventService.GetEventById(booking.EventId);
+                    eventService.GetEventByIdAsync(booking.EventId);
                 }
                 catch (Exception)
                 {
@@ -96,18 +96,18 @@ public class Handler : BackgroundService
                         booking.EventId,
                         pendingBookingId);
 
-                    bookingService.RejectBooking(pendingBookingId);
+                    bookingService.RejectBooingAsync(pendingBookingId);
                     return;
                 }
 
                 // Подтверждаем бронирование
-                bookingService.ConfirmBooking(pendingBookingId);
+                bookingService.ConfirmBookingAsync(pendingBookingId);
                 _logger.LogInformation("Бронирование {BookingId} успешно подтверждено", pendingBookingId);
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
                 _logger.LogWarning(ex, "Ошибка при подтверждении бронирования {BookingId}", pendingBookingId);
-                bookingService.RejectBooking(pendingBookingId);
+                bookingService.RejectBooingAsync(pendingBookingId);
             }
             finally
             {

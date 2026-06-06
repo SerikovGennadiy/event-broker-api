@@ -58,7 +58,7 @@ public class BookingService(IRepositoryManager repositoryManager, IMapper mapper
         return mapper.Map<BookingDTO>(booking);
     }
 
-    public ICollection<BookingDTO> GetPendingBookings()
+    public ICollection<BookingDTO> GetPendingBookingsAsync()
     {
         var bookings = repositoryManager.Booking.GetAllPendingBookings();
         var pendingBookingDTOs = mapper.Map<ICollection<BookingDTO>>(bookings);
@@ -74,7 +74,7 @@ public class BookingService(IRepositoryManager repositoryManager, IMapper mapper
         return entity;
     }
 
-    public void ConfirmBooking(Guid bookingId)
+    public void ConfirmBookingAsync(Guid bookingId)
     {
         var booking = GetBooking(bookingId);
         booking.Confirm();
@@ -85,7 +85,7 @@ public class BookingService(IRepositoryManager repositoryManager, IMapper mapper
         }
     }
 
-    public void RejectBooking(Guid bookingId)
+    public void RejectBooingAsync(Guid bookingId)
     {
         var booking = GetBooking(bookingId);
         booking.Reject();

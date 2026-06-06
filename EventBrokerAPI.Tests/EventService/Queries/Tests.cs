@@ -61,7 +61,7 @@ public class Tests : IClassFixture<EventServiceFixture>
         _fixture.MapperMock.Setup(m => m.Map<IEnumerable<EventDTO>>(It.IsAny<IEnumerable<Event>>())).Returns(eventDTOs);
 
         // Act
-        var (resultDTOs, pageData) = _fixture.EventService.GetAllEvents(eventParameters);
+        var (resultDTOs, pageData) = _fixture.EventService.GetAllEventsAsync(eventParameters);
 
         // Assert
         Assert.NotNull(resultDTOs);
@@ -85,7 +85,7 @@ public class Tests : IClassFixture<EventServiceFixture>
         _fixture.MapperMock.Setup(m => m.Map<EventDTO>(@event)).Returns(eventDTO);
 
         // Act 
-        var result = _fixture.EventService.GetEventById(eventGuid);
+        var result = _fixture.EventService.GetEventByIdAsync(eventGuid);
 
         // Assert
         Assert.NotNull(result);
@@ -129,7 +129,7 @@ public class Tests : IClassFixture<EventServiceFixture>
         var parameters = new EventParameters { Page = 1, PageSize = 10, Title = searchTitle };
 
         // Act
-        var (resultDTOs, pageData) = _fixture.EventService.GetAllEvents(parameters);
+        var (resultDTOs, pageData) = _fixture.EventService.GetAllEventsAsync(parameters);
 
         // Assert
         Assert.NotNull(resultDTOs);
@@ -176,7 +176,7 @@ public class Tests : IClassFixture<EventServiceFixture>
             .Returns(filteredEventDTOs);
 
         // Act
-        var (resultDTOs, pageData) = _fixture.EventService.GetAllEvents(parameters);
+        var (resultDTOs, pageData) = _fixture.EventService.GetAllEventsAsync(parameters);
 
         // Assert
         Assert.NotNull(resultDTOs);
@@ -214,8 +214,8 @@ public class Tests : IClassFixture<EventServiceFixture>
         var page3 = new EventParameters { Page = 3, PageSize = 10 };
 
         // Act
-        var (eventsPage1, pageData1) = _fixture.EventService.GetAllEvents(page1);
-        var (eventsPage3, pageData3) = _fixture.EventService.GetAllEvents(page3);
+        var (eventsPage1, pageData1) = _fixture.EventService.GetAllEventsAsync(page1);
+        var (eventsPage3, pageData3) = _fixture.EventService.GetAllEventsAsync(page3);
 
         // Assert
         Assert.Equal(10, eventsPage1.Count());
@@ -274,7 +274,7 @@ public class Tests : IClassFixture<EventServiceFixture>
 
 
         // Act
-        var (resultDTOs, pageData) = _fixture.EventService.GetAllEvents(parameters);
+        var (resultDTOs, pageData) = _fixture.EventService.GetAllEventsAsync(parameters);
 
         // Assert
         Assert.NotNull(resultDTOs);
