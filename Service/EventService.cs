@@ -31,7 +31,7 @@ public class EventService : IEventService
         if (!eventParameters.IsDateRangeValid)
             throw new EventBadDateRangeException();
 
-        var events = repositoryManager.Event.GetAllEvents(eventParameters);
+        var events = repositoryManager.Event.GetAllEventsAsync(eventParameters);
         var eventDTOs = mapper.Map<IEnumerable<EventInfo>>(events);
 
         return (eventDTOs, pageData: events.PageMetaData);
@@ -68,7 +68,7 @@ public class EventService : IEventService
         }
     }
 
-    public void DeleteEventAsync(Guid eventId)
+    public void DeleteEvent(Guid eventId)
     {
         var entity = GetEvent(eventId);
         repositoryManager.Event.DeleteEvent(entity);
@@ -77,7 +77,7 @@ public class EventService : IEventService
     #region Обертки с валидацей 
     private Event GetEvent(Guid eventId)
     {
-        var entity = repositoryManager.Event.GetById(eventId);
+        var entity = repositoryManager.Event.GetByIdAsync(eventId);
         if (entity == null)
             throw new EventNotFoundException(eventId);
 

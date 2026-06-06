@@ -25,7 +25,7 @@ public class Tests : IClassFixture<EventServiceFixture>
             new () { Id = Guid.NewGuid(), Title = "C", StartAt = DateTime.UtcNow.AddDays(5), EndAt = DateTime.UtcNow.AddDays(1), TotalSeats = default}
         ];
 
-        _fixture.EventRepositoryMock.Setup(r => r.GetById(unexistingGuid)).Returns((Event?)null);
+        _fixture.EventRepositoryMock.Setup(r => r.GetByIdAsync(unexistingGuid)).Returns((Event?)null);
 
         // Act
         var exception = Record.Exception(() => _fixture.EventService.GetEventByIdAsync(unexistingGuid));
@@ -42,7 +42,7 @@ public class Tests : IClassFixture<EventServiceFixture>
         // Arrange
         var unexistingGuid = Guid.NewGuid();
         var dto = new EventDTO("Title", "Description", DateTime.UtcNow, DateTime.UtcNow.AddDays(1), TotalSeats: 10);
-        _fixture.EventRepositoryMock.Setup(r => r.GetById(unexistingGuid)).Returns((Event?)null);
+        _fixture.EventRepositoryMock.Setup(r => r.GetByIdAsync(unexistingGuid)).Returns((Event?)null);
 
         // Act & Assert
         Assert.Throws<EventNotFoundException>(() => _fixture.EventService.UpdateEventAsync(unexistingGuid, dto));
@@ -103,7 +103,7 @@ public class Tests : IClassFixture<EventServiceFixture>
                                     TotalSeats: 10
                                     ); // некорректная дата окончания
 
-        _fixture.EventRepositoryMock.Setup(r => r.GetById(existingGuid)).Returns(existingEvent);
+        _fixture.EventRepositoryMock.Setup(r => r.GetByIdAsync(existingGuid)).Returns(existingEvent);
 
         // Act & Assert
         var exception = Assert.Throws<EventBadDateRangeException>(() => _fixture.EventService.UpdateEventAsync(existingGuid, updatedEventDTO));

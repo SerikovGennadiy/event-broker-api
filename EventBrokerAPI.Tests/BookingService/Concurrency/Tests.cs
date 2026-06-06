@@ -51,10 +51,8 @@ public class Tests(BookingServiceFixture fixture) : IClassFixture<BookingService
         {
             try
             {
-                await _fixture.BookingService.CreateBookingAsync(
-                    eventId,
-                    CancellationToken.None
-                );
+                await _fixture.BookingService.CreateBooking(
+                    eventId);
                 Interlocked.Increment(ref successCount);
             }
             catch (NoAvailableSeatsException)
@@ -102,10 +100,8 @@ public class Tests(BookingServiceFixture fixture) : IClassFixture<BookingService
         // Act
         var tasks = Enumerable.Range(0, totalSeats).Select(async _ =>
         {
-            await _fixture.BookingService.CreateBookingAsync(
-                eventId,
-                CancellationToken.None
-            );
+            await _fixture.BookingService.CreateBooking(
+                eventId);
         });
 
         await Task.WhenAll(tasks);

@@ -11,12 +11,12 @@ public interface IEventService
     // получить событие по ID
     Task<EventInfo> GetEventByIdAsync(Guid Id);
 
-    // создать событие
-    Task<EventInfo> CreateEventAsync(CreateEvent eventDTO);
-
     // обновить данные конкретного события
     Task UpdateEventAsync(Guid eventId, EventDTO eventDTO);
 
+    // создать событие
+    EventInfo CreateEvent(CreateEvent eventDTO);
+
     // удалить событие и сввязанные с ним брони 
-    Task DeleteEventAsync(Guid eventId);
+    void DeleteEvent(Guid eventId);
 }

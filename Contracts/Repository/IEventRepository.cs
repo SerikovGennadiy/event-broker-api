@@ -5,8 +5,8 @@ namespace Contracts.Repository;
 
 public interface IEventRepository
 {
-    PaginatedList<Event> GetAllEvents(EventParameters eventParameters);
-    Event? GetById(Guid id);
+    Task<PaginatedList<Event>> GetAllEventsAsync(EventParameters eventParameters);
+    Task<Event?> GetByIdAsync(Guid id);
 
     void CreateEvent(Event entity);
     void DeleteEvent(Event entity);

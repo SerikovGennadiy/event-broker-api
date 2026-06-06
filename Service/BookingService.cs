@@ -28,7 +28,7 @@ public class BookingService(IRepositoryManager repositoryManager, IMapper mapper
     }
     #endregion
 
-    public async Task<BookingDTO> CreateBookingAsync(Guid eventId, CancellationToken cancellationToken)
+    public async Task<BookingDTO> CreateBooking(Guid eventId)
     {
         // TODO - переделать под ORM, поддерживающую асинхронные операции, чтобы не блокировать поток при работе с БД
         if (cancellationToken.IsCancellationRequested)
@@ -60,14 +60,14 @@ public class BookingService(IRepositoryManager repositoryManager, IMapper mapper
 
     public ICollection<BookingDTO> GetPendingBookingsAsync()
     {
-        var bookings = repositoryManager.Booking.GetAllPendingBookings();
+        var bookings = repositoryManager.Booking.GetAllPendingBookingsAsync();
         var pendingBookingDTOs = mapper.Map<ICollection<BookingDTO>>(bookings);
         return pendingBookingDTOs;
     }
 
     private Booking GetBooking(Guid bookingId)
     {
-        var entity = repositoryManager.Booking.GetById(bookingId);
+        var entity = repositoryManager.Booking.GetByIdAsync(bookingId);
         if (entity is null)
             throw new BookingNotFoundException(bookingId);
 

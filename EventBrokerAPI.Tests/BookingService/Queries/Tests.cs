@@ -17,7 +17,7 @@ public class Tests(BookingServiceFixture fixture) : IClassFixture<BookingService
         var bookingId = Guid.NewGuid();
         var booking = new Booking(bookingId, Guid.NewGuid());
 
-        _fixture.BookingRepositoryMock.Setup(r => r.GetById(bookingId)).Returns(booking);
+        _fixture.BookingRepositoryMock.Setup(r => r.GetByIdAsync(bookingId)).Returns(booking);
 
         _fixture.MapperMock
             .Setup(m => m.Map<BookingDTO>(It.IsAny<Booking>()))

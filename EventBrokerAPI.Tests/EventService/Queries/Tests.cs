@@ -57,7 +57,7 @@ public class Tests : IClassFixture<EventServiceFixture>
         var eventDTOs = events.Select(e => e.toDTO()).ToList();
         var paginatedList = PaginatedList<Event>.ToPagedList(events, eventParameters.Page, eventParameters.PageSize);
 
-        _fixture.EventRepositoryMock.Setup(r => r.GetAllEvents(eventParameters)).Returns(paginatedList);
+        _fixture.EventRepositoryMock.Setup(r => r.GetAllEventsAsync(eventParameters)).Returns(paginatedList);
         _fixture.MapperMock.Setup(m => m.Map<IEnumerable<EventDTO>>(It.IsAny<IEnumerable<Event>>())).Returns(eventDTOs);
 
         // Act
@@ -81,7 +81,7 @@ public class Tests : IClassFixture<EventServiceFixture>
         Event @event = new() { Id = eventGuid, Title = "Event 1", StartAt = DateTime.UtcNow, EndAt = DateTime.UtcNow.AddDays(1), TotalSeats = default };
         EventDTO eventDTO = @event.toDTO();
 
-        _fixture.EventRepositoryMock.Setup(r => r.GetById(eventGuid)).Returns(@event);
+        _fixture.EventRepositoryMock.Setup(r => r.GetByIdAsync(eventGuid)).Returns(@event);
         _fixture.MapperMock.Setup(m => m.Map<EventDTO>(@event)).Returns(eventDTO);
 
         // Act 
@@ -90,7 +90,7 @@ public class Tests : IClassFixture<EventServiceFixture>
         // Assert
         Assert.NotNull(result);
         Assert.Equal(eventDTO, result);
-        _fixture.RepositoryManagerMock.Verify(rm => rm.Event.GetById(It.IsAny<Guid>()), Times.Once());
+        _fixture.RepositoryManagerMock.Verify(rm => rm.Event.GetByIdAsync(It.IsAny<Guid>()), Times.Once());
     }
 
 
@@ -118,7 +118,7 @@ public class Tests : IClassFixture<EventServiceFixture>
         var paginatedFiltered = PaginatedList<Event>.ToPagedList(filteredEvents, pageNumber: 1, pageSize: 10);
 
         _fixture.EventRepositoryMock
-            .Setup(r => r.GetAllEvents(It.Is<EventParameters>(p =>
+            .Setup(r => r.GetAllEventsAsync(It.Is<EventParameters>(p =>
                 p.Title == searchTitle && p.Page == 1 && p.PageSize == 10)))
             .Returns(paginatedFiltered);
 
@@ -135,7 +135,7 @@ public class Tests : IClassFixture<EventServiceFixture>
         Assert.NotNull(resultDTOs);
         Assert.Equal(filteredEvents.Count, resultDTOs.Count());
         Assert.All(resultDTOs, e => Assert.Contains(searchTitle, e.Title, StringComparison.OrdinalIgnoreCase));
-        _fixture.EventRepositoryMock.Verify(r => r.GetAllEvents(It.IsAny<EventParameters>()), Times.Once());
+        _fixture.EventRepositoryMock.Verify(r => r.GetAllEventsAsync(It.IsAny<EventParameters>()), Times.Once());
     }
 
     [Fact]
@@ -167,7 +167,7 @@ public class Tests : IClassFixture<EventServiceFixture>
         var parameters = new EventParameters { Page = 1, PageSize = 10, From = from, To = to };
 
         _fixture.EventRepositoryMock
-            .Setup(r => r.GetAllEvents(It.Is<EventParameters>(p =>
+            .Setup(r => r.GetAllEventsAsync(It.Is<EventParameters>(p =>
                 p.From == from && p.To == to && p.Page == 1 && p.PageSize == 10)))
             .Returns(paginatedResult);
 
@@ -182,7 +182,7 @@ public class Tests : IClassFixture<EventServiceFixture>
         Assert.NotNull(resultDTOs);
         Assert.Single(resultDTOs);
         Assert.Equal("B", resultDTOs.First().Title);
-        _fixture.EventRepositoryMock.Verify(r => r.GetAllEvents(It.IsAny<EventParameters>()), Times.Once());
+        _fixture.EventRepositoryMock.Verify(r => r.GetAllEventsAsync(It.IsAny<EventParameters>()), Times.Once());
     }
 
     [Fact]
@@ -204,7 +204,7 @@ public class Tests : IClassFixture<EventServiceFixture>
             .ToList();
 
         _fixture.EventRepositoryMock
-            .Setup(r => r.GetAllEvents(It.IsAny<EventParameters>()))
+            .Setup(r => r.GetAllEventsAsync(It.IsAny<EventParameters>()))
             .Returns((EventParameters p) => PaginatedList<Event>.ToPagedList(events, p.Page, p.PageSize));
 
         _fixture.MapperMock.Setup(m => m.Map<IEnumerable<EventDTO>>(It.IsAny<IEnumerable<Event>>()))
@@ -220,7 +220,7 @@ public class Tests : IClassFixture<EventServiceFixture>
         // Assert
         Assert.Equal(10, eventsPage1.Count());
         Assert.Equal(5, eventsPage3.Count());
-        _fixture.EventRepositoryMock.Verify(r => r.GetAllEvents(It.IsAny<EventParameters>()), Times.Exactly(2));
+        _fixture.EventRepositoryMock.Verify(r => r.GetAllEventsAsync(It.IsAny<EventParameters>()), Times.Exactly(2));
     }
 
     [Fact]
@@ -259,7 +259,7 @@ public class Tests : IClassFixture<EventServiceFixture>
 
         // Настройка моков
         _fixture.EventRepositoryMock
-            .Setup(r => r.GetAllEvents(It.Is<EventParameters>(p =>
+            .Setup(r => r.GetAllEventsAsync(It.Is<EventParameters>(p =>
                 p.Title == parameters.Title
                 && p.From == parameters.From
                 && p.To == parameters.To
@@ -280,6 +280,6 @@ public class Tests : IClassFixture<EventServiceFixture>
         Assert.NotNull(resultDTOs);
         Assert.Single(resultDTOs);
         Assert.Equal("Hiking", resultDTOs.First().Title);
-        _fixture.EventRepositoryMock.Verify(r => r.GetAllEvents(It.IsAny<EventParameters>()), Times.Once());
+        _fixture.EventRepositoryMock.Verify(r => r.GetAllEventsAsync(It.IsAny<EventParameters>()), Times.Once());
     }
 }

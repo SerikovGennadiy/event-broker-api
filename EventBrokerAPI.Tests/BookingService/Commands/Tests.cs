@@ -31,14 +31,14 @@ public class Tests(BookingServiceFixture fixture) : IClassFixture<BookingService
 
         _fixture.TestEvents[eventId] = @event;
 
-        _fixture.EventRepositoryMock.Setup(r => r.GetById(eventId)).Returns(@event);
+        _fixture.EventRepositoryMock.Setup(r => r.GetByIdAsync(eventId)).Returns(@event);
 
         _fixture.MapperMock
             .Setup(m => m.Map<BookingDTO>(It.IsAny<Booking>()))
             .Returns((Booking b) => new BookingDTO(b.Id, b.EventId, b.Status, b.CreatedAt, b.ProcessedAt));
 
         // Act
-        var bookingDto = await _fixture.BookingService.CreateBookingAsync(eventId, CancellationToken.None);
+        var bookingDto = await _fixture.BookingService.CreateBooking(eventId);
 
         // Assert
         Assert.NotNull(bookingDto);
@@ -68,15 +68,15 @@ public class Tests(BookingServiceFixture fixture) : IClassFixture<BookingService
 
         _fixture.TestEvents[eventId] = @event;
 
-        _fixture.EventRepositoryMock.Setup(r => r.GetById(eventId)).Returns(@event);
+        _fixture.EventRepositoryMock.Setup(r => r.GetByIdAsync(eventId)).Returns(@event);
 
         _fixture.MapperMock
             .Setup(m => m.Map<BookingDTO>(It.IsAny<Booking>()))
             .Returns((Booking b) => new BookingDTO(b.Id, b.EventId, b.Status, b.CreatedAt, b.ProcessedAt));
 
         // Act
-        var first = await _fixture.BookingService.CreateBookingAsync(eventId, CancellationToken.None);
-        var second = await _fixture.BookingService.CreateBookingAsync(eventId, CancellationToken.None);
+        var first = await _fixture.BookingService.CreateBooking(eventId);
+        var second = await _fixture.BookingService.CreateBooking(eventId);
 
         // Assert
         Assert.NotEqual(first.Id, second.Id);
@@ -94,7 +94,7 @@ public class Tests(BookingServiceFixture fixture) : IClassFixture<BookingService
         var bookingId = Guid.NewGuid();
         var booking = new Booking(bookingId, Guid.NewGuid());
 
-        _fixture.BookingRepositoryMock.Setup(r => r.GetById(bookingId)).Returns(booking);
+        _fixture.BookingRepositoryMock.Setup(r => r.GetByIdAsync(bookingId)).Returns(booking);
 
         _fixture.MapperMock
             .Setup(m => m.Map<BookingDTO>(It.IsAny<Booking>()))
@@ -147,23 +147,19 @@ public class Tests(BookingServiceFixture fixture) : IClassFixture<BookingService
             {
                 capturedBookings.Add(b);
                 _fixture.BookingRepositoryMock
-                    .Setup(r => r.GetById(b.Id))
+                    .Setup(r => r.GetByIdAsync(b.Id))
                     .Returns(b);
             });
 
         // Act - создаем бронь и отменяем её
-        var firstBooking = await _fixture.BookingService.CreateBookingAsync(
-            eventId,
-            CancellationToken.None
-        );
+        var firstBooking = await _fixture.BookingService.CreateBooking(
+            eventId);
 
         _fixture.BookingService.RejectBooingAsync(firstBooking.Id);
 
         // Создаем новую бронь после отмены
-        var secondBooking = await _fixture.BookingService.CreateBookingAsync(
-            eventId,
-            CancellationToken.None
-        );
+        var secondBooking = await _fixture.BookingService.CreateBooking(
+            eventId);
 
         // Assert
         Assert.NotEqual(firstBooking.Id, secondBooking.Id);
@@ -195,10 +191,8 @@ public class Tests(BookingServiceFixture fixture) : IClassFixture<BookingService
         _fixture.TestEvents[eventId] = testEvent;
        
         // Act
-        var booking = await _fixture.BookingService.CreateBookingAsync(
-            eventId,
-            CancellationToken.None
-        );
+        var booking = await _fixture.BookingService.CreateBooking(
+            eventId);
 
         // Assert
         Assert.NotNull(booking);
@@ -241,10 +235,8 @@ public class Tests(BookingServiceFixture fixture) : IClassFixture<BookingService
         // Act
         var tasks = Enumerable.Range(0, totalSeats).Select(async _ =>
         {
-            var booking = await _fixture.BookingService.CreateBookingAsync(
-                eventId,
-                CancellationToken.None
-            );
+            var booking = await _fixture.BookingService.CreateBooking(
+                eventId);
             bookingIds.Add(booking.Id);
         });
 

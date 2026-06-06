@@ -4,8 +4,7 @@ namespace Contracts.Repository;
 
 public interface IBookingRepository
 {
-    IEnumerable<Booking> GetAllPendingBookings();
-
-    Booking? GetById(Guid id); 
+    Task<IEnumerable<Booking>> GetAllPendingBookingsAsync();
+    Task<Booking?> GetByIdAsync(Guid id); 
     void CreateBooking(Booking entity); 
 }

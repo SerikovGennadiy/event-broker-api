@@ -33,7 +33,7 @@ public class EventController(IEventService eventService, IBookingService booking
     [ValidateDTOFilter]
     public IActionResult CreateEvent([FromBody] CreateEvent eventDTO)
     {
-        var _event = eventService.CreateEventAsync(eventDTO);
+        var _event = eventService.CreateEvent(eventDTO);
         return CreatedAtRoute(routeName: "EventById", new { id = _event.Id }, _event);
     }
 
@@ -43,7 +43,7 @@ public class EventController(IEventService eventService, IBookingService booking
     [ProducesResponseType(typeof(ErrorDetail), StatusCodes.Status409Conflict)]
     public async Task<IActionResult> CreateEventBooking(Guid eventId, CancellationToken token)
     {
-        var bookingDTO = await bookingService.CreateBookingAsync(eventId, token);
+        var bookingDTO = await bookingService.CreateBooking(eventId);
 
         return AcceptedAtRoute(
             routeName: "BookingById",
@@ -63,7 +63,7 @@ public class EventController(IEventService eventService, IBookingService booking
     [HttpDelete("{id:guid}")]
     public IActionResult DeleteEvent(Guid id)
     {
-        eventService.DeleteEventAsync(id);
+        eventService.DeleteEvent(id);
         return Ok();
     }
 }

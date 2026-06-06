@@ -89,7 +89,7 @@ public class Tests : IClassFixture<EventServiceFixture>
         EventDTO updatedEventDTO = updatedEvent.toDTO();
 
         _fixture.MapperMock.Setup(m => m.Map<Event>(updatedEventDTO)).Returns(updatedEvent);
-        _fixture.EventRepositoryMock.Setup(r => r.GetById(eventGuid)).Returns(@event);
+        _fixture.EventRepositoryMock.Setup(r => r.GetByIdAsync(eventGuid)).Returns(@event);
 
         // Act 
         _fixture.EventService.UpdateEventAsync(eventGuid, updatedEventDTO);
@@ -115,10 +115,10 @@ public class Tests : IClassFixture<EventServiceFixture>
         EventDTO eventDTO = @event.toDTO();
 
         _fixture.MapperMock.Setup(m => m.Map<Event>(eventDTO)).Returns(@event);
-        _fixture.EventRepositoryMock.Setup(r => r.GetById(eventGuid)).Returns(@event);
+        _fixture.EventRepositoryMock.Setup(r => r.GetByIdAsync(eventGuid)).Returns(@event);
 
         // Act
-        _fixture.EventService.DeleteEventAsync(eventGuid);
+        _fixture.EventService.DeleteEvent(eventGuid);
 
         // Assert
         _fixture.RepositoryManagerMock.Verify(rm => rm.Event.DeleteEvent(It.IsAny<Event>()), Times.Once());

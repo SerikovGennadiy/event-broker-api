@@ -17,10 +17,10 @@ public class Tests(BookingServiceFixture fixture) : IClassFixture<BookingService
     {
         // Arrange
         var eventId = Guid.NewGuid();
-        _fixture.EventRepositoryMock.Setup(r => r.GetById(eventId)).Returns((Event?)null);
+        _fixture.EventRepositoryMock.Setup(r => r.GetByIdAsync(eventId)).Returns((Event?)null);
 
         // Act
-        var ex = await Record.ExceptionAsync(() => _fixture.BookingService.CreateBookingAsync(eventId, CancellationToken.None));
+        var ex = await Record.ExceptionAsync(() => _fixture.BookingService.CreateBooking(eventId));
 
         // Assert
         Assert.NotNull(ex);
@@ -34,10 +34,10 @@ public class Tests(BookingServiceFixture fixture) : IClassFixture<BookingService
         // Arrange
         var eventId = Guid.NewGuid();
         // Симулируем удалённое событие тем же поведением репозитория (null)
-        _fixture.EventRepositoryMock.Setup(r => r.GetById(eventId)).Returns((Event?)null);
+        _fixture.EventRepositoryMock.Setup(r => r.GetByIdAsync(eventId)).Returns((Event?)null);
 
         // Act
-        var ex = await Record.ExceptionAsync(() => _fixture.BookingService.CreateBookingAsync(eventId, CancellationToken.None));
+        var ex = await Record.ExceptionAsync(() => _fixture.BookingService.CreateBooking(eventId));
 
         // Assert
         Assert.NotNull(ex);
@@ -50,7 +50,7 @@ public class Tests(BookingServiceFixture fixture) : IClassFixture<BookingService
     {
         // Arrange
         var bookingId = Guid.NewGuid();
-        _fixture.BookingRepositoryMock.Setup(r => r.GetById(bookingId)).Returns((Booking?)null);
+        _fixture.BookingRepositoryMock.Setup(r => r.GetByIdAsync(bookingId)).Returns((Booking?)null);
 
         // Act & Assert
         await Assert.ThrowsAsync<BookingNotFoundException>(() => _fixture.BookingService.GetBookingByIdAsync(bookingId, CancellationToken.None));
@@ -88,11 +88,11 @@ public class Tests(BookingServiceFixture fixture) : IClassFixture<BookingService
         _fixture.TestEvents[eventId] = testEvent;
 
         // Занимаем единственное место
-        await _fixture.BookingService.CreateBookingAsync(eventId, CancellationToken.None);
+        await _fixture.BookingService.CreateBooking(eventId);
 
         // Act & Assert
         var exception = await Assert.ThrowsAsync<NoAvailableSeatsException>(
-            () => _fixture.BookingService.CreateBookingAsync(eventId, CancellationToken.None)
+            () => _fixture.BookingService.CreateBooking(eventId)
         );
     }
 }
