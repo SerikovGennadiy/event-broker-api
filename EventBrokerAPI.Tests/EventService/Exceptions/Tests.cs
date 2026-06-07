@@ -59,7 +59,7 @@ public class Tests : IClassFixture<EventServiceFixture>
                                        EndAt: DateTime.UtcNow.AddDays(1),
                                        TotalSeats: 10);
         // Act & Assert
-        var expeption = Assert.Throws<EventNoTitleException>(() => _fixture.EventService.CreateEventAsync(eventDTO));
+        var expeption = Assert.Throws<EventNoTitleException>(() => _fixture.EventService.CreateEvent(eventDTO));
         Assert.Equal("Отсуствует наименование события", expeption.Message);
     }
 
@@ -74,7 +74,7 @@ public class Tests : IClassFixture<EventServiceFixture>
                                        EndAt: DateTime.UtcNow.AddDays(1),
                                        TotalSeats: 0);
         // Act & Assert
-        var expeption = Assert.Throws<EventBadTotalSeatsQuantity>(() => _fixture.EventService.CreateEventAsync(eventDTO));
+        var expeption = Assert.Throws<EventBadTotalSeatsQuantity>(() => _fixture.EventService.CreateEvent(eventDTO));
         Assert.Equal("Общее количество мест на мероприятии должно быть больше 0", expeption.Message);
     }
 

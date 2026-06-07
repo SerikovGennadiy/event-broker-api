@@ -63,7 +63,7 @@ public class EventController(IEventService eventService, IBookingService booking
     [HttpDelete("{id:guid}")]
     public IActionResult DeleteEvent(Guid id)
     {
-        eventService.DeleteEvent(id);
+        eventService.DeleteEventAsync(id);
         return Ok();
     }
 }

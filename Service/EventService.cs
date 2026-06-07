@@ -25,25 +25,25 @@ public class EventService : IEventService
         BookingService.OnRejected(ReleaseSeats);
     }
 
-    public (IEnumerable<EventInfo> eventDTOs, PaginatedResult pageData) GetAllEventsAsync(EventParameters eventParameters)
+    public async Task<(IEnumerable<EventInfo> eventDTOs, PaginatedResult pageData)> GetAllEventsAsync(EventParameters eventParameters)
     {
         // TODO этот инвариант должен сидеть в отдельном классе валидаторе, который будет использоваться в контроллере, а не в сервисе?
         if (!eventParameters.IsDateRangeValid)
             throw new EventBadDateRangeException();
 
-        var events = repositoryManager.Event.GetAllEventsAsync(eventParameters);
+        var events = await repositoryManager.Event.GetAllEventsAsync(eventParameters);
         var eventDTOs = mapper.Map<IEnumerable<EventInfo>>(events);
 
         return (eventDTOs, pageData: events.PageMetaData);
     }
 
-    public EventInfo GetEventByIdAsync(Guid eventId)
+    public async Task<EventInfo> GetEventByIdAsync(Guid eventId)
     {
-        var entity = GetEvent(eventId);
+        var entity = await GetEvent(eventId);
         return mapper.Map<EventInfo>(entity);
     }
 
-    public EventInfo CreateEventAsync(CreateEvent eventDTO)
+    public EventInfo CreateEvent(CreateEvent eventDTO)
     {
        ValidateEvent(eventDTO);
 
@@ -53,11 +53,11 @@ public class EventService : IEventService
        return mapper.Map<EventInfo>(entity);
     }
 
-    public void UpdateEventAsync(Guid eventId, EventDTO eventDTO)
+    public async Task UpdateEventAsync(Guid eventId, EventDTO eventDTO)
     {
         ValidateEvent(eventDTO);
 
-        var entity = GetEvent(eventId);
+        var entity = await GetEvent(eventId);
 
         // обновление только измененных полей маппером
         entity = mapper.Map<Event>(eventDTO);
@@ -66,18 +66,21 @@ public class EventService : IEventService
         {
             repo.Update(entity);
         }
+
+        await repositoryManager.SaveAsync();
     }
 
-    public void DeleteEvent(Guid eventId)
+    public async Task DeleteEventAsync(Guid eventId)
     {
-        var entity = GetEvent(eventId);
+        var entity = await GetEvent(eventId);
         repositoryManager.Event.DeleteEvent(entity);
+        await repositoryManager.SaveAsync();
     }
 
     #region Обертки с валидацей 
-    private Event GetEvent(Guid eventId)
+    private async Task<Event> GetEvent(Guid eventId)
     {
-        var entity = repositoryManager.Event.GetByIdAsync(eventId);
+        var entity = await repositoryManager.Event.GetByIdAsync(eventId);
         if (entity == null)
             throw new EventNotFoundException(eventId);
 
@@ -96,17 +99,21 @@ public class EventService : IEventService
             throw new EventBadTotalSeatsQuantity();
     }
 
-    private void ReserveSeats((Guid eventId, int seats) callFromBooking)
+    private async Task ReserveSeats((Guid eventId, int seats) callFromBooking)
     {
-        var @event = GetEvent(callFromBooking.eventId);
+        var @event = await GetEvent(callFromBooking.eventId);
         if (!@event.TryReserveSeats(callFromBooking.seats))
             throw new NoAvailableSeatsException(callFromBooking.eventId);
+
+        await repositoryManager.SaveAsync();
     }
 
-    private void ReleaseSeats((Guid eventId, int seats) recallFromBooking)
+    private async Task ReleaseSeats((Guid eventId, int seats) recallFromBooking)
     {
-        var @event = GetEvent(recallFromBooking.eventId);
+        var @event = await GetEvent(recallFromBooking.eventId);
         @event.ReleaseSeats(recallFromBooking.seats);
+
+        await repositoryManager.SaveAsync();
     }
     #endregion
 }

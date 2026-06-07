@@ -18,5 +18,5 @@ public interface IEventService
     EventInfo CreateEvent(CreateEvent eventDTO);
 
     // удалить событие и сввязанные с ним брони 
-    void DeleteEvent(Guid eventId);
+    Task DeleteEventAsync(Guid eventId);
 }

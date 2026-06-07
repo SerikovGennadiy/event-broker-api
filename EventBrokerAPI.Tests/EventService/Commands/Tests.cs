@@ -54,7 +54,7 @@ public class Tests : IClassFixture<EventServiceFixture>
         _fixture.EventRepositoryMock.Setup(repo => repo.CreateEvent(It.IsAny<Event>())).Verifiable();
 
         // Act
-        var result = _fixture.EventService.CreateEventAsync(createEventDTO);
+        var result = _fixture.EventService.CreateEvent(createEventDTO);
 
         // Assert
         Assert.NotNull(result);
@@ -118,7 +118,7 @@ public class Tests : IClassFixture<EventServiceFixture>
         _fixture.EventRepositoryMock.Setup(r => r.GetByIdAsync(eventGuid)).Returns(@event);
 
         // Act
-        _fixture.EventService.DeleteEvent(eventGuid);
+        _fixture.EventService.DeleteEventAsync(eventGuid);
 
         // Assert
         _fixture.RepositoryManagerMock.Verify(rm => rm.Event.DeleteEvent(It.IsAny<Event>()), Times.Once());
