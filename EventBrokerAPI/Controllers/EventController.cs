@@ -12,9 +12,9 @@ namespace EventBrokerAPI.Controllers;
 public class EventController(IEventService eventService, IBookingService bookingService): ControllerBase
 {
     [HttpGet]
-    public IActionResult GetAllEvents([FromQuery] EventParameters eventParameters)
+    public async Task<IActionResult> GetAllEvents([FromQuery] EventParameters eventParameters)
     {
-        var result = eventService.GetAllEventsAsync(eventParameters);
+        var result = await eventService.GetAllEventsAsync(eventParameters);
 
         Response.Headers.Append("X-Pagination",
                JsonSerializer.Serialize(result.pageData));
@@ -54,16 +54,16 @@ public class EventController(IEventService eventService, IBookingService booking
 
     [HttpPut("{id:guid}")]
     [ValidateDTOFilter]
-    public IActionResult UpdateEvent([FromRoute] Guid id, [FromBody] EventDTO eventDTO)
+    public async Task<IActionResult> UpdateEvent([FromRoute] Guid id, [FromBody] EventDTO eventDTO)
     {
-        eventService.UpdateEventAsync(id, eventDTO);
+        await eventService.UpdateEventAsync(id, eventDTO);
         return Ok();
     }
 
     [HttpDelete("{id:guid}")]
-    public IActionResult DeleteEvent(Guid id)
+    public async Task<IActionResult> DeleteEvent(Guid id)
     {
-        eventService.DeleteEventAsync(id);
+        await eventService.DeleteEventAsync(id);
         return Ok();
     }
 }
