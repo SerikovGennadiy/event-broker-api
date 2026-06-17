@@ -5,7 +5,6 @@ using Entities.Domain.Models;
 using Entities.ErrorHandling.Exceptions.Booking;
 using Repository;
 using Shared.DTO;
-using System.Threading;
 
 namespace Service;
 
@@ -28,7 +27,7 @@ public class BookingService(IRepositoryManager repositoryManager, IMapper mapper
     }
     #endregion
 
-    public async Task<BookingDTO> CreateBooking(Guid eventId, CancellationToken cancellationToken = default)
+    public async Task<BookingDTO> CreateBookingAsync(Guid eventId, CancellationToken cancellationToken = default)
     {
         if (cancellationToken.IsCancellationRequested)
             throw new OperationCanceledException(cancellationToken);

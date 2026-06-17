@@ -34,16 +34,16 @@ public class Event : IdEntity, IReadOnlyEvent
     // приватный конструктор под EFCore
     private Event() { }
 
-    public static Event Create(string Title, DateTime StartAt, DateTime EndAt, string? description, int totalSeats)
+    public static Event Create(string title, DateTime startAt, DateTime endAt, string? description, int totalSeats)
     {
         if (totalSeats <= 0)
             throw new ValidationException("Общее количество мест на мероприятие должно быть больше 0");
 
         return new Event() {
             Id = Guid.CreateVersion7(),
-            Title = Title,
-            StartAt = StartAt,
-            EndAt = EndAt, 
+            Title = title,
+            StartAt = startAt,
+            EndAt = endAt, 
             Description = description, 
             TotalSeats = totalSeats,
             AvailableSeats = totalSeats

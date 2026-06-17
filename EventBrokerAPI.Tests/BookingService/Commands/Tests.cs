@@ -1,89 +1,66 @@
-﻿using Entities.Domain.Models;
-using Microsoft.Extensions.Logging;
+﻿using Contracts.Service;
+using Entities.Domain.Models;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Moq;
+using Service;
 using Shared.DTO;
 using System.Collections.Concurrent;
 
 namespace EventBrokerAPI.Tests.BookingService.Commands;
 
 [Collection("BookingServiceTests")]
-public class Tests(BookingServiceFixture fixture) : IClassFixture<BookingServiceFixture>
+public class Tests(BookingServiceFixture _fixture) : IClassFixture<BookingServiceFixture>
 {
-    private readonly BookingServiceFixture _fixture = fixture;
-
     [Fact]
     [Trait("Booking", "Commands")]
     public async Task CreateBooking_ForExistingEvent_ReturnsPendingBooking()
     {
-        _fixture.ResetAllMocks();
         // Arrange
-        var eventId = Guid.NewGuid();
-        var @event = new Event
-        {
-            Id = eventId,
-            Title = "Test",
-            StartAt = DateTime.UtcNow,
-            EndAt = DateTime.UtcNow.AddDays(1),
-            // при default (0) тест падает (не хватает мест)
-            TotalSeats = 10,
-            AvailableSeats = 10
-        };
+        var @event = Event.Create(title: "Test",
+                                  startAt: DateTime.UtcNow,
+                                  endAt: DateTime.UtcNow.AddDays(1),
+                                  description: default,
+                                  totalSeats: 10);
+
+        var eventId = @event.Id;
 
         _fixture.TestEvents[eventId] = @event;
 
-        _fixture.EventRepositoryMock.Setup(r => r.GetByIdAsync(eventId)).Returns(@event);
-
-        _fixture.MapperMock
-            .Setup(m => m.Map<BookingDTO>(It.IsAny<Booking>()))
-            .Returns((Booking b) => new BookingDTO(b.Id, b.EventId, b.Status, b.CreatedAt, b.ProcessedAt));
-
         // Act
-        var bookingDto = await _fixture.BookingService.CreateBooking(eventId);
+        var bookingService = _fixture.serviceProvider.GetRequiredService<IBookingService>();
+        var bookingDto = await bookingService.CreateBookingAsync(eventId);
 
         // Assert
         Assert.NotNull(bookingDto);
         Assert.Equal(eventId, bookingDto.EventId);
         Assert.Equal(BookingStatus.Pending, bookingDto.Status);
-
-        _fixture.BookingRepositoryMock.Verify(rm => rm.CreateBooking(It.IsAny<Booking>()), Times.Once);
     }
 
     [Fact]
     [Trait("Booking", "Commands")]
     public async Task CreateBookings_UniqueIds_AllCreated()
     {
-        _fixture.ResetAllMocks();
         // Arrange
-        var eventId = Guid.NewGuid();
-        var @event = new Event
-        {
-            Id = eventId,
-            Title = "Test",
-            StartAt = DateTime.UtcNow,
-            EndAt = DateTime.UtcNow.AddDays(1),
-            // при default (0) тест падает (не хватает мест)
-            TotalSeats = 10,
-            AvailableSeats = 10
-        };
+        var @event = Event.Create(title: "Test",
+                                startAt: DateTime.UtcNow,
+                                endAt: DateTime.UtcNow.AddDays(1),
+                                description: default,
+                                totalSeats: 10);
+
+        var eventId = @event.Id;
 
         _fixture.TestEvents[eventId] = @event;
 
-        _fixture.EventRepositoryMock.Setup(r => r.GetByIdAsync(eventId)).Returns(@event);
-
-        _fixture.MapperMock
-            .Setup(m => m.Map<BookingDTO>(It.IsAny<Booking>()))
-            .Returns((Booking b) => new BookingDTO(b.Id, b.EventId, b.Status, b.CreatedAt, b.ProcessedAt));
-
         // Act
-        var first = await _fixture.BookingService.CreateBooking(eventId);
-        var second = await _fixture.BookingService.CreateBooking(eventId);
+        var bookingService = _fixture.serviceProvider.GetRequiredService<IBookingService>();
+        var first = await bookingService.CreateBookingAsync(eventId);
+        var second = await bookingService.CreateBookingAsync(eventId);
 
         // Assert
         Assert.NotEqual(first.Id, second.Id);
         Assert.Equal(BookingStatus.Pending, first.Status);
         Assert.Equal(BookingStatus.Pending, second.Status);
-
-        _fixture.RepositoryManagerMock.Verify(rm => rm.Booking.CreateBooking(It.IsAny<Booking>()), Times.Exactly(2));
     }
 
     [Fact]
@@ -94,15 +71,11 @@ public class Tests(BookingServiceFixture fixture) : IClassFixture<BookingService
         var bookingId = Guid.NewGuid();
         var booking = new Booking(bookingId, Guid.NewGuid());
 
-        _fixture.BookingRepositoryMock.Setup(r => r.GetByIdAsync(bookingId)).Returns(booking);
-
-        _fixture.MapperMock
-            .Setup(m => m.Map<BookingDTO>(It.IsAny<Booking>()))
-            .Returns((Booking b) => new BookingDTO(b.Id, b.EventId, b.Status, b.CreatedAt, b.ProcessedAt));
-
         // Act - Confirm
-        _fixture.BookingService.ConfirmBookingAsync(bookingId);
-        var confirmed = await _fixture.BookingService.GetBookingByIdAsync(bookingId, CancellationToken.None);
+        var bookingService = _fixture.serviceProvider.GetRequiredService<IBookingService>();
+
+        await bookingService.ConfirmBookingAsync(bookingId);
+        var confirmed = await bookingService.GetBookingByIdAsync(bookingId);
 
         // Assert Confirmed
         Assert.Equal(BookingStatus.Confirmed, confirmed.Status);
@@ -111,8 +84,8 @@ public class Tests(BookingServiceFixture fixture) : IClassFixture<BookingService
         // Act - Reset status to Pending then Reject
         booking.OnPending();
 
-        _fixture.BookingService.RejectBooingAsync(bookingId);
-        var rejected = await _fixture.BookingService.GetBookingByIdAsync(bookingId, CancellationToken.None);
+        await bookingService.RejectBooingAsync(bookingId);
+        var rejected = await bookingService.GetBookingByIdAsync(bookingId);
 
         // Assert Rejected
         Assert.Equal(BookingStatus.Rejected, rejected.Status);
@@ -124,47 +97,24 @@ public class Tests(BookingServiceFixture fixture) : IClassFixture<BookingService
     public async Task RejectBooking_AllowsNewBooking_OnSameSeat()
     {
         // Arrange
-        var eventId = Guid.NewGuid();
-        var testEvent = CreateTestEvent(eventId, totalSeats: 1);
-
-        // Настраиваем маппер
-        _fixture.MapperMock
-            .Setup(m => m.Map<BookingDTO>(It.IsAny<Booking>()))
-            .Returns((Booking b) => new BookingDTO(
-                b.Id,
-                b.EventId,
-                b.Status,
-                b.CreatedAt,
-                b.ProcessedAt
-            ));
+        var testEvent = CreateTestEvent(totalSeats: 1);
+        var eventId = testEvent.Id;
 
         _fixture.TestEvents[eventId] = testEvent;
 
-        var capturedBookings = new List<Booking>();
-        _fixture.BookingRepositoryMock
-            .Setup(r => r.CreateBooking(It.IsAny<Booking>()))
-            .Callback<Booking>(b =>
-            {
-                capturedBookings.Add(b);
-                _fixture.BookingRepositoryMock
-                    .Setup(r => r.GetByIdAsync(b.Id))
-                    .Returns(b);
-            });
-
         // Act - создаем бронь и отменяем её
-        var firstBooking = await _fixture.BookingService.CreateBooking(
-            eventId);
+        var bookingSerivce = _fixture.serviceProvider.GetRequiredService<IBookingService>();
+        var firstBooking = await bookingSerivce.CreateBookingAsync(eventId);
 
-        _fixture.BookingService.RejectBooingAsync(firstBooking.Id);
+        await bookingSerivce.RejectBooingAsync(firstBooking.Id);
 
         // Создаем новую бронь после отмены
-        var secondBooking = await _fixture.BookingService.CreateBooking(
-            eventId);
+        var secondBooking = await bookingSerivce.CreateBookingAsync(eventId);
 
         // Assert
         Assert.NotEqual(firstBooking.Id, secondBooking.Id);
         Assert.Equal(0, testEvent.AvailableSeats);
-        Assert.Equal(BookingStatus.Rejected, capturedBookings.First().Status);
+        Assert.Equal(BookingStatus.Rejected, firstBooking.Status);
         Assert.Equal(BookingStatus.Pending, secondBooking.Status);
     }
 
@@ -174,69 +124,40 @@ public class Tests(BookingServiceFixture fixture) : IClassFixture<BookingService
     public async Task CreateBooking_DecreasesAvailableSeats_ByOne()
     {
         // Arrange
-        var eventId = Guid.NewGuid();
-        var testEvent = CreateTestEvent(eventId, totalSeats: 10);
-
-        // Настраиваем маппер
-        _fixture.MapperMock
-            .Setup(m => m.Map<BookingDTO>(It.IsAny<Booking>()))
-            .Returns((Booking b) => new BookingDTO(
-                b.Id,
-                b.EventId,
-                b.Status,
-                b.CreatedAt,
-                b.ProcessedAt
-            ));
+        var testEvent = CreateTestEvent(totalSeats: 10);
+        var eventId = testEvent.Id;
 
         _fixture.TestEvents[eventId] = testEvent;
-       
+
         // Act
-        var booking = await _fixture.BookingService.CreateBooking(
-            eventId);
+        var bookingService = _fixture.serviceProvider.GetRequiredService<IBookingService>();
+        var booking = await bookingService.CreateBookingAsync(eventId);
 
         // Assert
         Assert.NotNull(booking);
         Assert.Equal(9, testEvent.AvailableSeats);
         Assert.Equal(BookingStatus.Pending, booking.Status);
         Assert.Equal(eventId, booking.EventId);
-
-        _fixture.BookingRepositoryMock.Verify(
-            r => r.CreateBooking(It.IsAny<Booking>()),
-            Times.Once
-        );
     }
 
     [Fact]
     [Trait("Booking", "Commands")]
     public async Task CreateMultipleBookings_UpToLimit_AllSuccessfulWithUniqueIds()
     {
-        _fixture.ResetAllMocks();
-        // Arrange
         // Arrange
         var eventId = Guid.NewGuid();
         var totalSeats = 5;
-        var testEvent = CreateTestEvent(eventId, totalSeats);
-
-        // Настраиваем маппер
-        _fixture.MapperMock
-            .Setup(m => m.Map<BookingDTO>(It.IsAny<Booking>()))
-            .Returns((Booking b) => new BookingDTO(
-                b.Id,
-                b.EventId,
-                b.Status,
-                b.CreatedAt,
-                b.ProcessedAt
-            ));
+        var testEvent = CreateTestEvent(totalSeats);
 
         _fixture.TestEvents[eventId] = testEvent;
 
         var bookingIds = new ConcurrentBag<Guid>();
 
         // Act
+        var bookingService = _fixture.serviceProvider.GetRequiredService<IBookingService>();
         var tasks = Enumerable.Range(0, totalSeats).Select(async _ =>
         {
-            var booking = await _fixture.BookingService.CreateBooking(
-                eventId);
+            var booking = await bookingService.CreateBookingAsync(eventId);
             bookingIds.Add(booking.Id);
         });
 
@@ -246,22 +167,14 @@ public class Tests(BookingServiceFixture fixture) : IClassFixture<BookingService
         Assert.Equal(totalSeats, bookingIds.Count);
         Assert.Equal(totalSeats, bookingIds.Distinct().Count());
         Assert.Equal(0, testEvent.AvailableSeats);
-        _fixture.BookingRepositoryMock.Verify(
-           r => r.CreateBooking(It.IsAny<Booking>()),
-          Times.Exactly(totalSeats)
-       );
     }
-    private static Event CreateTestEvent(Guid eventId, int totalSeats)
+
+    private static Event CreateTestEvent(int totalSeats)
     {
-        return new Event
-        {
-            Id = eventId,
-            Title = "Test Event",
-            Description = "Test Description",
-            StartAt = DateTime.UtcNow,
-            EndAt = DateTime.UtcNow.AddDays(1),
-            TotalSeats = totalSeats,
-            AvailableSeats = totalSeats
-        };
+        return Event.Create(title: "Test",
+                            startAt: DateTime.UtcNow,
+                            endAt: DateTime.UtcNow.AddDays(1),
+                            description: default,
+                            totalSeats: totalSeats);
     }
 }

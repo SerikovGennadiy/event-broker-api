@@ -1,34 +1,25 @@
-﻿using Entities.Domain.Models;
+﻿using Contracts.Service;
+using Entities.Domain.Models;
 using Entities.ErrorHandling.Exceptions.Event;
 using EventBrokerAPI.Tests.Fixture.EventService;
+using Microsoft.Extensions.DependencyInjection;
 using Shared.DTO;
+using Shared.ModelExtensions;
 
 namespace EventBrokerAPI.Tests.EventService.Exceptions;
 
-public class Tests : IClassFixture<EventServiceFixture>
+public class Tests(EventServiceFixture _fixture) : IClassFixture<EventServiceFixture>
 {
-    private readonly EventServiceFixture _fixture;
-    public Tests(EventServiceFixture fixture)
-    {
-        _fixture = fixture;
-    }
-
     [Fact]
     [Trait("Event", "Exceptions")]
-    public void GetEventById_NotExistId_ThrowsEventNotFoundException()
+    public async Task GetEventById_NotExistId_ThrowsEventNotFoundException()
     {
         // Arrange
         var unexistingGuid = Guid.NewGuid();
-        List<Event> events = [
-            new () { Id = Guid.NewGuid(), Title = "A", StartAt = DateTime.UtcNow, EndAt = DateTime.UtcNow.AddDays(2), TotalSeats = default },
-            new () { Id = Guid.NewGuid(), Title = "B", StartAt = DateTime.UtcNow.AddDays(2), EndAt = DateTime.UtcNow.AddDays(1), TotalSeats = default },
-            new () { Id = Guid.NewGuid(), Title = "C", StartAt = DateTime.UtcNow.AddDays(5), EndAt = DateTime.UtcNow.AddDays(1), TotalSeats = default}
-        ];
-
-        _fixture.EventRepositoryMock.Setup(r => r.GetByIdAsync(unexistingGuid)).Returns((Event?)null);
 
         // Act
-        var exception = Record.Exception(() => _fixture.EventService.GetEventByIdAsync(unexistingGuid));
+        var eventService = _fixture.serviceProvider.GetRequiredService<IEventService>();
+        var exception = await Record.ExceptionAsync(() => eventService.GetEventByIdAsync(unexistingGuid));
 
         // Assert
         Assert.NotNull(exception);
@@ -37,15 +28,15 @@ public class Tests : IClassFixture<EventServiceFixture>
 
     [Fact]
     [Trait("Event", "Exceptions")]
-    public void UpdateEvent_NotExistId_ThrowsEventNotFoundException()
+    public async Task UpdateEvent_NotExistId_ThrowsEventNotFoundException()
     {
         // Arrange
         var unexistingGuid = Guid.NewGuid();
         var dto = new EventDTO("Title", "Description", DateTime.UtcNow, DateTime.UtcNow.AddDays(1), TotalSeats: 10);
-        _fixture.EventRepositoryMock.Setup(r => r.GetByIdAsync(unexistingGuid)).Returns((Event?)null);
 
         // Act & Assert
-        Assert.Throws<EventNotFoundException>(() => _fixture.EventService.UpdateEventAsync(unexistingGuid, dto));
+        var eventService = _fixture.serviceProvider.GetRequiredService<IEventService>();
+        await Assert.ThrowsAsync<EventNotFoundException>(() => eventService.UpdateEventAsync(unexistingGuid, dto));
     }
 
     [Fact]
@@ -59,7 +50,8 @@ public class Tests : IClassFixture<EventServiceFixture>
                                        EndAt: DateTime.UtcNow.AddDays(1),
                                        TotalSeats: 10);
         // Act & Assert
-        var expeption = Assert.Throws<EventNoTitleException>(() => _fixture.EventService.CreateEvent(eventDTO));
+        var eventService = _fixture.serviceProvider.GetRequiredService<IEventService>();
+        var expeption = Assert.Throws<EventNoTitleException>(() => eventService.CreateEvent(eventDTO));
         Assert.Equal("Отсуствует наименование события", expeption.Message);
     }
 
@@ -74,39 +66,36 @@ public class Tests : IClassFixture<EventServiceFixture>
                                        EndAt: DateTime.UtcNow.AddDays(1),
                                        TotalSeats: 0);
         // Act & Assert
-        var expeption = Assert.Throws<EventBadTotalSeatsQuantity>(() => _fixture.EventService.CreateEvent(eventDTO));
+        var eventService = _fixture.serviceProvider.GetRequiredService<IEventService>();
+        var expeption = Assert.Throws<EventBadTotalSeatsQuantity>(() => eventService.CreateEvent(eventDTO));
         Assert.Equal("Общее количество мест на мероприятии должно быть больше 0", expeption.Message);
     }
 
 
     [Fact]
     [Trait("Event", "Exceptions")]
-    public void UpdateEvent_IncorrectDateRange_ThrowsEventBadDateRangeException()
+    public async Task UpdateEvent_IncorrectDateRange_ThrowsEventBadDateRangeException()
     {
-        // Arrange
-        var existingGuid = Guid.NewGuid();
-        var existingEvent = new Event
-        {
-            Id = existingGuid,
-            Title = "Existing Event",
-            StartAt = DateTime.UtcNow,
-            EndAt = DateTime.UtcNow.AddDays(1),
-            TotalSeats = 10
-        };
+        Guid eventGuid = Guid.NewGuid();
 
-        // Arrange
-        var updatedEventDTO = new EventDTO(
-                                    Title: "Another one super event",
-                                    Description: "Info about event",
-                                    StartAt: DateTime.UtcNow,
-                                    EndAt: DateTime.UtcNow.AddDays(-2),
-                                    TotalSeats: 10
-                                    ); // некорректная дата окончания
+        var original = Event.Create(title: "Existing Event",
+                                    startAt: DateTime.UtcNow,
+                                    endAt: DateTime.UtcNow.AddDays(1),
+                                    default,
+                                    totalSeats: 10);
+        Guid eventId = original.Id;
 
-        _fixture.EventRepositoryMock.Setup(r => r.GetByIdAsync(existingGuid)).Returns(existingEvent);
+        Event updated = Event.Create(title: "Another one super event",
+                                     startAt: DateTime.UtcNow,
+                                     endAt: DateTime.UtcNow.AddDays(-2),
+                                     description: "Info about event",
+                                     totalSeats: 10);
+
+        EventDTO updatedEventDTO = updated.toDTO();
 
         // Act & Assert
-        var exception = Assert.Throws<EventBadDateRangeException>(() => _fixture.EventService.UpdateEventAsync(existingGuid, updatedEventDTO));
+        var eventService = _fixture.serviceProvider.GetRequiredService<IEventService>();
+        var exception = await  Assert.ThrowsAsync<EventBadDateRangeException>(() => eventService.UpdateEventAsync(eventId, updatedEventDTO));
         Assert.Equal("Некорректные даты начала и завершения мероприятия", exception.Message);
     }
 }

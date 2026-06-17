@@ -1,8 +1,10 @@
-﻿using Entities.Domain.Models;
-using Entities.ErrorHandling.Exceptions.Booking;
-using Moq;
+﻿using Moq;
 using Shared.DTO;
 using System.Collections.Concurrent;
+using Contracts.Service;
+using Entities.Domain.Models;
+using Entities.ErrorHandling.Exceptions.Booking;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace EventBrokerAPI.Tests.BookingService.Concurrency;
 
@@ -16,43 +18,29 @@ public class Tests(BookingServiceFixture fixture) : IClassFixture<BookingService
     public async Task ConcurrentBookings_WithOverbooking_OnlyAllowsUpToCapacity()
     {
         // Arrange
-        _fixture.ResetAllMocks();
-
         var concurrentRequests = 20;
-        var eventId = Guid.NewGuid();
         var totalSeats = 5;
-        Event testEvent = CreateTestEvent(eventId, totalSeats);
 
-        // Настраиваем маппер
-        _fixture.MapperMock
-            .Setup(m => m.Map<BookingDTO>(It.IsAny<Booking>()))
-            .Returns((Booking b) => new BookingDTO(
-                b.Id,
-                b.EventId,
-                b.Status,
-                b.CreatedAt,
-                b.ProcessedAt
-            ));
+        Event testEvent = CreateTestEvent(totalSeats);
+        var eventId = testEvent.Id;
 
         _fixture.TestEvents[eventId] = testEvent;
-
 
         var successCount = 0;
         var failureCount = 0;
         var lockObj = new object();
 
-        var capturedBookings = new ConcurrentBag<Booking>();
-        _fixture.BookingRepositoryMock
-            .Setup(r => r.CreateBooking(It.IsAny<Booking>()))
-            .Callback<Booking>(b => capturedBookings.Add(b));
+        var capturedBookings = new ConcurrentBag<BookingDTO>();
 
         // Act
+        var bookingService = _fixture.serviceProvider.GetRequiredService<IBookingService>();
         var tasks = Enumerable.Range(0, concurrentRequests).Select(async _ =>
         {
             try
             {
-                await _fixture.BookingService.CreateBooking(
-                    eventId);
+                var createdBooking = await bookingService.CreateBookingAsync(eventId);
+                capturedBookings.Add(createdBooking);
+
                 Interlocked.Increment(ref successCount);
             }
             catch (NoAvailableSeatsException)
@@ -75,33 +63,20 @@ public class Tests(BookingServiceFixture fixture) : IClassFixture<BookingService
     public async Task ConcurrentBookings_AllHaveUniqueIds()
     {
         // Arrange
-        var eventId = Guid.NewGuid();
         var totalSeats = 10;
-        var testEvent = CreateTestEvent(totalSeats: totalSeats, eventId: eventId);
-
-        // Настраиваем маппер
-        _fixture.MapperMock
-            .Setup(m => m.Map<BookingDTO>(It.IsAny<Booking>()))
-            .Returns((Booking b) => new BookingDTO(
-                b.Id,
-                b.EventId,
-                b.Status,
-                b.CreatedAt,
-                b.ProcessedAt
-            ));
+        var testEvent = CreateTestEvent(totalSeats);
+        var eventId = testEvent.Id;
 
         _fixture.TestEvents[eventId] = testEvent;
 
         var bookingIds = new ConcurrentBag<Guid>();
-        _fixture.BookingRepositoryMock
-            .Setup(r => r.CreateBooking(It.IsAny<Booking>()))
-            .Callback<Booking>(b => bookingIds.Add(b.Id));
 
         // Act
+        var bookingService = _fixture.serviceProvider.GetRequiredService<IBookingService>();
         var tasks = Enumerable.Range(0, totalSeats).Select(async _ =>
         {
-            await _fixture.BookingService.CreateBooking(
-                eventId);
+            var createdBooking = await bookingService.CreateBookingAsync(eventId);
+            bookingIds.Add(createdBooking.Id);
         });
 
         await Task.WhenAll(tasks);
@@ -113,17 +88,12 @@ public class Tests(BookingServiceFixture fixture) : IClassFixture<BookingService
     }
 
 
-    private static Event CreateTestEvent(Guid eventId, int totalSeats)
+    private static Event CreateTestEvent(int totalSeats)
     {
-        return new Event
-        {
-            Id = eventId,
-            Title = "Test Event",
-            Description = "Test Description",
-            StartAt = DateTime.UtcNow,
-            EndAt = DateTime.UtcNow.AddDays(1),
-            TotalSeats = totalSeats,
-            AvailableSeats = totalSeats
-        };
+        return Event.Create(title: "Test Event",
+                            startAt: DateTime.UtcNow,
+                            endAt: DateTime.UtcNow.AddDays(1),
+                            description: "Test Description",
+                            totalSeats: totalSeats);
     }
 }

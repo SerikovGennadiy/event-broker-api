@@ -1,27 +1,21 @@
-﻿using Entities.Domain.Models;
+﻿using Contracts.Service;
+using Entities.Domain.Models;
+using Entities.ErrorHandling.Exceptions.Event;
 using EventBrokerAPI.Tests.Fixture.EventService;
+using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using Shared.DTO;
 using Shared.ModelExtensions;
 
 namespace EventBrokerAPI.Tests.EventService.Commands;
 
-public class Tests : IClassFixture<EventServiceFixture>
+public class Tests(EventServiceFixture _fixture) : IClassFixture<EventServiceFixture>
 {
-    private readonly EventServiceFixture _fixture;
-    public Tests(EventServiceFixture fixture)
-    {
-        _fixture = fixture;
-    }
-
     [Fact]
     [Trait("Event", "Commands")]
     public void CreateEvent_ValidData_ReturnsEvent()
     {
         // Arrange
-        var createdEventGuid = Guid.NewGuid();
-
-        // Создаем EventInfo без Id
         var createEventDTO = new CreateEvent(
             Title: "Event: hiking",
             Description: "Info about event",
@@ -30,36 +24,19 @@ public class Tests : IClassFixture<EventServiceFixture>
             TotalSeats: 100
         );
 
-        // Добавляем Id через with (теперь работает!)
-        var @event = new Event()
-        {
-            Id = createdEventGuid,
-            Title = "Event: hiking",
-            Description = "Info about event",
-            StartAt = new DateTime(2026, 5, 2),
-            EndAt = new DateTime(2026, 5, 3),
-            TotalSeats = 100
-        };
-
-        var eventDTO = new EventInfo(Id: createdEventGuid,
-                                     Title: "Event: hiking",
-                                     Description: "Info about event",
-                                     StartAt: new DateTime(2026, 5, 2),
-                                     EndAt: new DateTime(2026, 5, 3),
-                                     TotalSeats: 100,
-                                     AvailableSeats: 100);
-
-        _fixture.MapperMock.Setup(m => m.Map<Event>(createEventDTO)).Returns(@event);
-        _fixture.MapperMock.Setup(m => m.Map<EventInfo>(It.IsAny<Event>())).Returns(eventDTO);
-        _fixture.EventRepositoryMock.Setup(repo => repo.CreateEvent(It.IsAny<Event>())).Verifiable();
-
         // Act
-        var result = _fixture.EventService.CreateEvent(createEventDTO);
+        var eventService = _fixture.serviceProvider.GetRequiredService<IEventService>();
+        var result = eventService.CreateEvent(createEventDTO);
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(eventDTO, result);
-        _fixture.RepositoryManagerMock.Verify(rm => rm.Event.CreateEvent(It.IsAny<Event>()), Times.Once());
+        Assert.NotEqual(Guid.Empty, result.Id);
+        Assert.Equal(createEventDTO.Title, result.Title);
+        Assert.Equal(createEventDTO.Description, result.Description);
+        Assert.Equal(createEventDTO.StartAt, result.StartAt);
+        Assert.Equal(createEventDTO.EndAt, result.EndAt);
+        Assert.Equal(createEventDTO.TotalSeats, result.TotalSeats);
+        Assert.Equal(createEventDTO.TotalSeats, result.AvailableSeats); // если есть
     }
 
     [Fact]
@@ -68,59 +45,53 @@ public class Tests : IClassFixture<EventServiceFixture>
     {
         // Arrange
         Guid eventGuid = Guid.NewGuid();
-        Event @event = new Event()
-        {
-            Id = eventGuid,
-            Title = "Test event",
-            StartAt = DateTime.UtcNow,
-            EndAt = DateTime.UtcNow.AddDays(2),
-            TotalSeats = 100
-        };
 
-        Event updatedEvent = new Event()
-        {
-            Id = eventGuid,
-            Title = "Updated test event",
-            Description = "Added description",
-            StartAt = DateTime.UtcNow.AddDays(3),
-            EndAt = DateTime.UtcNow.AddDays(4),
-            TotalSeats = 100
-        };
-        EventDTO updatedEventDTO = updatedEvent.toDTO();
+        var original = Event.Create(title: "Test event",
+                                    startAt: DateTime.UtcNow.AddDays(3),
+                                    endAt: DateTime.UtcNow.AddDays(4),
+                                    default,
+                                    totalSeats: 100);
+        Guid eventId = original.Id;
 
-        _fixture.MapperMock.Setup(m => m.Map<Event>(updatedEventDTO)).Returns(updatedEvent);
-        _fixture.EventRepositoryMock.Setup(r => r.GetByIdAsync(eventGuid)).Returns(@event);
+        Event updated = Event.Create(title: "Updated test event",
+                                     startAt: DateTime.UtcNow.AddDays(3),
+                                     endAt: DateTime.UtcNow.AddDays(4),
+                                     description: "Added description",
+                                     totalSeats: 100);
+
+        EventDTO updatedEventDTO = updated.toDTO();
 
         // Act 
-        _fixture.EventService.UpdateEventAsync(eventGuid, updatedEventDTO);
+        var eventService = _fixture.serviceProvider.GetRequiredService<IEventService>();
+        eventService.UpdateEventAsync(eventGuid, updatedEventDTO);
 
         // Assert (подсчет не вызовов методов репозитория Event, а любых обращений к нему)
-        _fixture.RepositoryManagerMock.Verify(rm => rm.Event, Times.AtLeastOnce);
+        Assert.Equal(original.Title, updatedEventDTO.Title);
+        Assert.Equal(original.Description, updatedEventDTO.Description);
     }
 
     [Fact]
     [Trait("Event", "Commands")]
-    public void DeleteEvent_ByGuidId_WithoutReturns()
+    public async Task DeleteEvent_ByGuidId_WithoutReturns()
     {
         // Arrange
-        Guid eventGuid = Guid.NewGuid();
-        Event @event = new Event()
-        {
-            Id = eventGuid,
-            Title = "Test event",
-            StartAt = DateTime.UtcNow,
-            EndAt = DateTime.UtcNow.AddDays(2),
-            TotalSeats = 100
-        };
-        EventDTO eventDTO = @event.toDTO();
-
-        _fixture.MapperMock.Setup(m => m.Map<Event>(eventDTO)).Returns(@event);
-        _fixture.EventRepositoryMock.Setup(r => r.GetByIdAsync(eventGuid)).Returns(@event);
+        var createEventDTO = new CreateEvent(Title: "Event: hiking",
+                                             Description: "Info about event",
+                                             StartAt: new DateTime(2026, 5, 2),
+                                             EndAt: new DateTime(2026, 5, 3),
+                                             TotalSeats: 100);
 
         // Act
-        _fixture.EventService.DeleteEventAsync(eventGuid);
+        var eventService = _fixture.serviceProvider.GetRequiredService<IEventService>();
+        var createdEvent = eventService.CreateEvent(createEventDTO);
+        await eventService.DeleteEventAsync(createdEvent.Id);
 
         // Assert
-        _fixture.RepositoryManagerMock.Verify(rm => rm.Event.DeleteEvent(It.IsAny<Event>()), Times.Once());
+        await eventService.DeleteEventAsync(createdEvent.Id);
+
+        // Assert
+        await Assert.ThrowsAsync<EventNotFoundException>(
+            () => eventService.GetEventByIdAsync(createdEvent.Id)
+        );
     }
 }

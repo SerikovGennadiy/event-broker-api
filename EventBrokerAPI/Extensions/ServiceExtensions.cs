@@ -1,5 +1,6 @@
 ﻿using Contracts.Repository;
 using Contracts.Service;
+using Microsoft.EntityFrameworkCore;
 using Repository;
 using Service;
 
@@ -45,7 +46,8 @@ public static class ServiceExtensions
     }
     public static IServiceCollection ConfigureContext(this IServiceCollection services)
     {
-        services.AddSingleton<RepositoryContext>();
+        //services.AddSingleton<RepositoryContext>();
+        services.AddDbContext<AppDbContext>(opts => opts.UseInMemoryDatabase("eventapi"));
         return services;
     }
 

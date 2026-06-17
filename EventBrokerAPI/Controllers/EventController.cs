@@ -9,7 +9,7 @@ namespace EventBrokerAPI.Controllers;
 
 [ApiController]
 [Route("events")]
-public class EventController(IEventService eventService, IBookingService bookingService): ControllerBase
+public class EventController(IEventService eventService, IBookingService bookingService) : ControllerBase
 {
     [HttpGet]
     public async Task<IActionResult> GetAllEvents([FromQuery] EventParameters eventParameters)
@@ -22,10 +22,10 @@ public class EventController(IEventService eventService, IBookingService booking
         return Ok(result.eventDTOs);
     }
 
-    [HttpGet("{id:guid}", Name="EventById")]
-    public IActionResult GetEvent(Guid id)
+    [HttpGet("{id:guid}", Name = "EventById")]
+    public async Task<IActionResult> GetEvent(Guid id)
     {
-        var eventDTO = eventService.GetEventByIdAsync(id);
+        var eventDTO = await eventService.GetEventByIdAsync(id);
         return Ok(eventDTO);
     }
 
@@ -43,7 +43,7 @@ public class EventController(IEventService eventService, IBookingService booking
     [ProducesResponseType(typeof(ErrorDetail), StatusCodes.Status409Conflict)]
     public async Task<IActionResult> CreateEventBooking(Guid eventId, CancellationToken token)
     {
-        var bookingDTO = await bookingService.CreateBooking(eventId);
+        var bookingDTO = await bookingService.CreateBookingAsync(eventId);
 
         return AcceptedAtRoute(
             routeName: "BookingById",

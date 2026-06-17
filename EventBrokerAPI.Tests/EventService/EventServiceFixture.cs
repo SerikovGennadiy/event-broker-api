@@ -1,34 +1,31 @@
-﻿using AutoMapper;
+﻿using Moq;
+using AutoMapper;
 using Contracts.Repository;
-using Moq;
-using EventServiceType = Service.EventService;
+using Microsoft.Extensions.DependencyInjection;
+using Contracts.Service;
+using Repository;
+using Microsoft.EntityFrameworkCore;
 
 namespace EventBrokerAPI.Tests.Fixture.EventService;
 public class EventServiceFixture : IDisposable
 {
-    public EventServiceType EventService { get; }
-
-    public Mock<IRepositoryManager> RepositoryManagerMock { get; } = new();
-    public Mock<IEventRepository> EventRepositoryMock { get; } = new();
-    public Mock<IMapper> MapperMock { get; } = new();
+    public required IServiceProvider serviceProvider;
 
     public EventServiceFixture()
     {
-        RepositoryManagerMock.Setup(x => x.Event)
-            .Returns(EventRepositoryMock.Object);
+        var services = new ServiceCollection();
 
-        EventService = new EventServiceType(
-            RepositoryManagerMock.Object,
-            MapperMock.Object
-        );
+        services.AddDbContext<AppDbContext>(options =>
+            options.UseInMemoryDatabase($"TestDb_{Guid.CreateVersion7()}"));
+        services.AddScoped<IRepositoryManager, RepositoryManager>();
+        services.AddScoped<IEventService, Service.EventService>();
+        services.AddAutoMapper(cfg => cfg.AddProfile<MappingProfile>());
+
+        serviceProvider = services.BuildServiceProvider();
     }
 
     public void Dispose()
     {
-        RepositoryManagerMock.Reset();
-        EventRepositoryMock.Reset();
-        MapperMock.Reset();
-
         GC.SuppressFinalize(this);
     }
 }

@@ -1,51 +1,38 @@
-﻿using AutoMapper;
+﻿using Moq;
+using AutoMapper;
+using Contracts.Service;
 using Contracts.Repository;
 using Entities.Domain.Models;
-using Entities.ErrorHandling.Exceptions.Booking;
 using Entities.ErrorHandling.Exceptions.Event;
-using Moq;
+using Entities.ErrorHandling.Exceptions.Booking;
+using Microsoft.EntityFrameworkCore;
+using Repository;
 using System.Collections.Concurrent;
-using Xunit;
-using BookingServiceType = Service.BookingService;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.VisualStudio.TestPlatform.TestHost;
 
 namespace EventBrokerAPI.Tests.BookingService;
 public class BookingServiceFixture : IAsyncLifetime
 {
-    public required BookingServiceType BookingService { get; set; }
-    public required Mock<IRepositoryManager> RepositoryManagerMock { get; set; } 
-    public required Mock<IEventRepository> EventRepositoryMock { get; set;} 
-    public required Mock<IBookingRepository> BookingRepositoryMock { get; set;} 
-    public required Mock<IMapper> MapperMock { get; set;} 
+    public required ServiceProvider serviceProvider;
     public required ConcurrentDictionary<Guid, Event> TestEvents { get; set; }
 
     public async Task InitializeAsync()
     {
-        // Создаем новые инстансы для каждого запуска
+        var services = new ServiceCollection();
+        // Регистрируем реальный сервис
+        services.AddDbContext<AppDbContext>(options => 
+            options.UseInMemoryDatabase($"BookDB_{Guid.CreateVersion7()}"));
 
-        RepositoryManagerMock = new Mock<IRepositoryManager>();
-        EventRepositoryMock = new Mock<IEventRepository>();
-        BookingRepositoryMock = new Mock<IBookingRepository>();
-        MapperMock = new Mock<IMapper>();
-        TestEvents = new ConcurrentDictionary<Guid, Event>();
+        services.AddScoped<IEventService, Service.EventService>();
+        services.AddScoped<IBookingService, Service.BookingService>();
+        services.AddScoped<IRepositoryManager, RepositoryManager>();
+        services.AddAutoMapper(cfg => cfg.AddProfile<MappingProfile>());
 
-        RepositoryManagerMock
-            .Setup(x => x.Event)
-            .Returns(EventRepositoryMock.Object);
+        serviceProvider = services.BuildServiceProvider();
 
-        RepositoryManagerMock
-            .Setup(x => x.Booking)
-            .Returns(BookingRepositoryMock.Object);
-
-        BookingService = new BookingServiceType(
-            RepositoryManagerMock.Object,
-            MapperMock.Object
-        );
-
-        // Важно: очищаем делегаты, связывающиеся через DI!!
-        BookingServiceType.ClearHandlers();
-        
         // Настраиваем делегаты для работы с тестовыми событиями
-        BookingServiceType.OnBooked(data =>
+        Service.BookingService.OnBooked(async data =>
         {
             if (TestEvents.TryGetValue(data.eventId, out var @event))
             {
@@ -56,49 +43,22 @@ public class BookingServiceFixture : IAsyncLifetime
             {
                 throw new EventNotFoundException(data.eventId);
             }
+            await Task.CompletedTask;
         });
 
-        BookingServiceType.OnRejected(data =>
+        Service.BookingService.OnRejected(async data =>
         {
             if (TestEvents.TryGetValue(data.eventId, out var @event))
             {
                 @event.ReleaseSeats(data.seats);
             }
+            await Task.CompletedTask;
         });
 
         await Task.CompletedTask;
     }
-
     public async Task DisposeAsync()
     {
-        // Очищаем статические делегаты
-        BookingServiceType.ClearHandlers();
-
-        // Очищаем моки
-        RepositoryManagerMock?.Reset();
-        EventRepositoryMock?.Reset();
-        BookingRepositoryMock?.Reset();
-        MapperMock?.Reset();
-
-        // Очищаем тестовые данные
-        TestEvents?.Clear();
-
-        await Task.CompletedTask;
-    }
-
-    public void ResetAllMocks()
-    {
-        RepositoryManagerMock.Reset();
-        EventRepositoryMock.Reset();
-        BookingRepositoryMock.Reset();
-        MapperMock.Reset();
-
-        // Перенастраиваем базовые связи
-        RepositoryManagerMock
-            .Setup(x => x.Event)
-            .Returns(EventRepositoryMock.Object);
-        RepositoryManagerMock
-            .Setup(x => x.Booking)
-            .Returns(BookingRepositoryMock.Object);
+        await serviceProvider.DisposeAsync();
     }
 }

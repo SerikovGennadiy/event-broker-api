@@ -1,6 +1,8 @@
-﻿using Entities.Domain.Models;
-using Moq;
+﻿using Moq;
 using Shared.DTO;
+using Contracts.Service;
+using Entities.Domain.Models;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace EventBrokerAPI.Tests.BookingService.Queries;
 
@@ -17,14 +19,9 @@ public class Tests(BookingServiceFixture fixture) : IClassFixture<BookingService
         var bookingId = Guid.NewGuid();
         var booking = new Booking(bookingId, Guid.NewGuid());
 
-        _fixture.BookingRepositoryMock.Setup(r => r.GetByIdAsync(bookingId)).Returns(booking);
-
-        _fixture.MapperMock
-            .Setup(m => m.Map<BookingDTO>(It.IsAny<Booking>()))
-            .Returns((Booking b) => new BookingDTO(b.Id, b.EventId, b.Status, b.CreatedAt, b.ProcessedAt));
-
         // Act
-        var result = await _fixture.BookingService.GetBookingByIdAsync(bookingId, CancellationToken.None);
+        var bookingService = _fixture.serviceProvider.GetRequiredService<IBookingService>();
+        var result = await bookingService.GetBookingByIdAsync(bookingId);
 
         // Assert
         Assert.NotNull(result);

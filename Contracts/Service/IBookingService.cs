@@ -8,5 +8,5 @@ public interface IBookingService
     Task<ICollection<BookingDTO>> GetPendingBookingsAsync();
     Task ConfirmBookingAsync(Guid bookingId, CancellationToken cancellationToken = default);
     Task RejectBooingAsync(Guid bookingId, CancellationToken cancellationToken = default);
-    Task<BookingDTO> CreateBooking(Guid eventId, CancellationToken cancellationToken = default);
+    Task<BookingDTO> CreateBookingAsync(Guid eventId, CancellationToken cancellationToken = default);
 }
