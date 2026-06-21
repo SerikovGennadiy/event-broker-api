@@ -28,13 +28,12 @@ public class Tests(BookingServiceFixture fixture) : IClassFixture<BookingService
 
         var successCount = 0;
         var failureCount = 0;
-        var lockObj = new object();
 
         var capturedBookings = new ConcurrentBag<BookingDTO>();
 
         // Act
         var bookingService = _fixture.serviceProvider.GetRequiredService<IBookingService>();
-        var tasks = Enumerable.Range(0, concurrentRequests).Select(async _ =>
+        var tasks = Enumerable.Range(0, concurrentRequests).Select(_ => Task.Run(async () =>
         {
             try
             {
@@ -47,7 +46,7 @@ public class Tests(BookingServiceFixture fixture) : IClassFixture<BookingService
             {
                 Interlocked.Increment(ref failureCount);
             }
-        });
+        }));
 
         await Task.WhenAll(tasks);
 

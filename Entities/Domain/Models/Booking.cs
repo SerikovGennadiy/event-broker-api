@@ -41,9 +41,9 @@ public class Booking : IdEntity
     /// <summary> Конструктор для создания новой брони</summary>
     /// <param name="bookingId">Идентификатор брони</param>
     /// <param name="eventId">Идентификатор мероприятия</param>
-    public Booking(Guid bookingId, Guid eventId)
+    public Booking(Guid eventId)
     {
-        Id = bookingId;
+        Id = Guid.NewGuid();
         EventId = eventId;
         CreatedAt = DateTime.UtcNow;
         OnPending();
@@ -69,7 +69,7 @@ public class Booking : IdEntity
         ProcessedAt = DateTime.UtcNow;
     }
 
-    public void OnPending()
+    private void OnPending()
     {
         if (Status == BookingStatus.Pending)
             return;
@@ -77,5 +77,4 @@ public class Booking : IdEntity
         Status = BookingStatus.Pending;
         ProcessedAt = DateTime.UtcNow;
     }
-
 }

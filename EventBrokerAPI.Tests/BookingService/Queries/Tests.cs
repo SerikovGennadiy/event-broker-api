@@ -1,6 +1,4 @@
-﻿using Moq;
-using Shared.DTO;
-using Contracts.Service;
+﻿using Contracts.Service;
 using Entities.Domain.Models;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -16,17 +14,28 @@ public class Tests(BookingServiceFixture fixture) : IClassFixture<BookingService
     public async Task GetBookingById_ReturnsCorrectInformation()
     {
         // Arrange
-        var bookingId = Guid.NewGuid();
-        var booking = new Booking(bookingId, Guid.NewGuid());
+        var tempEvent = CreateTestEvent(totalSeats: 5);
+
+        _fixture.TestEvents[tempEvent.Id] = tempEvent;
 
         // Act
         var bookingService = _fixture.serviceProvider.GetRequiredService<IBookingService>();
-        var result = await bookingService.GetBookingByIdAsync(bookingId);
+        var booking = await bookingService.CreateBookingAsync(tempEvent.Id);
+        var result = await bookingService.GetBookingByIdAsync(booking.Id);
 
         // Assert
-        Assert.NotNull(result);
-        Assert.Equal(bookingId, result.Id);
-        Assert.Equal(booking.EventId, result.EventId);
-        Assert.Equal(BookingStatus.Pending, result.Status);
+        Assert.NotNull(booking);
+        Assert.Equal(booking.Id, result.Id);
+        Assert.Equal(booking.EventId, tempEvent.Id);
+        Assert.Equal(BookingStatus.Pending, booking.Status);
+    }
+
+    private static Event CreateTestEvent(int totalSeats)
+    {
+        return Event.Create(title: "Test Event",
+                            startAt: DateTime.UtcNow,
+                            endAt: DateTime.UtcNow.AddDays(1),
+                            description: "Test Description",
+                            totalSeats: totalSeats);
     }
 }

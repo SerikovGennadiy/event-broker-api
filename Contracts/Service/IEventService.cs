@@ -15,7 +15,7 @@ public interface IEventService
     Task UpdateEventAsync(Guid eventId, EventDTO eventDTO);
 
     // создать событие
-    EventInfo CreateEvent(CreateEvent eventDTO);
+    Task<EventInfo> CreateEventAsync(CreateEvent eventDTO);
 
     // удалить событие и сввязанные с ним брони 
     Task DeleteEventAsync(Guid eventId);

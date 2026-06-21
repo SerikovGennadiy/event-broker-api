@@ -3,6 +3,7 @@ using Entities.Domain.Models;
 using Entities.ErrorHandling.Exceptions.Event;
 using EventBrokerAPI.Tests.Fixture.EventService;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.OpenApi.Writers;
 using Moq;
 using Shared.DTO;
 using Shared.ModelExtensions;
@@ -13,7 +14,7 @@ public class Tests(EventServiceFixture _fixture) : IClassFixture<EventServiceFix
 {
     [Fact]
     [Trait("Event", "Commands")]
-    public void CreateEvent_ValidData_ReturnsEvent()
+    public async Task CreateEvent_ValidData_ReturnsEvent()
     {
         // Arrange
         var createEventDTO = new CreateEvent(
@@ -26,7 +27,7 @@ public class Tests(EventServiceFixture _fixture) : IClassFixture<EventServiceFix
 
         // Act
         var eventService = _fixture.serviceProvider.GetRequiredService<IEventService>();
-        var result = eventService.CreateEvent(createEventDTO);
+        var result = await eventService.CreateEventAsync(createEventDTO);
 
         // Assert
         Assert.NotNull(result);
@@ -41,33 +42,41 @@ public class Tests(EventServiceFixture _fixture) : IClassFixture<EventServiceFix
 
     [Fact]
     [Trait("Event", "Commands")]
-    public void UpdateEvent_WithValidData_ReturnUpdatedSameEvent()
+    public async Task UpdateEvent_WithValidData_ReturnUpdatedSameEvent()
     {
         // Arrange
-        Guid eventGuid = Guid.NewGuid();
+        var eventService = _fixture.serviceProvider.GetRequiredService<IEventService>();
 
-        var original = Event.Create(title: "Test event",
-                                    startAt: DateTime.UtcNow.AddDays(3),
-                                    endAt: DateTime.UtcNow.AddDays(4),
-                                    default,
-                                    totalSeats: 100);
-        Guid eventId = original.Id;
+        var createdDTO = new CreateEvent(
+            Title: "Test event",
+            Description: "Initial description",
+            StartAt: DateTime.UtcNow.AddDays(3),
+            EndAt: DateTime.UtcNow.AddDays(4),
+            TotalSeats: 100
+        );
 
-        Event updated = Event.Create(title: "Updated test event",
-                                     startAt: DateTime.UtcNow.AddDays(3),
-                                     endAt: DateTime.UtcNow.AddDays(4),
-                                     description: "Added description",
-                                     totalSeats: 100);
+        var created = await eventService.CreateEventAsync(createdDTO);
+        var createdId = created.Id;
 
-        EventDTO updatedEventDTO = updated.toDTO();
+        var updatedEventDTO = new EventDTO(
+            Title: "Updated test event",
+            Description: "Updated description",
+            StartAt: DateTime.UtcNow.AddDays(5),
+            EndAt: DateTime.UtcNow.AddDays(6),
+            TotalSeats: 150
+        );
 
         // Act 
-        var eventService = _fixture.serviceProvider.GetRequiredService<IEventService>();
-        eventService.UpdateEventAsync(eventGuid, updatedEventDTO);
+        await eventService.UpdateEventAsync(createdId, updatedEventDTO);
+        var updated = await eventService.GetEventByIdAsync(createdId);
 
-        // Assert (подсчет не вызовов методов репозитория Event, а любых обращений к нему)
-        Assert.Equal(original.Title, updatedEventDTO.Title);
-        Assert.Equal(original.Description, updatedEventDTO.Description);
+        // Assert
+        Assert.NotNull(updated);
+        Assert.Equal(updatedEventDTO.Title, updated.Title);
+        Assert.Equal(updatedEventDTO.Description, updated.Description);
+        Assert.Equal(updatedEventDTO.StartAt, updated.StartAt);
+        Assert.Equal(updatedEventDTO.EndAt, updated.EndAt);
+        Assert.Equal(updatedEventDTO.TotalSeats, updated.TotalSeats);
     }
 
     [Fact]
@@ -83,10 +92,7 @@ public class Tests(EventServiceFixture _fixture) : IClassFixture<EventServiceFix
 
         // Act
         var eventService = _fixture.serviceProvider.GetRequiredService<IEventService>();
-        var createdEvent = eventService.CreateEvent(createEventDTO);
-        await eventService.DeleteEventAsync(createdEvent.Id);
-
-        // Assert
+        var createdEvent = await eventService.CreateEventAsync(createEventDTO);
         await eventService.DeleteEventAsync(createdEvent.Id);
 
         // Assert

@@ -10,7 +10,7 @@ namespace Service;
 
 public class BookingService(IRepositoryManager repositoryManager, IMapper mapper) : IBookingService
 {
-    private static readonly SemaphoreSlim _bookigSemaphore = new(1,1);
+    private static readonly SemaphoreSlim _bookigSemaphore = new(1, 1);
     #region Управление уведомлениями
     /// <summary>Отбилось желание забронироваться на мероприятие</summary>
     private static Func<(Guid eventId, int seats), Task>? Rejected;
@@ -38,9 +38,14 @@ public class BookingService(IRepositoryManager repositoryManager, IMapper mapper
         {
             Booking booking;
 
-            Booked?.Invoke((eventId, seats: 1));
+            var bookedHandler = Booked;
+            if (bookedHandler is not null)
+            {
+                // await handler чтобы исключения из обработчика пробрасывались в вызывающий код
+                await bookedHandler((eventId, seats: 1));
+            }
 
-            booking = new Booking(Guid.NewGuid(), eventId);
+            booking = new Booking(eventId);
             repositoryManager.Booking.CreateBooking(booking);
 
             await repositoryManager.SaveAsync();
@@ -83,7 +88,7 @@ public class BookingService(IRepositoryManager repositoryManager, IMapper mapper
         var booking = await GetBookingAsync(bookingId);
         booking.Confirm();
 
-        if(repositoryManager.Booking is BookingRepository repo)
+        if (repositoryManager.Booking is BookingRepository repo)
         {
             repo.Update(booking);
         }
@@ -99,7 +104,12 @@ public class BookingService(IRepositoryManager repositoryManager, IMapper mapper
         var booking = await GetBookingAsync(bookingId);
         booking.Reject();
 
-        Rejected?.Invoke((eventId: booking.EventId, seats: 1));
+        var rejectedHandler = Rejected;
+        if (rejectedHandler is not null)
+        {
+            // await чтобы обработчик выполнялся и изменения/исключения применялись синхронно
+            await rejectedHandler((eventId: booking.EventId, seats: 1));
+        }
 
         if (repositoryManager.Booking is BookingRepository repo)
         {

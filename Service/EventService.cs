@@ -43,12 +43,14 @@ public class EventService : IEventService
         return mapper.Map<EventInfo>(entity);
     }
 
-    public EventInfo CreateEvent(CreateEvent eventDTO)
+    public async Task<EventInfo> CreateEventAsync(CreateEvent eventDTO)
     {
        ValidateEvent(eventDTO);
 
        var entity = Event.Create(eventDTO.Title, eventDTO.StartAt, eventDTO.EndAt, eventDTO.Description, eventDTO.TotalSeats);
        repositoryManager.Event.CreateEvent(entity);
+
+       await repositoryManager.SaveAsync();
 
        return mapper.Map<EventInfo>(entity);
     }
@@ -59,13 +61,7 @@ public class EventService : IEventService
 
         var entity = await GetEvent(eventId);
 
-        // обновление только измененных полей маппером
-        entity = mapper.Map<Event>(eventDTO);
-        // пока что EventDTO общий
-        if(repositoryManager.Event is EventRepository repo)
-        {
-            repo.Update(entity);
-        }
+        mapper.Map(eventDTO, entity);
 
         await repositoryManager.SaveAsync();
     }

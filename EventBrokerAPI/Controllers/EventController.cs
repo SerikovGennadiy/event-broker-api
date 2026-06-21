@@ -33,7 +33,7 @@ public class EventController(IEventService eventService, IBookingService booking
     [ValidateDTOFilter]
     public IActionResult CreateEvent([FromBody] CreateEvent eventDTO)
     {
-        var _event = eventService.CreateEvent(eventDTO);
+        var _event = eventService.CreateEventAsync(eventDTO);
         return CreatedAtRoute(routeName: "EventById", new { id = _event.Id }, _event);
     }
 

@@ -12,7 +12,7 @@ namespace EventBrokerAPI.Tests.BookingService.Exceptions;
 public class Tests(BookingServiceFixture fixture) : IClassFixture<BookingServiceFixture>
 {
     private readonly BookingServiceFixture _fixture = fixture;
-    
+
     [Fact]
     [Trait("Booking", "Exceptions")]
     public async Task CreateBooking_ForNonExistingOrDeletedEvent_ThrowsEventNotFoundException()

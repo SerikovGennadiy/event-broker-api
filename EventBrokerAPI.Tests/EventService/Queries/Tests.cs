@@ -14,36 +14,31 @@ public class Tests(EventServiceFixture _fixture) : IClassFixture<EventServiceFix
     public async Task GetAllEvents_WithValidParameters_ShouldReturnEvents()
     {
         // Arrange
+        _fixture.RecreateDatabase();
+
+        var eventService = _fixture.serviceProvider.GetRequiredService<IEventService>();
+
         var eventParameters = new EventParameters
         {
             Page = 1,
             PageSize = 10
         };
-        Event updated = Event.Create(title: "Event 1",
-                                     startAt: DateTime.UtcNow.AddDays(1),
-                                     endAt: DateTime.UtcNow.AddDays(2),
-                                     description: "Description 1",
-                                     totalSeats: 100);
 
-        EventDTO updatedEventDTO = updated.toDTO();
-        List<Event> events = [
-               Event.Create(title: "Event 1",
-                            startAt: DateTime.UtcNow.AddDays(1),
-                            endAt: DateTime.UtcNow.AddDays(2),
-                            description: "Description 1",
-                            totalSeats: 100),
-               Event.Create(title: "Event 2",
-                           startAt: DateTime.UtcNow.AddDays(3),
-                           endAt: DateTime.UtcNow.AddDays(4),
-                           description: "Description 2",
-                           totalSeats: 100),
+        List<CreateEvent> eventDTOs = [
+             new CreateEvent(Title: "Event 1", 
+                                       Description: "Info about event",
+                                       StartAt: DateTime.UtcNow,
+                                       EndAt: DateTime.UtcNow.AddDays(1),
+                                       TotalSeats: 4),
+             new CreateEvent(Title: "Event 2", 
+                                       Description: "Info about event",
+                                       StartAt: DateTime.UtcNow,
+                                       EndAt: DateTime.UtcNow.AddDays(1),
+                                       TotalSeats: 5),
         ];
 
         // Act
-        var eventService = _fixture.serviceProvider.GetRequiredService<IEventService>();
-
-        var dtos = events.Select(x => new CreateEvent(x.Title, x.Description, x.StartAt, x.EndAt, x.TotalSeats)).ToList();
-        dtos.ForEach(dto => eventService.CreateEvent(dto));
+        eventDTOs.ForEach(async dto => await eventService.CreateEventAsync(dto));
 
         var (resultDTOs, pageData) = await eventService.GetAllEventsAsync(eventParameters);
 
@@ -59,17 +54,11 @@ public class Tests(EventServiceFixture _fixture) : IClassFixture<EventServiceFix
     public async Task GetEvent_GuidId_ReturnEvent()
     {
         // Arrage
-        var eventGuid = Guid.NewGuid();
-        Event @event = Event.Create(title: "Event 1",
-                                    startAt: DateTime.UtcNow.AddDays(1),
-                                    endAt: DateTime.UtcNow.AddDays(2),
-                                    description: "Description 1",
-                                    totalSeats: 100);
-
-        // Act 
         var eventService = _fixture.serviceProvider.GetRequiredService<IEventService>();
-        var created = eventService.CreateEvent(new CreateEvent(Title: "Event 1", Description: "Description 1", StartAt: DateTime.UtcNow.AddDays(1), EndAt: DateTime.UtcNow.AddDays(2), TotalSeats: 100));
-        var result = await eventService.GetEventByIdAsync(eventGuid);
+ 
+        // Act 
+        var created = await eventService.CreateEventAsync(new CreateEvent(Title: "Event 1", Description: "Description 1", StartAt: DateTime.UtcNow.AddDays(1), EndAt: DateTime.UtcNow.AddDays(2), TotalSeats: 100));
+        var result = await eventService.GetEventByIdAsync(created.Id);
 
         // Assert
         Assert.NotNull(result);
@@ -82,12 +71,14 @@ public class Tests(EventServiceFixture _fixture) : IClassFixture<EventServiceFix
     public async Task GetEvents_FilterByTitle_ReturnsMatchingEvents()
     {
         // Arrange
+        _fixture.RecreateDatabase();
+
         const string searchTitle = "hiking";
 
         var eventService = _fixture.serviceProvider.GetRequiredService<IEventService>();
-            eventService.CreateEvent(new CreateEvent(Title: "Hiking trip", Description: default, StartAt: DateTime.UtcNow, EndAt: DateTime.UtcNow.AddDays(1), TotalSeats: default));
-            eventService.CreateEvent(new CreateEvent(Title: "Conference", Description: default, StartAt: DateTime.UtcNow, EndAt: DateTime.UtcNow.AddDays(1), TotalSeats: default));
-            eventService.CreateEvent(new CreateEvent(Title: "hiking festival", Description: default, StartAt: DateTime.UtcNow, EndAt: DateTime.UtcNow.AddDays(1), TotalSeats: default));
+            await eventService.CreateEventAsync(new CreateEvent(Title: "Hiking trip", Description: default, StartAt: DateTime.UtcNow, EndAt: DateTime.UtcNow.AddDays(1), TotalSeats: 10));
+            await eventService.CreateEventAsync(new CreateEvent(Title: "Conference", Description: default, StartAt: DateTime.UtcNow, EndAt: DateTime.UtcNow.AddDays(1), TotalSeats: 10));
+            await eventService.CreateEventAsync(new CreateEvent(Title: "hiking festival", Description: default, StartAt: DateTime.UtcNow, EndAt: DateTime.UtcNow.AddDays(1), TotalSeats: 10));
       
         var parameters = new EventParameters { Page = 1, PageSize = 10, Title = searchTitle };
 
@@ -110,9 +101,9 @@ public class Tests(EventServiceFixture _fixture) : IClassFixture<EventServiceFix
         var to = now.AddDays(5);
 
         var eventService = _fixture.serviceProvider.GetRequiredService<IEventService>();
-            eventService.CreateEvent(new CreateEvent(Title: "A", Description: default, StartAt: DateTime.UtcNow.AddDays(1), EndAt: DateTime.UtcNow.AddDays(2), TotalSeats: default));
-            eventService.CreateEvent(new CreateEvent(Title: "B", Description: default, StartAt: DateTime.UtcNow.AddDays(3), EndAt: DateTime.UtcNow.AddDays(4), TotalSeats: default));
-            eventService.CreateEvent(new CreateEvent(Title: "C", Description: default, StartAt: DateTime.UtcNow.AddDays(5), EndAt: DateTime.UtcNow.AddDays(6), TotalSeats: default));
+           await eventService.CreateEventAsync(new CreateEvent(Title: "A", Description: default, StartAt: DateTime.UtcNow.AddDays(1), EndAt: DateTime.UtcNow.AddDays(2), TotalSeats: 10));
+           await eventService.CreateEventAsync(new CreateEvent(Title: "B", Description: default, StartAt: DateTime.UtcNow.AddDays(3), EndAt: DateTime.UtcNow.AddDays(4), TotalSeats: 10));
+           await eventService.CreateEventAsync(new CreateEvent(Title: "C", Description: default, StartAt: DateTime.UtcNow.AddDays(5), EndAt: DateTime.UtcNow.AddDays(6), TotalSeats: 10));
 
         var parameters = new EventParameters { Page = 1, PageSize = 10, From = from, To = to };
 
@@ -130,16 +121,18 @@ public class Tests(EventServiceFixture _fixture) : IClassFixture<EventServiceFix
     public async Task GetEvents_Pagination_WorksCorrectly()
     {
         // Arrange
+        _fixture.RecreateDatabase();
+
         var eventService = _fixture.serviceProvider.GetRequiredService<IEventService>();
         var eventDTOs = Enumerable.Range(1, 25)
             .Select(i => new CreateEvent(Title: $"Event {i}",
                                          Description: default,
                                          StartAt: DateTime.UtcNow.AddDays(i),
                                          EndAt: DateTime.UtcNow.AddDays(i + 1),
-                                         TotalSeats: default))
+                                         TotalSeats: 10))
             .ToList();
 
-        eventDTOs.ForEach(dto => eventService.CreateEvent(dto));
+        eventDTOs.ForEach(async dto => await eventService.CreateEventAsync(dto));
 
         var page1 = new EventParameters { Page = 1, PageSize = 10 };
         var page3 = new EventParameters { Page = 3, PageSize = 10 };
@@ -161,9 +154,9 @@ public class Tests(EventServiceFixture _fixture) : IClassFixture<EventServiceFix
         var baseDate = DateTime.UtcNow.Date;
 
         var eventService = _fixture.serviceProvider.GetRequiredService<IEventService>();
-        eventService.CreateEvent(new CreateEvent(Title: "Hiking", Description: default, StartAt: baseDate.AddDays(1), EndAt: baseDate.AddDays(2), TotalSeats: default));
-        eventService.CreateEvent(new CreateEvent(Title: "Hiking Special", Description: default, StartAt: baseDate.AddDays(10), EndAt: baseDate.AddDays(11), TotalSeats: default));
-        eventService.CreateEvent(new CreateEvent(Title: "Conference", Description: default, StartAt: baseDate.AddDays(1), EndAt: baseDate.AddDays(2), TotalSeats: default));
+           await eventService.CreateEventAsync(new CreateEvent(Title: "Hiking", Description: default, StartAt: baseDate.AddDays(1), EndAt: baseDate.AddDays(2), TotalSeats: 10));
+           await eventService.CreateEventAsync(new CreateEvent(Title: "Hiking Special", Description: default, StartAt: baseDate.AddDays(10), EndAt: baseDate.AddDays(11), TotalSeats: 10));
+           await eventService.CreateEventAsync(new CreateEvent(Title: "Conference", Description: default, StartAt: baseDate.AddDays(1), EndAt: baseDate.AddDays(2), TotalSeats: 10));
 
         // Данные для фильтрации по всем параметрам
         var parameters = new EventParameters

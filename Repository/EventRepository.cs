@@ -11,7 +11,7 @@ public class EventRepository : RepositoryBase<Event>, IEventRepository
     public EventRepository(AppDbContext context) : base(context)
     { }
 
-    public async Task<Event?> GetByIdAsync(Guid eventId) => await FindByCondition(x => x.Id == eventId).SingleOrDefaultAsync();
+    public async Task<Event?> GetByIdAsync(Guid eventId) => await FindByCondition(x => x.Id == eventId).FirstOrDefaultAsync();
 
     public async Task<IEnumerable<Event>> GetAllEventsAsync() => await FindAll().ToListAsync();
     public async Task<PaginatedList<Event>> GetAllEventsAsync(EventParameters eventParameters)

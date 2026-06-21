@@ -1,21 +1,19 @@
-﻿using Moq;
-using AutoMapper;
+﻿using Contracts.Repository;
 using Contracts.Service;
-using Contracts.Repository;
 using Entities.Domain.Models;
-using Entities.ErrorHandling.Exceptions.Event;
 using Entities.ErrorHandling.Exceptions.Booking;
+using Entities.ErrorHandling.Exceptions.Event;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Repository;
 using System.Collections.Concurrent;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.VisualStudio.TestPlatform.TestHost;
 
 namespace EventBrokerAPI.Tests.BookingService;
 public class BookingServiceFixture : IAsyncLifetime
 {
     public required ServiceProvider serviceProvider;
-    public required ConcurrentDictionary<Guid, Event> TestEvents { get; set; }
+    public required ConcurrentDictionary<Guid, Event> TestEvents { get; set; } = new();
 
     public async Task InitializeAsync()
     {
@@ -27,10 +25,25 @@ public class BookingServiceFixture : IAsyncLifetime
         services.AddScoped<IEventService, Service.EventService>();
         services.AddScoped<IBookingService, Service.BookingService>();
         services.AddScoped<IRepositoryManager, RepositoryManager>();
+
         services.AddAutoMapper(cfg => cfg.AddProfile<MappingProfile>());
+        services.AddLogging(builder =>
+        {
+            builder.AddConsole();           // Для вывода в консоль
+            builder.AddDebug();             // Для вывода в Debug
+            builder.AddFilter("Microsoft", LogLevel.Warning); // Фильтры
+            builder.AddFilter("System", LogLevel.Warning);
+        });
 
         serviceProvider = services.BuildServiceProvider();
 
+        services.AddLogging(builder =>
+        {
+            builder.AddConsole();           // Для вывода в консоль
+            builder.AddDebug();             // Для вывода в Debug
+            builder.AddFilter("Microsoft", LogLevel.Warning); // Фильтры
+            builder.AddFilter("System", LogLevel.Warning);
+        });
         // Настраиваем делегаты для работы с тестовыми событиями
         Service.BookingService.OnBooked(async data =>
         {
@@ -59,6 +72,15 @@ public class BookingServiceFixture : IAsyncLifetime
     }
     public async Task DisposeAsync()
     {
+        #region !
+        // обработчики в BookingService регистрируются только один раз из‑за ??= и потом не снимаются,
+        // поэтому при прогоне всего набора тестов разные экземпляры фикстуры могут работать с чужими
+        // / устаревшими обработчиками(или без них).Исправления — всегда пересоздавать обработчик при
+        // регистрации и сбрасывать их при завершении фикстуры.
+        // Снимаем статические обработчики, чтобы не ссылаться на объекты фикстуры после её завершения
+        // Будут проблемы при запуске нескольких комплектов
+        #endregion
         await serviceProvider.DisposeAsync();
+        Service.BookingService.ClearHandlers();
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Contracts.Service;
 using Entities.Domain.Models;
+using Entities.ErrorHandling.Exceptions.Booking;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
@@ -68,28 +69,30 @@ public class Tests(BookingServiceFixture _fixture) : IClassFixture<BookingServic
     public async Task GetBooking_ChangeStatus_ReturnCorrectStatus()
     {
         // Arrange
-        var bookingId = Guid.NewGuid();
-        var booking = new Booking(bookingId, Guid.NewGuid());
-
-        // Act - Confirm
         var bookingService = _fixture.serviceProvider.GetRequiredService<IBookingService>();
+        var tempEvent = CreateTestEvent(totalSeats: 5);
+        var eventId = tempEvent.Id;
 
-        await bookingService.ConfirmBookingAsync(bookingId);
-        var confirmed = await bookingService.GetBookingByIdAsync(bookingId);
+        // необязательно
+        _fixture.TestEvents[eventId] = tempEvent;
 
-        // Assert Confirmed
-        Assert.Equal(BookingStatus.Confirmed, confirmed.Status);
-        Assert.NotNull(confirmed.ProcessedAt);
+        // Act 
+        var firstBooking = await bookingService.CreateBookingAsync(eventId);
+        await bookingService.ConfirmBookingAsync(firstBooking.Id);
+        var confiredDTO = await bookingService.GetBookingByIdAsync(firstBooking.Id);
 
-        // Act - Reset status to Pending then Reject
-        booking.OnPending();
+        var secondBooking = await bookingService.CreateBookingAsync(eventId);
+        await bookingService.RejectBooingAsync(secondBooking.Id);
+        var rejectedDTO = await bookingService.GetBookingByIdAsync(secondBooking.Id);
 
-        await bookingService.RejectBooingAsync(bookingId);
-        var rejected = await bookingService.GetBookingByIdAsync(bookingId);
+        // Assert 
+        Assert.Equal(BookingStatus.Confirmed, confiredDTO.Status);
+        Assert.NotNull(confiredDTO.ProcessedAt);
+        await Assert.ThrowsAsync<BookingNoReverseStatus>(() => bookingService.RejectBooingAsync(confiredDTO.Id));
 
-        // Assert Rejected
-        Assert.Equal(BookingStatus.Rejected, rejected.Status);
-        Assert.NotNull(rejected.ProcessedAt);
+        Assert.Equal(BookingStatus.Rejected, rejectedDTO.Status);
+        Assert.NotNull(rejectedDTO.ProcessedAt);
+        await Assert.ThrowsAsync<BookingNoReverseStatus>(() => bookingService.ConfirmBookingAsync(rejectedDTO.Id));
     }
 
     [Fact]
@@ -97,27 +100,27 @@ public class Tests(BookingServiceFixture _fixture) : IClassFixture<BookingServic
     public async Task RejectBooking_AllowsNewBooking_OnSameSeat()
     {
         // Arrange
+        var bookingSerivce = _fixture.serviceProvider.GetRequiredService<IBookingService>();
         var testEvent = CreateTestEvent(totalSeats: 1);
         var eventId = testEvent.Id;
 
         _fixture.TestEvents[eventId] = testEvent;
 
         // Act - создаем бронь и отменяем её
-        var bookingSerivce = _fixture.serviceProvider.GetRequiredService<IBookingService>();
         var firstBooking = await bookingSerivce.CreateBookingAsync(eventId);
 
         await bookingSerivce.RejectBooingAsync(firstBooking.Id);
+        var rejectedDTO = await bookingSerivce.GetBookingByIdAsync(firstBooking.Id);
 
-        // Создаем новую бронь после отмены
         var secondBooking = await bookingSerivce.CreateBookingAsync(eventId);
+        var pendingDTO = await bookingSerivce.GetBookingByIdAsync(secondBooking.Id);
 
         // Assert
         Assert.NotEqual(firstBooking.Id, secondBooking.Id);
         Assert.Equal(0, testEvent.AvailableSeats);
-        Assert.Equal(BookingStatus.Rejected, firstBooking.Status);
-        Assert.Equal(BookingStatus.Pending, secondBooking.Status);
+        Assert.Equal(BookingStatus.Rejected, rejectedDTO.Status);
+        Assert.Equal(BookingStatus.Pending, pendingDTO.Status);
     }
-
 
     [Fact]
     [Trait("Booking", "Commands")]

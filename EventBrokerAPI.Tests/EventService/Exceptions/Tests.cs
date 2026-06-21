@@ -41,7 +41,7 @@ public class Tests(EventServiceFixture _fixture) : IClassFixture<EventServiceFix
 
     [Fact]
     [Trait("Event", "Exceptions")]
-    public void CreateEvent_IncorrectTitle_ThrowsEventNoTitleException()
+    public async Task CreateEvent_IncorrectTitle_ThrowsEventNoTitleException()
     {
         // Arrange
         var eventDTO = new CreateEvent(Title: string.Empty, // некорректный заголовок
@@ -51,13 +51,13 @@ public class Tests(EventServiceFixture _fixture) : IClassFixture<EventServiceFix
                                        TotalSeats: 10);
         // Act & Assert
         var eventService = _fixture.serviceProvider.GetRequiredService<IEventService>();
-        var expeption = Assert.Throws<EventNoTitleException>(() => eventService.CreateEvent(eventDTO));
+        var expeption = await Assert.ThrowsAsync<EventNoTitleException>(() => eventService.CreateEventAsync(eventDTO));
         Assert.Equal("Отсуствует наименование события", expeption.Message);
     }
 
     [Fact]
     [Trait("Event", "Exceptions")]
-    public void CreateEvent_IncorrectTotalSeats_ThrowsEventBadTotalSeatsQuantity()
+    public async Task CreateEvent_IncorrectTotalSeats_ThrowsEventBadTotalSeatsQuantity()
     {
         // Arrange
         var eventDTO = new CreateEvent(Title: "Event without seats", // некорректный заголовок
@@ -67,7 +67,7 @@ public class Tests(EventServiceFixture _fixture) : IClassFixture<EventServiceFix
                                        TotalSeats: 0);
         // Act & Assert
         var eventService = _fixture.serviceProvider.GetRequiredService<IEventService>();
-        var expeption = Assert.Throws<EventBadTotalSeatsQuantity>(() => eventService.CreateEvent(eventDTO));
+        var expeption = await Assert.ThrowsAsync<EventBadTotalSeatsQuantity>(() => eventService.CreateEventAsync(eventDTO));
         Assert.Equal("Общее количество мест на мероприятии должно быть больше 0", expeption.Message);
     }
 
