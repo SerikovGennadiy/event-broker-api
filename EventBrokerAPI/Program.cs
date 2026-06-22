@@ -5,7 +5,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddOpenApi();
 builder.Services.ConfigureCors();
-builder.Services.ConfigureContext();
+builder.Services.ConfigureContext(builder.Configuration);
 builder.Services.ConfigureRepositoryManager();
 builder.Services.ConfigureAPIServices();
 builder.Services.ConfigureActionFilters();
