@@ -108,7 +108,7 @@ API использует docker-контейнер СУБД PostgreSQL (Тест
 2. клонируйте проект **git clone -b sprint_5 https://github.com/SerikovGennadiy/event-broker-api.git**
 3. перейдите в директорию **cd event-broker-api (содержащую sln файл решения)**
 5. выполните **docker compose up -d** (команда ищет по умолчанию файл конфигурации и выполняет развертывание и запуск контейнера c СУБД PostgreSQL)
-6. выполните **docker ps --filter "name=eventapi-postgres** (убедитесь, что контейнер работает, тоже самое можно легко проверить, Docker Desktop)
+6. выполните **docker ps --filter "name=eventapi-postgres"** (убедитесь, что контейнер работает, тоже самое можно легко проверить, Docker Desktop)
 
 ## Тестирование
 1. запустите тесты **dotnet test ./EventBrokerAPI.Tests/EventBrokerAPI.Tests.csproj**
