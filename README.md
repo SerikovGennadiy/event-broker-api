@@ -101,7 +101,8 @@ API использует docker-контейнер СУБД PostgreSQL (Тест
 1. Активируйте компонент WSL (Windows Subsystem for Linux). В терминале (или оболочке powershell) выполните **wsl --install**
 2. Перезагрузите компьютер
 3. Скачайте и установите приложение **Docker Desktop** для Windows. (Установка дистрибутивов Unix не требуется)
-   
+4. проверьте, что процесс docker-daemon в работе **docker --version** или **docker ps**
+    
 ## Клонирование репозитория API
 1. откройте терминал
 2. клонируйте проект **git clone -b sprint_5 https://github.com/SerikovGennadiy/event-broker-api.git**
