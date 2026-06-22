@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace EventBrokerAPI.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("health")]
 public class HealthController : ControllerBase
 {
     private readonly AppDbContext _context;

@@ -31,9 +31,9 @@ public class EventController(IEventService eventService, IBookingService booking
 
     [HttpPost]
     [ValidateDTOFilter]
-    public IActionResult CreateEvent([FromBody] CreateEvent eventDTO)
+    public async Task<IActionResult> CreateEvent([FromBody] CreateEvent eventDTO)
     {
-        var _event = eventService.CreateEventAsync(eventDTO);
+        var _event = await eventService.CreateEventAsync(eventDTO);
         return CreatedAtRoute(routeName: "EventById", new { id = _event.Id }, _event);
     }
 

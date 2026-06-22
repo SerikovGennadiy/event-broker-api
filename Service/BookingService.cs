@@ -8,24 +8,9 @@ using Shared.DTO;
 
 namespace Service;
 
-public class BookingService(IRepositoryManager repositoryManager, IMapper mapper) : IBookingService
+public class BookingService(IRepositoryManager repositoryManager, IEventService eventService, IMapper mapper) : IBookingService
 {
     private static readonly SemaphoreSlim _bookigSemaphore = new(1, 1);
-    #region Управление уведомлениями
-    /// <summary>Отбилось желание забронироваться на мероприятие</summary>
-    private static Func<(Guid eventId, int seats), Task>? Rejected;
-    internal static void OnRejected(Func<(Guid eventId, int seats), Task> handler) => Rejected ??= handler;
-
-    /// <summary>Выражаем желание забронироваться на мероприятие</summary>
-    private static Func<(Guid eventId, int seats), Task>? Booked;
-    internal static void OnBooked(Func<(Guid eventId, int seats), Task> handler) => Booked ??= handler;
-
-    internal static void ClearHandlers()
-    {
-        Booked = null;
-        Rejected = null;
-    }
-    #endregion
 
     public async Task<BookingDTO> CreateBookingAsync(Guid eventId, CancellationToken cancellationToken = default)
     {
@@ -38,15 +23,10 @@ public class BookingService(IRepositoryManager repositoryManager, IMapper mapper
         {
             Booking booking;
 
-            var bookedHandler = Booked;
-            if (bookedHandler is not null)
-            {
-                // await handler чтобы исключения из обработчика пробрасывались в вызывающий код
-                await bookedHandler((eventId, seats: 1));
-            }
-
             booking = new Booking(eventId);
             repositoryManager.Booking.CreateBooking(booking);
+
+            await eventService.ReserveSeats((eventId: booking.EventId, seats: 1));
 
             await repositoryManager.SaveAsync();
 
@@ -102,14 +82,8 @@ public class BookingService(IRepositoryManager repositoryManager, IMapper mapper
             throw new OperationCanceledException(cancellationToken);
 
         var booking = await GetBookingAsync(bookingId);
+        await eventService.ReleaseSeats((eventId: booking.EventId, seats: 1));
         booking.Reject();
-
-        var rejectedHandler = Rejected;
-        if (rejectedHandler is not null)
-        {
-            // await чтобы обработчик выполнялся и изменения/исключения применялись синхронно
-            await rejectedHandler((eventId: booking.EventId, seats: 1));
-        }
 
         if (repositoryManager.Booking is BookingRepository repo)
         {

@@ -21,10 +21,10 @@ public class Tests(BookingServiceFixture fixture) : IClassFixture<BookingService
         var concurrentRequests = 20;
         var totalSeats = 5;
 
-        Event testEvent = CreateTestEvent(totalSeats);
-        var eventId = testEvent.Id;
-
-        _fixture.TestEvents[eventId] = testEvent;
+        var eventService = _fixture.serviceProvider.GetRequiredService<IEventService>();
+        var bookingService = _fixture.serviceProvider.GetRequiredService<IBookingService>();
+        var eventDTO = CreateTestEvent(totalSeats);
+        var @event = await eventService.CreateEventAsync(eventDTO);
 
         var successCount = 0;
         var failureCount = 0;
@@ -32,12 +32,11 @@ public class Tests(BookingServiceFixture fixture) : IClassFixture<BookingService
         var capturedBookings = new ConcurrentBag<BookingDTO>();
 
         // Act
-        var bookingService = _fixture.serviceProvider.GetRequiredService<IBookingService>();
         var tasks = Enumerable.Range(0, concurrentRequests).Select(_ => Task.Run(async () =>
         {
             try
             {
-                var createdBooking = await bookingService.CreateBookingAsync(eventId);
+                var createdBooking = await bookingService.CreateBookingAsync(@event.Id);
                 capturedBookings.Add(createdBooking);
 
                 Interlocked.Increment(ref successCount);
@@ -50,10 +49,11 @@ public class Tests(BookingServiceFixture fixture) : IClassFixture<BookingService
 
         await Task.WhenAll(tasks);
 
+        var updatedEvent = await eventService.GetEventByIdAsync(@event.Id);
         // Assert
         Assert.Equal(totalSeats, successCount);
         Assert.Equal(concurrentRequests - totalSeats, failureCount);
-        Assert.Equal(0, testEvent.AvailableSeats);
+        Assert.Equal(0, updatedEvent.AvailableSeats);
         Assert.Equal(totalSeats, capturedBookings.Count);
     }
 
@@ -63,18 +63,17 @@ public class Tests(BookingServiceFixture fixture) : IClassFixture<BookingService
     {
         // Arrange
         var totalSeats = 10;
-        var testEvent = CreateTestEvent(totalSeats);
-        var eventId = testEvent.Id;
-
-        _fixture.TestEvents[eventId] = testEvent;
+        var eventService = _fixture.serviceProvider.GetRequiredService<IEventService>();
+        var bookingService = _fixture.serviceProvider.GetRequiredService<IBookingService>();
+        var eventDTO = CreateTestEvent(totalSeats);
+        var @event = await eventService.CreateEventAsync(eventDTO);
 
         var bookingIds = new ConcurrentBag<Guid>();
 
         // Act
-        var bookingService = _fixture.serviceProvider.GetRequiredService<IBookingService>();
         var tasks = Enumerable.Range(0, totalSeats).Select(async _ =>
         {
-            var createdBooking = await bookingService.CreateBookingAsync(eventId);
+            var createdBooking = await bookingService.CreateBookingAsync(@event.Id);
             bookingIds.Add(createdBooking.Id);
         });
 
@@ -86,13 +85,14 @@ public class Tests(BookingServiceFixture fixture) : IClassFixture<BookingService
         Assert.All(bookingIds, id => Assert.NotEqual(Guid.Empty, id));
     }
 
-
-    private static Event CreateTestEvent(int totalSeats)
+    private static CreateEvent CreateTestEvent(int totalSeats = 10)
     {
-        return Event.Create(title: "Test Event",
-                            startAt: DateTime.UtcNow,
-                            endAt: DateTime.UtcNow.AddDays(1),
-                            description: "Test Description",
-                            totalSeats: totalSeats);
+        return new CreateEvent(
+            Title: "Test event",
+            Description: "Initial description",
+            StartAt: DateTime.UtcNow,
+            EndAt: DateTime.UtcNow.AddDays(1),
+            TotalSeats: totalSeats
+        );
     }
 }

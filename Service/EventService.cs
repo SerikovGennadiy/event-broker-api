@@ -4,6 +4,7 @@ using Contracts.Service;
 using Entities.Domain.Models;
 using Entities.ErrorHandling.Exceptions.Booking;
 using Entities.ErrorHandling.Exceptions.Event;
+using Microsoft.Extensions.DependencyInjection;
 using Repository;
 using Shared.DTO;
 using Shared.RequestSpecification;
@@ -14,15 +15,12 @@ public class EventService : IEventService
 {
     private readonly IRepositoryManager repositoryManager;
     private readonly IMapper mapper;
+
     public EventService(IRepositoryManager _repositoryManager,
                         IMapper _mapper)
     {
         repositoryManager = _repositoryManager;
         mapper = _mapper;
-
-        // TODO перевести в статический конструктор потом, пока контроль в порядка контрактов сервисов в DI
-        BookingService.OnBooked(ReserveSeats);
-        BookingService.OnRejected(ReleaseSeats);
     }
 
     public async Task<(IEnumerable<EventInfo> eventDTOs, PaginatedResult pageData)> GetAllEventsAsync(EventParameters eventParameters)
@@ -95,7 +93,7 @@ public class EventService : IEventService
             throw new EventBadTotalSeatsQuantity();
     }
 
-    private async Task ReserveSeats((Guid eventId, int seats) callFromBooking)
+    public async Task ReserveSeats((Guid eventId, int seats) callFromBooking)
     {
         var @event = await GetEvent(callFromBooking.eventId);
         if (!@event.TryReserveSeats(callFromBooking.seats))
@@ -104,7 +102,7 @@ public class EventService : IEventService
         await repositoryManager.SaveAsync();
     }
 
-    private async Task ReleaseSeats((Guid eventId, int seats) recallFromBooking)
+    public async Task ReleaseSeats((Guid eventId, int seats) recallFromBooking)
     {
         var @event = await GetEvent(recallFromBooking.eventId);
         @event.ReleaseSeats(recallFromBooking.seats);

@@ -1,6 +1,7 @@
 ﻿using Contracts.Service;
 using Entities.Domain.Models;
 using Microsoft.Extensions.DependencyInjection;
+using Shared.DTO;
 
 namespace EventBrokerAPI.Tests.BookingService.Queries;
 
@@ -14,28 +15,30 @@ public class Tests(BookingServiceFixture fixture) : IClassFixture<BookingService
     public async Task GetBookingById_ReturnsCorrectInformation()
     {
         // Arrange
-        var tempEvent = CreateTestEvent(totalSeats: 5);
-
-        _fixture.TestEvents[tempEvent.Id] = tempEvent;
+        var eventService = _fixture.serviceProvider.GetRequiredService<IEventService>();
+        var bookingService = _fixture.serviceProvider.GetRequiredService<IBookingService>();
+        var eventDTO = CreateTestEvent(totalSeats: 5);
+        var @event = await eventService.CreateEventAsync(eventDTO);
 
         // Act
-        var bookingService = _fixture.serviceProvider.GetRequiredService<IBookingService>();
-        var booking = await bookingService.CreateBookingAsync(tempEvent.Id);
+        var booking = await bookingService.CreateBookingAsync(@event.Id);
         var result = await bookingService.GetBookingByIdAsync(booking.Id);
 
         // Assert
         Assert.NotNull(booking);
         Assert.Equal(booking.Id, result.Id);
-        Assert.Equal(booking.EventId, tempEvent.Id);
+        Assert.Equal(booking.EventId, @event.Id);
         Assert.Equal(BookingStatus.Pending, booking.Status);
     }
 
-    private static Event CreateTestEvent(int totalSeats)
+    private static CreateEvent CreateTestEvent(int totalSeats = 10)
     {
-        return Event.Create(title: "Test Event",
-                            startAt: DateTime.UtcNow,
-                            endAt: DateTime.UtcNow.AddDays(1),
-                            description: "Test Description",
-                            totalSeats: totalSeats);
+        return new CreateEvent(
+            Title: "Test event",
+            Description: "Initial description",
+            StartAt: DateTime.UtcNow,
+            EndAt: DateTime.UtcNow.AddDays(1),
+            TotalSeats: totalSeats
+        );
     }
 }

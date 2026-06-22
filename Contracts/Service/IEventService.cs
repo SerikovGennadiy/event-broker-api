@@ -19,4 +19,10 @@ public interface IEventService
 
     // удалить событие и сввязанные с ним брони 
     Task DeleteEventAsync(Guid eventId);
+
+    // зарезервировать место
+    Task ReserveSeats((Guid eventId, int seats) callFromBooking);
+
+    // отказаться от брони
+    Task ReleaseSeats((Guid eventId, int seats) recallFromBooking);
 }

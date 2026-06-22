@@ -11,30 +11,31 @@ using System.Collections.Concurrent;
 namespace EventBrokerAPI.Tests.BookingService.Commands;
 
 [Collection("BookingServiceTests")]
-public class Tests(BookingServiceFixture _fixture) : IClassFixture<BookingServiceFixture>
+public class Tests: IClassFixture<BookingServiceFixture>
 {
+    private readonly BookingServiceFixture _fixture;
+    public Tests(BookingServiceFixture fixture)
+    {
+        _fixture = fixture;
+        _fixture.RecreateDatabase();
+    }
+
     [Fact]
     [Trait("Booking", "Commands")]
     public async Task CreateBooking_ForExistingEvent_ReturnsPendingBooking()
     {
         // Arrange
-        var @event = Event.Create(title: "Test",
-                                  startAt: DateTime.UtcNow,
-                                  endAt: DateTime.UtcNow.AddDays(1),
-                                  description: default,
-                                  totalSeats: 10);
-
-        var eventId = @event.Id;
-
-        _fixture.TestEvents[eventId] = @event;
+        var eventService = _fixture.serviceProvider.GetRequiredService<IEventService>();
+        var bookingService = _fixture.serviceProvider.GetRequiredService<IBookingService>();
+        var eventDTO = CreateTestEvent();
+        var @event = await eventService.CreateEventAsync(eventDTO);
 
         // Act
-        var bookingService = _fixture.serviceProvider.GetRequiredService<IBookingService>();
-        var bookingDto = await bookingService.CreateBookingAsync(eventId);
+        var bookingDto = await bookingService.CreateBookingAsync(@event.Id);
 
         // Assert
         Assert.NotNull(bookingDto);
-        Assert.Equal(eventId, bookingDto.EventId);
+        Assert.Equal(@event.Id, bookingDto.EventId);
         Assert.Equal(BookingStatus.Pending, bookingDto.Status);
     }
 
@@ -43,20 +44,14 @@ public class Tests(BookingServiceFixture _fixture) : IClassFixture<BookingServic
     public async Task CreateBookings_UniqueIds_AllCreated()
     {
         // Arrange
-        var @event = Event.Create(title: "Test",
-                                startAt: DateTime.UtcNow,
-                                endAt: DateTime.UtcNow.AddDays(1),
-                                description: default,
-                                totalSeats: 10);
-
-        var eventId = @event.Id;
-
-        _fixture.TestEvents[eventId] = @event;
+        var eventService = _fixture.serviceProvider.GetRequiredService<IEventService>();
+        var bookingService = _fixture.serviceProvider.GetRequiredService<IBookingService>();
+        var eventDTO = CreateTestEvent();
+        var @event = await eventService.CreateEventAsync(eventDTO);
 
         // Act
-        var bookingService = _fixture.serviceProvider.GetRequiredService<IBookingService>();
-        var first = await bookingService.CreateBookingAsync(eventId);
-        var second = await bookingService.CreateBookingAsync(eventId);
+        var first = await bookingService.CreateBookingAsync(@event.Id);
+        var second = await bookingService.CreateBookingAsync(@event.Id);
 
         // Assert
         Assert.NotEqual(first.Id, second.Id);
@@ -69,19 +64,26 @@ public class Tests(BookingServiceFixture _fixture) : IClassFixture<BookingServic
     public async Task GetBooking_ChangeStatus_ReturnCorrectStatus()
     {
         // Arrange
+        var eventService = _fixture.serviceProvider.GetRequiredService<IEventService>();
         var bookingService = _fixture.serviceProvider.GetRequiredService<IBookingService>();
-        var tempEvent = CreateTestEvent(totalSeats: 5);
-        var eventId = tempEvent.Id;
+        var eventDTO = CreateTestEvent(totalSeats: 5);
+        var @event = await eventService.CreateEventAsync(eventDTO);
 
-        // необязательно
-        _fixture.TestEvents[eventId] = tempEvent;
+        // Act
+        var first = await bookingService.CreateBookingAsync(@event.Id);
+        var second = await bookingService.CreateBookingAsync(@event.Id);
+
+        // Assert
+        Assert.NotEqual(first.Id, second.Id);
+        Assert.Equal(BookingStatus.Pending, first.Status);
+        Assert.Equal(BookingStatus.Pending, second.Status);
 
         // Act 
-        var firstBooking = await bookingService.CreateBookingAsync(eventId);
+        var firstBooking = await bookingService.CreateBookingAsync(@event.Id);
         await bookingService.ConfirmBookingAsync(firstBooking.Id);
         var confiredDTO = await bookingService.GetBookingByIdAsync(firstBooking.Id);
 
-        var secondBooking = await bookingService.CreateBookingAsync(eventId);
+        var secondBooking = await bookingService.CreateBookingAsync(@event.Id);
         await bookingService.RejectBooingAsync(secondBooking.Id);
         var rejectedDTO = await bookingService.GetBookingByIdAsync(secondBooking.Id);
 
@@ -100,24 +102,24 @@ public class Tests(BookingServiceFixture _fixture) : IClassFixture<BookingServic
     public async Task RejectBooking_AllowsNewBooking_OnSameSeat()
     {
         // Arrange
-        var bookingSerivce = _fixture.serviceProvider.GetRequiredService<IBookingService>();
-        var testEvent = CreateTestEvent(totalSeats: 1);
-        var eventId = testEvent.Id;
-
-        _fixture.TestEvents[eventId] = testEvent;
+        var eventService = _fixture.serviceProvider.GetRequiredService<IEventService>();
+        var bookingService = _fixture.serviceProvider.GetRequiredService<IBookingService>();
+        var eventDTO = CreateTestEvent(totalSeats: 1);
+        var @event = await eventService.CreateEventAsync(eventDTO);
 
         // Act - создаем бронь и отменяем её
-        var firstBooking = await bookingSerivce.CreateBookingAsync(eventId);
+        var firstBooking = await bookingService.CreateBookingAsync(@event.Id);
 
-        await bookingSerivce.RejectBooingAsync(firstBooking.Id);
-        var rejectedDTO = await bookingSerivce.GetBookingByIdAsync(firstBooking.Id);
+        await bookingService.RejectBooingAsync(firstBooking.Id);
+        var rejectedDTO = await bookingService.GetBookingByIdAsync(firstBooking.Id);
 
-        var secondBooking = await bookingSerivce.CreateBookingAsync(eventId);
-        var pendingDTO = await bookingSerivce.GetBookingByIdAsync(secondBooking.Id);
+        var secondBooking = await bookingService.CreateBookingAsync(@event.Id);
+        var pendingDTO = await bookingService.GetBookingByIdAsync(secondBooking.Id);
 
+        var offEvent = await eventService.GetEventByIdAsync(@event.Id);
         // Assert
         Assert.NotEqual(firstBooking.Id, secondBooking.Id);
-        Assert.Equal(0, testEvent.AvailableSeats);
+        Assert.Equal(0, offEvent.AvailableSeats);
         Assert.Equal(BookingStatus.Rejected, rejectedDTO.Status);
         Assert.Equal(BookingStatus.Pending, pendingDTO.Status);
     }
@@ -127,20 +129,19 @@ public class Tests(BookingServiceFixture _fixture) : IClassFixture<BookingServic
     public async Task CreateBooking_DecreasesAvailableSeats_ByOne()
     {
         // Arrange
-        var testEvent = CreateTestEvent(totalSeats: 10);
-        var eventId = testEvent.Id;
-
-        _fixture.TestEvents[eventId] = testEvent;
+        var eventService = _fixture.serviceProvider.GetRequiredService<IEventService>();
+        var bookingService = _fixture.serviceProvider.GetRequiredService<IBookingService>();
+        var eventDTO = CreateTestEvent();
+        var @event = await eventService.CreateEventAsync(eventDTO);
 
         // Act
-        var bookingService = _fixture.serviceProvider.GetRequiredService<IBookingService>();
-        var booking = await bookingService.CreateBookingAsync(eventId);
-
+        var booking = await bookingService.CreateBookingAsync(@event.Id);
+        var updatedEvent = await eventService.GetEventByIdAsync(@event.Id);
         // Assert
         Assert.NotNull(booking);
-        Assert.Equal(9, testEvent.AvailableSeats);
+        Assert.Equal(9, updatedEvent.AvailableSeats);
         Assert.Equal(BookingStatus.Pending, booking.Status);
-        Assert.Equal(eventId, booking.EventId);
+        Assert.Equal(@event.Id, booking.EventId);
     }
 
     [Fact]
@@ -148,36 +149,39 @@ public class Tests(BookingServiceFixture _fixture) : IClassFixture<BookingServic
     public async Task CreateMultipleBookings_UpToLimit_AllSuccessfulWithUniqueIds()
     {
         // Arrange
-        var eventId = Guid.NewGuid();
         var totalSeats = 5;
-        var testEvent = CreateTestEvent(totalSeats);
 
-        _fixture.TestEvents[eventId] = testEvent;
+        var eventService = _fixture.serviceProvider.GetRequiredService<IEventService>();
+        var bookingService = _fixture.serviceProvider.GetRequiredService<IBookingService>();
+        var eventDTO = CreateTestEvent(totalSeats);
+        var @event = await eventService.CreateEventAsync(eventDTO);
 
         var bookingIds = new ConcurrentBag<Guid>();
 
         // Act
-        var bookingService = _fixture.serviceProvider.GetRequiredService<IBookingService>();
         var tasks = Enumerable.Range(0, totalSeats).Select(async _ =>
         {
-            var booking = await bookingService.CreateBookingAsync(eventId);
+            var booking = await bookingService.CreateBookingAsync(@event.Id);
             bookingIds.Add(booking.Id);
         });
 
         await Task.WhenAll(tasks);
 
+        var updatedEvent = await eventService.GetEventByIdAsync(@event.Id);
         // Assert
         Assert.Equal(totalSeats, bookingIds.Count);
         Assert.Equal(totalSeats, bookingIds.Distinct().Count());
-        Assert.Equal(0, testEvent.AvailableSeats);
+        Assert.Equal(0, updatedEvent.AvailableSeats);
     }
 
-    private static Event CreateTestEvent(int totalSeats)
+    private static CreateEvent CreateTestEvent(int totalSeats = 10)
     {
-        return Event.Create(title: "Test",
-                            startAt: DateTime.UtcNow,
-                            endAt: DateTime.UtcNow.AddDays(1),
-                            description: default,
-                            totalSeats: totalSeats);
+        return new CreateEvent(
+            Title: "Test event",
+            Description: "Initial description",
+            StartAt: DateTime.UtcNow,
+            EndAt: DateTime.UtcNow.AddDays(1),
+            TotalSeats: totalSeats
+        );
     }
 }

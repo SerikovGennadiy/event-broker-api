@@ -18,11 +18,11 @@ public class Tests(BookingServiceFixture fixture) : IClassFixture<BookingService
     public async Task CreateBooking_ForNonExistingOrDeletedEvent_ThrowsEventNotFoundException()
     {
         // Arrange
-        var eventId = Guid.NewGuid();
+        var bookingService = _fixture.serviceProvider.GetRequiredService<IBookingService>();
+        var notExistEventGuid = Guid.NewGuid();
 
         // Act
-        var bookingService = _fixture.serviceProvider.GetRequiredService<IBookingService>();
-        var ex = await Record.ExceptionAsync(() => bookingService.CreateBookingAsync(eventId));
+        var ex = await Record.ExceptionAsync(() => bookingService.CreateBookingAsync(notExistEventGuid));
 
         // Assert
         Assert.NotNull(ex);
@@ -47,27 +47,29 @@ public class Tests(BookingServiceFixture fixture) : IClassFixture<BookingService
     {
         // Arrange
         var onlyOneSeat = 1;
-        var testEvent = CreateTestEvent(totalSeats: onlyOneSeat);
-        var eventId = testEvent.Id;
 
-        _fixture.TestEvents[eventId] = testEvent;
+        var eventService = _fixture.serviceProvider.GetRequiredService<IEventService>();
+        var bookingService = _fixture.serviceProvider.GetRequiredService<IBookingService>();
+        var eventDTO = CreateTestEvent(onlyOneSeat);
+        var @event = await eventService.CreateEventAsync(eventDTO);
 
         // Занимаем единственное место
-        var bookingService = _fixture.serviceProvider.GetRequiredService<IBookingService>();
-        await bookingService.CreateBookingAsync(eventId);
+        await bookingService.CreateBookingAsync(@event.Id);
 
         // Act & Assert
         var exception = await Assert.ThrowsAsync<NoAvailableSeatsException>(
-            () => bookingService.CreateBookingAsync(eventId)
+            () => bookingService.CreateBookingAsync(@event.Id)
         );
     }
 
-    private static Event CreateTestEvent(int totalSeats)
+    private static CreateEvent CreateTestEvent(int totalSeats = 10)
     {
-        return Event.Create(title: "Test Event",
-                            startAt: DateTime.UtcNow,
-                            endAt: DateTime.UtcNow.AddDays(1),
-                            description: "Test Description",
-                            totalSeats: totalSeats);
+        return new CreateEvent(
+            Title: "Test event",
+            Description: "Initial description",
+            StartAt: DateTime.UtcNow,
+            EndAt: DateTime.UtcNow.AddDays(1),
+            TotalSeats: totalSeats
+        );
     }
 }

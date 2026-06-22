@@ -12,7 +12,7 @@ public class ServiceManager : IServiceManager
     public ServiceManager(IRepositoryManager repositoryManager, IMapper mapper)
     {
         _eventService = new EventService(repositoryManager, mapper);
-        _bookingService = new BookingService(repositoryManager, mapper);
+        _bookingService = new BookingService(repositoryManager, _eventService, mapper);
     }
     public IEventService EventService => _eventService;
     public IBookingService BookingService => _bookingService;
