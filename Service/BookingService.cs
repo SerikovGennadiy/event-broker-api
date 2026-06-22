@@ -8,93 +8,88 @@ using Shared.DTO;
 
 namespace Service;
 
-public class BookingService(IRepositoryManager repositoryManager, IMapper mapper) : IBookingService
+public class BookingService(IRepositoryManager repositoryManager, IEventService eventService, IMapper mapper) : IBookingService
 {
-    private readonly object _bookingLock = new();
+    private static readonly SemaphoreSlim _bookigSemaphore = new(1, 1);
 
-    #region Управление уведомлениями
-    /// <summary>Отбилось желание забронироваться на мероприятие</summary>
-    private static Action<(Guid eventId, int seats)>? Rejected;
-    internal static void OnRejected(Action<(Guid eventId, int seats)> handler) => Rejected ??= handler;
-
-    /// <summary>Выражаем желание забронироваться на мероприятие</summary>
-    private static Action<(Guid eventId, int seats)>? Booked;
-    internal static void OnBooked(Action<(Guid eventId, int seats)> handler) => Booked ??= handler;
-
-    internal static void ClearHandlers()
+    public async Task<BookingDTO> CreateBookingAsync(Guid eventId, CancellationToken cancellationToken = default)
     {
-        Booked = null;
-        Rejected = null;
-    }
-    #endregion
-
-    public async Task<BookingDTO> CreateBookingAsync(Guid eventId, CancellationToken cancellationToken)
-    {
-        // TODO - переделать под ORM, поддерживающую асинхронные операции, чтобы не блокировать поток при работе с БД
         if (cancellationToken.IsCancellationRequested)
             throw new OperationCanceledException(cancellationToken);
-        await Task.Yield();
 
-        Booking booking;
-        lock (_bookingLock)
+        await _bookigSemaphore.WaitAsync(cancellationToken);
+
+        try
         {
-            Booked?.Invoke((eventId, seats: 1));
+            Booking booking;
 
-            booking = new Booking(Guid.NewGuid(), eventId);
+            booking = new Booking(eventId);
             repositoryManager.Booking.CreateBooking(booking);
+
+            await eventService.ReserveSeats((eventId: booking.EventId, seats: 1));
+
+            await repositoryManager.SaveAsync();
+
+            return mapper.Map<BookingDTO>(booking);
         }
+        finally
+        {
+            _bookigSemaphore.Release();
+        }
+    }
 
+    public async Task<BookingDTO> GetBookingByIdAsync(Guid bookingId)
+    {
+        var booking = await GetBookingAsync(bookingId);
         return mapper.Map<BookingDTO>(booking);
     }
 
-    public async Task<BookingDTO> GetBookingByIdAsync(Guid bookingId, CancellationToken cancellationToken)
+    public async Task<ICollection<BookingDTO>> GetPendingBookingsAsync()
     {
-        // TODO - переделать под ORM, поддерживающую асинхронные операции, чтобы не блокировать поток при работе с БД
-        if (cancellationToken.IsCancellationRequested)
-            throw new OperationCanceledException(cancellationToken);
-        await Task.Yield();
-
-        var booking = GetBooking(bookingId);
-        return mapper.Map<BookingDTO>(booking);
-    }
-
-    public ICollection<BookingDTO> GetPendingBookings()
-    {
-        var bookings = repositoryManager.Booking.GetAllPendingBookings();
+        var bookings = await repositoryManager.Booking.GetAllPendingBookingsAsync();
         var pendingBookingDTOs = mapper.Map<ICollection<BookingDTO>>(bookings);
         return pendingBookingDTOs;
     }
 
-    private Booking GetBooking(Guid bookingId)
+    private async Task<Booking> GetBookingAsync(Guid bookingId)
     {
-        var entity = repositoryManager.Booking.GetById(bookingId);
+        var entity = await repositoryManager.Booking.GetByIdAsync(bookingId);
         if (entity is null)
             throw new BookingNotFoundException(bookingId);
 
         return entity;
     }
 
-    public void ConfirmBooking(Guid bookingId)
+    public async Task ConfirmBookingAsync(Guid bookingId, CancellationToken cancellationToken = default)
     {
-        var booking = GetBooking(bookingId);
+        if (cancellationToken.IsCancellationRequested)
+            throw new OperationCanceledException(cancellationToken);
+
+        var booking = await GetBookingAsync(bookingId);
         booking.Confirm();
-
-        if(repositoryManager.Booking is BookingRepository repo)
-        {
-            repo.Update(booking);
-        }
-    }
-
-    public void RejectBooking(Guid bookingId)
-    {
-        var booking = GetBooking(bookingId);
-        booking.Reject();
-
-        Rejected?.Invoke((eventId: booking.EventId, seats: 1));
 
         if (repositoryManager.Booking is BookingRepository repo)
         {
             repo.Update(booking);
         }
+
+        await repositoryManager.SaveAsync();
+    }
+
+    public async Task RejectBooingAsync(Guid bookingId, CancellationToken cancellationToken = default)
+    {
+        if (cancellationToken.IsCancellationRequested)
+            throw new OperationCanceledException(cancellationToken);
+
+        var booking = await GetBookingAsync(bookingId);
+        await eventService.ReleaseSeats((eventId: booking.EventId, seats: 1));
+        booking.Reject();
+
+        if (repositoryManager.Booking is BookingRepository repo)
+        {
+            repo.Update(booking);
+        }
+
+        await repositoryManager.SaveAsync();
     }
 }

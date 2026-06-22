@@ -4,7 +4,7 @@ namespace Repository.Extensions;
 
 public static class EventRepositoryExtension
 {
-    public static IEnumerable<Event> FilterRangeEvents(this IEnumerable<Event> events, DateTime? from, DateTime? to)
+    public static IQueryable<Event> FilterRangeEvents(this IQueryable<Event> events, DateTime? from, DateTime? to)
     {
         if(events == null) throw new ArgumentNullException(nameof(events));
 
@@ -17,7 +17,7 @@ public static class EventRepositoryExtension
         return events;
     }
 
-    public static IEnumerable<Event> FilterTitleEvents(this IEnumerable<Event> events, string? title)
+    public static IQueryable<Event> FilterTitleEvents(this IQueryable<Event> events, string? title)
     {
         if (events == null) throw new ArgumentNullException(nameof(events));
 

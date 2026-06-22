@@ -1,5 +1,6 @@
-﻿using Entities.Domain.Models;
-using Moq;
+﻿using Contracts.Service;
+using Entities.Domain.Models;
+using Microsoft.Extensions.DependencyInjection;
 using Shared.DTO;
 
 namespace EventBrokerAPI.Tests.BookingService.Queries;
@@ -14,22 +15,30 @@ public class Tests(BookingServiceFixture fixture) : IClassFixture<BookingService
     public async Task GetBookingById_ReturnsCorrectInformation()
     {
         // Arrange
-        var bookingId = Guid.NewGuid();
-        var booking = new Booking(bookingId, Guid.NewGuid());
-
-        _fixture.BookingRepositoryMock.Setup(r => r.GetById(bookingId)).Returns(booking);
-
-        _fixture.MapperMock
-            .Setup(m => m.Map<BookingDTO>(It.IsAny<Booking>()))
-            .Returns((Booking b) => new BookingDTO(b.Id, b.EventId, b.Status, b.CreatedAt, b.ProcessedAt));
+        var eventService = _fixture.serviceProvider.GetRequiredService<IEventService>();
+        var bookingService = _fixture.serviceProvider.GetRequiredService<IBookingService>();
+        var eventDTO = CreateTestEvent(totalSeats: 5);
+        var @event = await eventService.CreateEventAsync(eventDTO);
 
         // Act
-        var result = await _fixture.BookingService.GetBookingByIdAsync(bookingId, CancellationToken.None);
+        var booking = await bookingService.CreateBookingAsync(@event.Id);
+        var result = await bookingService.GetBookingByIdAsync(booking.Id);
 
         // Assert
-        Assert.NotNull(result);
-        Assert.Equal(bookingId, result.Id);
-        Assert.Equal(booking.EventId, result.EventId);
-        Assert.Equal(BookingStatus.Pending, result.Status);
+        Assert.NotNull(booking);
+        Assert.Equal(booking.Id, result.Id);
+        Assert.Equal(booking.EventId, @event.Id);
+        Assert.Equal(BookingStatus.Pending, booking.Status);
+    }
+
+    private static CreateEvent CreateTestEvent(int totalSeats = 10)
+    {
+        return new CreateEvent(
+            Title: "Test event",
+            Description: "Initial description",
+            StartAt: DateTime.UtcNow,
+            EndAt: DateTime.UtcNow.AddDays(1),
+            TotalSeats: totalSeats
+        );
     }
 }

@@ -1,10 +1,11 @@
 using EventBrokerAPI.Extensions;
+using Repository;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddOpenApi();
 builder.Services.ConfigureCors();
-builder.Services.ConfigureContext();
+builder.Services.ConfigureContext(builder.Configuration);
 builder.Services.ConfigureRepositoryManager();
 builder.Services.ConfigureAPIServices();
 builder.Services.ConfigureActionFilters();
@@ -16,6 +17,11 @@ builder.Services.AddAutoMapper(cfg => { }, typeof(Program));
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    db.Database.EnsureCreated();
+}
 
 if (app.Environment.IsDevelopment())
 {

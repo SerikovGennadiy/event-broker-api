@@ -9,12 +9,12 @@ namespace EventBrokerAPI.Controllers;
 
 [ApiController]
 [Route("events")]
-public class EventController(IEventService eventService, IBookingService bookingService): ControllerBase
+public class EventController(IEventService eventService, IBookingService bookingService) : ControllerBase
 {
     [HttpGet]
-    public IActionResult GetAllEvents([FromQuery] EventParameters eventParameters)
+    public async Task<IActionResult> GetAllEvents([FromQuery] EventParameters eventParameters)
     {
-        var result = eventService.GetAllEvents(eventParameters);
+        var result = await eventService.GetAllEventsAsync(eventParameters);
 
         Response.Headers.Append("X-Pagination",
                JsonSerializer.Serialize(result.pageData));
@@ -22,18 +22,18 @@ public class EventController(IEventService eventService, IBookingService booking
         return Ok(result.eventDTOs);
     }
 
-    [HttpGet("{id:guid}", Name="EventById")]
-    public IActionResult GetEvent(Guid id)
+    [HttpGet("{id:guid}", Name = "EventById")]
+    public async Task<IActionResult> GetEvent(Guid id)
     {
-        var eventDTO = eventService.GetEventById(id);
+        var eventDTO = await eventService.GetEventByIdAsync(id);
         return Ok(eventDTO);
     }
 
     [HttpPost]
     [ValidateDTOFilter]
-    public IActionResult CreateEvent([FromBody] CreateEvent eventDTO)
+    public async Task<IActionResult> CreateEvent([FromBody] CreateEvent eventDTO)
     {
-        var _event = eventService.CreateEvent(eventDTO);
+        var _event = await eventService.CreateEventAsync(eventDTO);
         return CreatedAtRoute(routeName: "EventById", new { id = _event.Id }, _event);
     }
 
@@ -43,7 +43,7 @@ public class EventController(IEventService eventService, IBookingService booking
     [ProducesResponseType(typeof(ErrorDetail), StatusCodes.Status409Conflict)]
     public async Task<IActionResult> CreateEventBooking(Guid eventId, CancellationToken token)
     {
-        var bookingDTO = await bookingService.CreateBookingAsync(eventId, token);
+        var bookingDTO = await bookingService.CreateBookingAsync(eventId);
 
         return AcceptedAtRoute(
             routeName: "BookingById",
@@ -54,16 +54,16 @@ public class EventController(IEventService eventService, IBookingService booking
 
     [HttpPut("{id:guid}")]
     [ValidateDTOFilter]
-    public IActionResult UpdateEvent([FromRoute] Guid id, [FromBody] EventDTO eventDTO)
+    public async Task<IActionResult> UpdateEvent([FromRoute] Guid id, [FromBody] EventDTO eventDTO)
     {
-        eventService.UpdateEvent(id, eventDTO);
+        await eventService.UpdateEventAsync(id, eventDTO);
         return Ok();
     }
 
     [HttpDelete("{id:guid}")]
-    public IActionResult DeleteEvent(Guid id)
+    public async Task<IActionResult> DeleteEvent(Guid id)
     {
-        eventService.DeleteEvent(id);
+        await eventService.DeleteEventAsync(id);
         return Ok();
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Contracts.Repository;
 using Entities.Domain.Models;
+using Microsoft.EntityFrameworkCore;
 using Repository.Extensions;
 using Shared.RequestSpecification;
 
@@ -7,21 +8,20 @@ namespace Repository;
 
 public class EventRepository : RepositoryBase<Event>, IEventRepository
 {
-    public EventRepository(RepositoryContext context) : base(context)
+    public EventRepository(AppDbContext context) : base(context)
     { }
 
-    public Event? GetById(Guid eventId) => FindByCondition(x => x.Id == eventId).SingleOrDefault();
+    public async Task<Event?> GetByIdAsync(Guid eventId) => await FindByCondition(x => x.Id == eventId).FirstOrDefaultAsync();
 
-    public IEnumerable<Event> GetAllEvents() => FindAll();
-    public PaginatedList<Event> GetAllEvents(EventParameters eventParameters)
+    public async Task<IEnumerable<Event>> GetAllEventsAsync() => await FindAll().ToListAsync();
+    public async Task<PaginatedList<Event>> GetAllEventsAsync(EventParameters eventParameters)
     {
-       var events = FindAll()
-                   .FilterRangeEvents(eventParameters.From, eventParameters.To)
-                   .FilterTitleEvents(eventParameters.Title)
-                   .ToList();
+        var events = await FindAll()
+                          .FilterRangeEvents(eventParameters.From, eventParameters.To)
+                          .FilterTitleEvents(eventParameters.Title)
+                          .ToListAsync();
 
         return PaginatedList<Event>.ToPagedList(events, eventParameters.Page, eventParameters.PageSize);
-
     }
 
     public void CreateEvent(Event entity) => Create(entity);

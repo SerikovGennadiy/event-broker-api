@@ -1,34 +1,52 @@
 ﻿using AutoMapper;
 using Contracts.Repository;
+using Contracts.Service;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Moq;
-using EventServiceType = Service.EventService;
+using Repository;
+using System.Net;
+using System.Threading.Tasks;
 
 namespace EventBrokerAPI.Tests.Fixture.EventService;
-public class EventServiceFixture : IDisposable
+public class EventServiceFixture : IAsyncLifetime
 {
-    public EventServiceType EventService { get; }
-
-    public Mock<IRepositoryManager> RepositoryManagerMock { get; } = new();
-    public Mock<IEventRepository> EventRepositoryMock { get; } = new();
-    public Mock<IMapper> MapperMock { get; } = new();
-
-    public EventServiceFixture()
+    public required ServiceProvider serviceProvider;
+    public async Task InitializeAsync()
     {
-        RepositoryManagerMock.Setup(x => x.Event)
-            .Returns(EventRepositoryMock.Object);
+        var services = new ServiceCollection();
 
-        EventService = new EventServiceType(
-            RepositoryManagerMock.Object,
-            MapperMock.Object
-        );
+        services.AddDbContext<AppDbContext>(options =>
+            options.UseInMemoryDatabase($"TestDb_{Guid.CreateVersion7()}"));
+
+        services.AddScoped<IEventService, Service.EventService>();
+        services.AddScoped<IRepositoryManager, RepositoryManager>();
+        services.AddAutoMapper(cfg => cfg.AddProfile<MappingProfile>());
+
+        services.AddLogging(builder =>
+        {
+            builder.AddConsole();           // Для вывода в консоль
+            builder.AddDebug();             // Для вывода в Debug
+            builder.AddFilter("Microsoft", LogLevel.Warning); // Фильтры
+            builder.AddFilter("System", LogLevel.Warning);
+        });
+
+        serviceProvider = services.BuildServiceProvider();
+
+        await Task.CompletedTask;
     }
 
-    public void Dispose()
+    public async Task DisposeAsync()
     {
-        RepositoryManagerMock.Reset();
-        EventRepositoryMock.Reset();
-        MapperMock.Reset();
+        await serviceProvider.DisposeAsync();
+    }
 
-        GC.SuppressFinalize(this);
+    public void RecreateDatabase()
+    {
+        var context = serviceProvider.GetRequiredService<AppDbContext>();
+
+        context.Database.EnsureDeleted();
+        context.Database.EnsureCreated();
     }
 }

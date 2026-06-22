@@ -1,5 +1,6 @@
 ﻿using Contracts.Repository;
 using Contracts.Service;
+using Microsoft.EntityFrameworkCore;
 using Repository;
 using Service;
 
@@ -43,9 +44,17 @@ public static class ServiceExtensions
 
         return services;
     }
-    public static IServiceCollection ConfigureContext(this IServiceCollection services)
+    public static IServiceCollection ConfigureContext(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddSingleton<RepositoryContext>();
+        services.AddDbContext<AppDbContext>(opts =>
+        {
+           var connectionString = configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'Default' not found.");
+            opts.UseNpgsql(connectionString);
+            //.LogTo(Console.WriteLine, LogLevel.Information) 
+            //.EnableDetailedErrors()                         
+            //.EnableSensitiveDataLogging();
+    });
+
         return services;
     }
 

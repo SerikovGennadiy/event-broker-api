@@ -6,18 +6,23 @@ namespace Contracts.Service;
 public interface IEventService
 {
     // считать данные из хранилища
-    (IEnumerable<EventInfo> eventDTOs, PaginatedResult pageData) GetAllEvents(EventParameters eventParameters);
+    Task<(IEnumerable<EventInfo> eventDTOs, PaginatedResult pageData)> GetAllEventsAsync(EventParameters eventParameters);
 
     // получить событие по ID
-    EventInfo GetEventById(Guid Id);
-
-    // создать событие
-    EventInfo CreateEvent(CreateEvent eventDTO);
+    Task<EventInfo> GetEventByIdAsync(Guid Id);
 
     // обновить данные конкретного события
-    void UpdateEvent(Guid eventId, EventDTO eventDTO);
+    Task UpdateEventAsync(Guid eventId, EventDTO eventDTO);
 
-    // событие 
-    void DeleteEvent(Guid eventId);
+    // создать событие
+    Task<EventInfo> CreateEventAsync(CreateEvent eventDTO);
 
+    // удалить событие и сввязанные с ним брони 
+    Task DeleteEventAsync(Guid eventId);
+
+    // зарезервировать место
+    Task ReserveSeats((Guid eventId, int seats) callFromBooking);
+
+    // отказаться от брони
+    Task ReleaseSeats((Guid eventId, int seats) recallFromBooking);
 }

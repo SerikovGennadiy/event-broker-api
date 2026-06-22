@@ -2,19 +2,13 @@
 
 namespace Repository;
 
-public class RepositoryManager : IRepositoryManager
+public class RepositoryManager(AppDbContext context) : IRepositoryManager
 {
-    private IEventRepository Events { get; }
-    private IBookingRepository Bookings { get; }
-
-    public RepositoryManager(RepositoryContext context)
-    {
-        Events = new EventRepository(context);
-        Bookings = new BookingRepository(context);
-    }
+    private IEventRepository Events { get; } = new EventRepository(context);
+    private IBookingRepository Bookings { get; } = new BookingRepository(context);
 
     public IEventRepository Event => Events;
     public IBookingRepository Booking => Bookings;
-    // TODO : хранилище локальное
-    public void Save() => throw new NotImplementedException();
+
+    public async Task SaveAsync() => await context.SaveChangesAsync();
 }

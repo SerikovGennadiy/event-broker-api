@@ -1,5 +1,6 @@
 ﻿using Entities.Domain.Contract;
 using System.ComponentModel.DataAnnotations;
+using System.Collections.Generic;
 
 namespace Entities.Domain.Models;
 
@@ -27,16 +28,22 @@ public class Event : IdEntity, IReadOnlyEvent
     /// <summary>Количество оставшихся свободных мест на мероприятии</summary>
     public int AvailableSeats { get; internal set; }
 
-    public static Event Create(string Title, DateTime StartAt, DateTime EndAt, string? description, int totalSeats)
+    /// <summary>Навигация — брони на мероприятие</summary>
+    public ICollection<Booking> Bookings { get; set; } = new List<Booking>();
+
+    // приватный конструктор под EFCore
+    private Event() { }
+
+    public static Event Create(string title, DateTime startAt, DateTime endAt, string? description, int totalSeats)
     {
         if (totalSeats <= 0)
             throw new ValidationException("Общее количество мест на мероприятие должно быть больше 0");
 
         return new Event() {
             Id = Guid.CreateVersion7(),
-            Title = Title,
-            StartAt = StartAt,
-            EndAt = EndAt, 
+            Title = title,
+            StartAt = startAt,
+            EndAt = endAt, 
             Description = description, 
             TotalSeats = totalSeats,
             AvailableSeats = totalSeats
@@ -64,9 +71,6 @@ public class Event : IdEntity, IReadOnlyEvent
         var newAvailable = AvailableSeats + count;
         AvailableSeats = newAvailable > TotalSeats ? TotalSeats : newAvailable;
     }
-
-    // конструктор, для тестирования (как корректно такое делают, чтобы не засорять код - не знаю)
-    internal Event() { }
 }
 
 public interface IReadOnlyEvent
