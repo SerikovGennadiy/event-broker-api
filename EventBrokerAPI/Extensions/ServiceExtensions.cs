@@ -48,7 +48,7 @@ public static class ServiceExtensions
     {
         services.AddDbContext<AppDbContext>(opts =>
         {
-           var connectionString = configuration.GetConnectionString("Default") ?? throw new InvalidOperationException("Connection string 'Default' not found.");
+           var connectionString = configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'Default' not found.");
             opts.UseNpgsql(connectionString);
             //.LogTo(Console.WriteLine, LogLevel.Information) 
             //.EnableDetailedErrors()                         
