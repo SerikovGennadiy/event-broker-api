@@ -13,7 +13,7 @@ namespace EventBrokerAPI.ContextFactory
                                                           .Build();
 
             var builder = new DbContextOptionsBuilder<AppDbContext>()
-                .UseNpgsql(connectionString: configuration.GetConnectionString("DeafaultConnection"),
+                .UseNpgsql(connectionString: configuration.GetConnectionString("DefaultConnection"),
                            npgsqlOptionsAction: m => m.MigrationsAssembly("EventBrokerAPI"));
 
             return new AppDbContext(builder.Options);
