@@ -31,4 +31,4 @@ app.UseSwaggerUI();
 
 app.MapControllers();
 
-app.Run();
+app.MigrateDatabase().Run();
