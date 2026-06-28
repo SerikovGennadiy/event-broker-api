@@ -1,20 +1,17 @@
 ﻿using Contracts.Service;
 using Entities.Domain.Models;
 using Entities.ErrorHandling.Exceptions.Booking;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Moq;
-using Service;
 using Shared.DTO;
 using System.Collections.Concurrent;
 
 namespace EventBrokerAPI.Tests.BookingService.Commands;
 
 [Collection("BookingServiceTests")]
-public class Tests: IClassFixture<BookingServiceFixture>
+public class Tests: IClassFixture<Fixture>
 {
-    private readonly BookingServiceFixture _fixture;
-    public Tests(BookingServiceFixture fixture)
+    private readonly Fixture _fixture;
+    public Tests(Fixture fixture)
     {
         _fixture = fixture;
         _fixture.RecreateDatabase();

@@ -24,6 +24,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Элементы решен
 		docker-compose.yml = docker-compose.yml
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventBrokerAPI.IntegrationTests", "EventBrokerAPI.IntegrationTests\EventBrokerAPI.IntegrationTests.csproj", "{B55A5C16-42AC-42E5-9511-0C45D2A83C9E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -62,6 +64,10 @@ Global
 		{DBE0FBA2-1641-4F0C-B964-C9AED83F64F2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DBE0FBA2-1641-4F0C-B964-C9AED83F64F2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DBE0FBA2-1641-4F0C-B964-C9AED83F64F2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B55A5C16-42AC-42E5-9511-0C45D2A83C9E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B55A5C16-42AC-42E5-9511-0C45D2A83C9E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B55A5C16-42AC-42E5-9511-0C45D2A83C9E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B55A5C16-42AC-42E5-9511-0C45D2A83C9E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

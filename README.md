@@ -54,7 +54,9 @@ use case прост (с возможным овербукингом):
 - Swagger/OpenAPI
 - Entity Framework Core (предполагается)
 - Многопоточность
-
+- Docker (Testcontainers)
+- xUnit
+- PostgreSQL
 ** примечание **
 
 Применены примитивы синхронизации для защиты от непредсказуемых результатов и обеспечения целостности данных при состоянии гонки или попытки овербукинга:
@@ -93,25 +95,30 @@ use case прост (с возможным овербукингом):
 | Status | 2 | Бронь отклонена |
 
 ### Измененен контекст данных приложения.
-API использует docker-контейнер СУБД PostgreSQL (Тесты API используют UseInMemoryDatabase имитацию)
+API использует docker-контейнер СУБД PostgreSQL (Unit-тесты API используют UseInMemoryDatabase имитацию, Интеграционные - контейнерную реализацию на Testcontainers)
+Управление схемой БД осуществляется через **механизм миграций**. Реализовано их **автоматическое применение при запуске** основного приложения API и интеграционных тестов его репозиториев.
+Поэтому ручное обновление схемы БД запуском команды **dotnet ef database update** также доступно, но необязательно.
 
 ### 🚀 Установка и запуск API
 
 ## Выполните развертывание контейнера СУБД (для Windows)
-1. Активируйте компонент WSL (Windows Subsystem for Linux). В терминале (или оболочке powershell) выполните **wsl --install**
-2. Перезагрузите компьютер
-3. Скачайте и установите приложение **Docker Desktop** для Windows. (Установка дистрибутивов Unix не требуется)
+1. активируйте компонент WSL (Windows Subsystem for Linux). В терминале (или оболочке powershell) выполните **wsl --install**
+2. перезагрузите компьютер
+3. скачайте и установите приложение **Docker Desktop** для Windows. (Установка дистрибутивов Unix не требуется)
 4. проверьте, что процесс docker-daemon в работе **docker --version** или **docker ps**
     
 ## Клонирование репозитория API
 1. откройте терминал
-2. клонируйте проект **git clone -b sprint_5 https://github.com/SerikovGennadiy/event-broker-api.git**
+2. клонируйте проект **git clone -b sprint_6 https://github.com/SerikovGennadiy/event-broker-api.git**
 3. перейдите в директорию **cd event-broker-api (содержащую sln файл решения)**
 5. выполните **docker compose up -d** (команда ищет по умолчанию файл конфигурации и выполняет развертывание и запуск контейнера c СУБД PostgreSQL)
 6. выполните **docker ps --filter "name=eventapi-postgres"** (убедитесь, что контейнер работает, тоже самое можно легко проверить, Docker Desktop)
 
-## Тестирование
-1. запустите тесты **dotnet test ./EventBrokerAPI.Tests/EventBrokerAPI.Tests.csproj**
+## Unit-тестирование
+1. выполните запуск **dotnet test ./EventBrokerAPI.Tests/EventBrokerAPI.Tests.csproj**
+
+## Интеграционные тесты репозиториев
+1. выполните запуск **dotnet test ./EventBrokerAPI.IntegrationTests/EventBrokerAPI.IntegrationTests.csproj**
 
 ## Запуск API
 1. убедитесь, что порт указанный в настройках запуска свободен
