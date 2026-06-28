@@ -1,28 +1,25 @@
-﻿using AutoMapper;
-using Contracts.Repository;
+﻿using Contracts.Repository;
 using Contracts.Service;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Moq;
 using Repository;
-using System.Net;
-using System.Threading.Tasks;
 
-namespace EventBrokerAPI.Tests.Fixture.EventService;
-public class EventServiceFixture : IAsyncLifetime
+namespace EventBrokerAPI.Tests.BookingService;
+public class Fixture : IAsyncLifetime
 {
     public required ServiceProvider serviceProvider;
+
     public async Task InitializeAsync()
     {
         var services = new ServiceCollection();
-
-        services.AddDbContext<AppDbContext>(options =>
-            options.UseInMemoryDatabase($"TestDb_{Guid.CreateVersion7()}"));
-
-        services.AddScoped<IEventService, Service.EventService>();
-        services.AddScoped<IRepositoryManager, RepositoryManager>();
+        // Регистрируем реальный сервис
+        services.AddDbContext<AppDbContext>(options => 
+            options.UseInMemoryDatabase($"BookDB_{Guid.CreateVersion7()}"));
         services.AddAutoMapper(cfg => cfg.AddProfile<MappingProfile>());
+        services.AddScoped<IRepositoryManager, RepositoryManager>();
+        services.AddScoped<IEventService, Service.EventService>();
+        services.AddScoped<IBookingService, Service.BookingService>();
 
         services.AddLogging(builder =>
         {

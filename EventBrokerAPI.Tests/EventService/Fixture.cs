@@ -5,21 +5,20 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Repository;
 
-namespace EventBrokerAPI.Tests.BookingService;
-public class BookingServiceFixture : IAsyncLifetime
+namespace EventBrokerAPI.Tests.Fixture.EventService;
+public class Fixture : IAsyncLifetime
 {
     public required ServiceProvider serviceProvider;
-
     public async Task InitializeAsync()
     {
         var services = new ServiceCollection();
-        // Регистрируем реальный сервис
-        services.AddDbContext<AppDbContext>(options => 
-            options.UseInMemoryDatabase($"BookDB_{Guid.CreateVersion7()}"));
-        services.AddAutoMapper(cfg => cfg.AddProfile<MappingProfile>());
-        services.AddScoped<IRepositoryManager, RepositoryManager>();
+
+        services.AddDbContext<AppDbContext>(options =>
+            options.UseInMemoryDatabase($"TestDb_{Guid.CreateVersion7()}"));
+
         services.AddScoped<IEventService, Service.EventService>();
-        services.AddScoped<IBookingService, Service.BookingService>();
+        services.AddScoped<IRepositoryManager, RepositoryManager>();
+        services.AddAutoMapper(cfg => cfg.AddProfile<MappingProfile>());
 
         services.AddLogging(builder =>
         {
