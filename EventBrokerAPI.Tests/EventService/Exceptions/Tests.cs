@@ -8,7 +8,7 @@ using Shared.ModelExtensions;
 
 namespace EventBrokerAPI.Tests.EventService.Exceptions;
 
-public class Tests(EventServiceFixture _fixture) : IClassFixture<EventServiceFixture>
+public class Tests(Fixture.EventService.Fixture _fixture) : IClassFixture<Fixture.EventService.Fixture>
 {
     [Fact]
     [Trait("Event", "Exceptions")]

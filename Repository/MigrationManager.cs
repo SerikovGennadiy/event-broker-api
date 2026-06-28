@@ -1,4 +1,4 @@
-﻿using Microsoft.Data.SqlClient;
+﻿using Npgsql;
 using Microsoft.Extensions.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -19,7 +19,7 @@ public static class MigrationManager
             {
                 appContext.Database.Migrate();
             }
-            catch (SqlException)
+            catch (PostgresException)
             {
                 if (_numbersOfRetries < 6)
                 {

@@ -6,9 +6,9 @@ using Shared.DTO;
 namespace EventBrokerAPI.Tests.BookingService.Queries;
 
 [Collection("BookingServiceTests")]
-public class Tests(BookingServiceFixture fixture) : IClassFixture<BookingServiceFixture>
+public class Tests(Fixture fixture) : IClassFixture<Fixture>
 {
-    private readonly BookingServiceFixture _fixture = fixture;
+    private readonly Fixture _fixture = fixture;
 
     [Fact]
     [Trait("Booking", "Queries")]

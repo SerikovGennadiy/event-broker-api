@@ -10,7 +10,7 @@ using Shared.ModelExtensions;
 
 namespace EventBrokerAPI.Tests.EventService.Commands;
 
-public class Tests(EventServiceFixture _fixture) : IClassFixture<EventServiceFixture>
+public class Tests(Fixture.EventService.Fixture _fixture) : IClassFixture<Fixture.EventService.Fixture>
 {
     [Fact]
     [Trait("Event", "Commands")]
