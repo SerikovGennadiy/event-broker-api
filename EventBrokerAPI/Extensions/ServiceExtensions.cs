@@ -48,8 +48,8 @@ public static class ServiceExtensions
     {
         services.AddDbContext<AppDbContext>(opts =>
         {
-           var connectionString = configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'Default' not found.");
-            opts.UseNpgsql(connectionString);
+           var connectionString = configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Строка подключения DefaultConnection не найдена");
+            opts.UseNpgsql(connectionString, m => m.MigrationsAssembly("EventBrokerAPI"));
             //.LogTo(Console.WriteLine, LogLevel.Information) 
             //.EnableDetailedErrors()                         
             //.EnableSensitiveDataLogging();
