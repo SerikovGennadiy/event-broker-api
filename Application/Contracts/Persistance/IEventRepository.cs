@@ -1,4 +1,4 @@
-﻿using Application.Shared.RequestSpecification;
+﻿using Application.Common.RequestSpecification;
 using Entities.Domain.Models;
 
 namespace Application.Contracts.Persistance;

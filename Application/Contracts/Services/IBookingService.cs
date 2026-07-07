@@ -1,4 +1,4 @@
-﻿using Application.Shared.DTO;
+﻿using Application.Common.DTO;
 
 namespace Application.Contracts.Services;
 

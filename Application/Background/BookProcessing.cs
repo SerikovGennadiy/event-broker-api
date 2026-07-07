@@ -1,9 +1,9 @@
-﻿using Contracts.Service;
+﻿using Application.Contracts.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-namespace BookingProcessor;
+namespace Application.Background;
 
 public class Handler : BackgroundService
 {
@@ -86,7 +86,7 @@ public class Handler : BackgroundService
                 try
                 {
                     // Проверяем, что событие существует
-                   await eventService.GetEventByIdAsync(booking.EventId);
+                    await eventService.GetEventByIdAsync(booking.EventId);
                 }
                 catch (Exception)
                 {
@@ -127,5 +127,3 @@ public class Handler : BackgroundService
         }
     }
 }
-
-

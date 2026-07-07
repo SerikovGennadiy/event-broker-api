@@ -1,5 +1,5 @@
-﻿using Application.Shared.DTO;
-using Application.Shared.RequestSpecification;
+﻿using Application.Common.DTO;
+using Application.Common.RequestSpecification;
 
 namespace Application.Contracts.Services;
 

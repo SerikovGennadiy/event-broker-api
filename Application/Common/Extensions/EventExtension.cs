@@ -1,7 +1,7 @@
 ﻿using Domain.Models;
-using Application.Shared.DTO;
+using Application.Common.DTO;
 
-namespace Application.Shared.Extensions;
+namespace Application.Common.Extensions;
 /// <summary> Для генерации DTO объекта из доменной суности </summary>
 public static class EventExtension
 {
