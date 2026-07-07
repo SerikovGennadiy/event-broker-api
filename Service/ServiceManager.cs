@@ -1,6 +1,4 @@
 ﻿using AutoMapper;
-using Contracts.Repository;
-using Contracts.Service;
 
 namespace Service;
 

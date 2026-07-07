@@ -1,5 +1,5 @@
 ﻿using Domain.Contracts;
-using Entities.ErrorHandling.Exceptions.Booking;
+using Domain.Exceptions.Booking;
 
 namespace Domain.Models;
 

@@ -1,10 +1,5 @@
 ﻿using AutoMapper;
-using Contracts.Repository;
-using Contracts.Service;
-using Entities.Domain.Models;
-using Entities.ErrorHandling.Exceptions.Booking;
 using Repository;
-using Shared.DTO;
 
 namespace Service;
 

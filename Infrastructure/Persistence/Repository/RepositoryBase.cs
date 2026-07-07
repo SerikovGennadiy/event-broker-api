@@ -1,8 +1,6 @@
-﻿using Contracts.Repository;
-using Entities.Domain.Contract;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 
-namespace Repository;
+namespace Infrastructure.Persistence.Repository;
 
 public class RepositoryBase<T> : IRepositoryBase<T> where T : class, IdEntity
 {

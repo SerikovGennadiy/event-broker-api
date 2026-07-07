@@ -1,7 +1,4 @@
-﻿using Contracts.Service;
-using Entities.Domain.Models;
-using Microsoft.Extensions.DependencyInjection;
-using Shared.DTO;
+﻿using Microsoft.Extensions.DependencyInjection;
 
 namespace EventBrokerAPI.Tests.BookingService.Queries;
 

@@ -1,12 +1,12 @@
-﻿using Entities.Domain.Models;
+﻿using Domain.Models;
 
-namespace Repository.Extensions;
+namespace Infrastructure.Persistence.Extensions;
 
 public static class EventRepositoryExtension
 {
     public static IQueryable<Event> FilterRangeEvents(this IQueryable<Event> events, DateTime? from, DateTime? to)
     {
-        if(events == null) throw new ArgumentNullException(nameof(events));
+        if (events == null) throw new ArgumentNullException(nameof(events));
 
         if (from.HasValue)
             events = events.Where(e => e.StartAt >= from);

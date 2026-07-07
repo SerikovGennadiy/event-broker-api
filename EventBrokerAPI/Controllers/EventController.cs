@@ -1,8 +1,4 @@
-﻿using Contracts.Service;
-using Entities.ErrorHandling.Model;
-using Microsoft.AspNetCore.Mvc;
-using Shared.DTO;
-using Shared.RequestSpecification;
+﻿using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
 
 namespace EventBrokerAPI.Controllers;

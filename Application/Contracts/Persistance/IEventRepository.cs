@@ -1,5 +1,5 @@
 ﻿using Application.Common.RequestSpecification;
-using Entities.Domain.Models;
+using Domain.Models;
 
 namespace Application.Contracts.Persistance;
 

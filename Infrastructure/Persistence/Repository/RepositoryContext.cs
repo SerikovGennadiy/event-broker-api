@@ -1,9 +1,6 @@
-﻿using Entities.Domain.Contract;
-using Entities.Domain.Models;
-using System;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 
-namespace Repository;
+namespace Infrastructure.Persistence.Repository;
 
 [Obsolete($"Используйте {nameof(AppDbContext)} вместо {nameof(RepositoryContext)}")]
 public class RepositoryContext
@@ -16,7 +13,7 @@ public class RepositoryContext
     {
         // получить все List'ы в классе
         var dbSets = GetType().GetProperties()
-                              .Where(p => p.PropertyType.IsGenericType 
+                              .Where(p => p.PropertyType.IsGenericType
                                        && p.PropertyType.GetGenericTypeDefinition() == typeof(List<>))
                               .ToList();
 
@@ -31,7 +28,7 @@ public class RepositoryContext
 
     public List<T> Set<T>()
     {
-        if(_dbSets.TryGetValue(typeof(T), out var dbSet))
+        if (_dbSets.TryGetValue(typeof(T), out var dbSet))
         {
             return (List<T>)dbSet;
         }
@@ -48,11 +45,11 @@ public static class ListUpdateExtension
             throw new ArgumentException($"Сущность {nameof(T)} с ID: {item.Id} отсутсвует");
 
         var properties = typeof(T).GetProperties()
-            .Where(p => p.CanRead 
-                     && p.CanWrite 
+            .Where(p => p.CanRead
+                     && p.CanWrite
                      && p.Name != $"{nameof(item.Id)}");
 
-        foreach(var prop in properties)
+        foreach (var prop in properties)
         {
             var value = prop.GetValue(item);
             prop.SetValue(stored, value);

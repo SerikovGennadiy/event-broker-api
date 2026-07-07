@@ -1,10 +1,8 @@
-﻿using Domain.Exceptions;
-
-namespace Domain.Exceptions.Event;
+﻿namespace Domain.Exceptions.Event;
 
 public class EventNotFoundException : NotFoundException
 {
-    public EventNotFoundException(Guid eventId) 
+    public EventNotFoundException(Guid eventId)
         : base($"Сущность мероприятия с ID: {eventId} отсутсвует")
     {
     }

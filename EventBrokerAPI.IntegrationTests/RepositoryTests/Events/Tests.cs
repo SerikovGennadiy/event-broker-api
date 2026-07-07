@@ -1,6 +1,4 @@
-﻿using Entities.Domain.Models;
-using Repository;
-using Shared.RequestSpecification;
+﻿using Repository;
 
 namespace EventBrokerAPI.IntegrationTests.RepositoryTests.Events;
 

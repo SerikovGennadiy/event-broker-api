@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Mvc.Controllers;
+using Microsoft.AspNetCore.Mvc.Filters;
 
 /// <summary>Перехват до ModelBinding'а</summary>
 /// <remarks>проверка на пустой запрос для PUT и POST</remarks>

@@ -1,9 +1,9 @@
-﻿using Npgsql;
-using Microsoft.Extensions.Hosting;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Npgsql;
 
-namespace Repository;
+namespace Infrastructure.Persistence.Migration;
 
 public static class MigrationManager
 {
@@ -29,7 +29,7 @@ public static class MigrationManager
 
                     Console.WriteLine($"Сервер СУД не найден или недоступен. Повторная попытка....#{_numbersOfRetries}");
 
-                    MigrateDatabase(host);
+                    host.MigrateDatabase();
                 }
                 throw;
             }

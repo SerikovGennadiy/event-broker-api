@@ -1,7 +1,6 @@
-﻿using Entities.Domain.Models;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 
-namespace Repository;
+namespace Infrastructure.Persistence;
 
 public sealed class AppDbContext : DbContext
 {

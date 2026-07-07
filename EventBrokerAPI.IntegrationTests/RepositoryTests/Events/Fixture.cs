@@ -22,7 +22,7 @@ public class Fixture : IAsyncLifetime
     public AppDbContext CreateTestDbContext()
     {
         var options = new DbContextOptionsBuilder<AppDbContext>()
-            .UseNpgsql(connectionString: _postgres.GetConnectionString(), 
+            .UseNpgsql(connectionString: _postgres.GetConnectionString(),
                        npgsqlOptionsAction: m => m.MigrationsAssembly("EventBrokerAPI"))
             .Options;
 

@@ -1,5 +1,5 @@
-﻿using Repository;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
+using Repository;
 
 namespace EventBrokerAPI.Controllers;
 

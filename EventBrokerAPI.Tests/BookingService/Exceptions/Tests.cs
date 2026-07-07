@@ -1,10 +1,4 @@
-﻿using Contracts.Service;
-using Entities.Domain.Models;
-using Entities.ErrorHandling.Exceptions.Booking;
-using Entities.ErrorHandling.Exceptions.Event;
-using Microsoft.Extensions.DependencyInjection;
-using Moq;
-using Shared.DTO;
+﻿using Microsoft.Extensions.DependencyInjection;
 
 namespace EventBrokerAPI.Tests.BookingService.Exceptions;
 

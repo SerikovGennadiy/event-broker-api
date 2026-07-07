@@ -1,12 +1,4 @@
-﻿using Contracts.Service;
-using Entities.Domain.Models;
-using Entities.ErrorHandling.Exceptions.Event;
-using EventBrokerAPI.Tests.Fixture.EventService;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.OpenApi.Writers;
-using Moq;
-using Shared.DTO;
-using Shared.ModelExtensions;
+﻿using Microsoft.Extensions.DependencyInjection;
 
 namespace EventBrokerAPI.Tests.EventService.Commands;
 

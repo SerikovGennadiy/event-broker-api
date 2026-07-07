@@ -1,6 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.Collections.Generic;
-using Domain.Contracts;
+﻿using Domain.Contracts;
+using System.ComponentModel.DataAnnotations;
 
 namespace Domain.Models;
 
@@ -39,12 +38,13 @@ public class Event : IdEntity, IReadOnlyEvent
         if (totalSeats <= 0)
             throw new ValidationException("Общее количество мест на мероприятие должно быть больше 0");
 
-        return new Event() {
+        return new Event()
+        {
             Id = Guid.CreateVersion7(),
             Title = title,
             StartAt = startAt,
-            EndAt = endAt, 
-            Description = description, 
+            EndAt = endAt,
+            Description = description,
             TotalSeats = totalSeats,
             AvailableSeats = totalSeats
         };

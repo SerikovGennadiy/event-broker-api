@@ -1,8 +1,8 @@
-﻿using Entities.Domain.Models;
+﻿using Domain.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Repository.Configuration;
+namespace Infrastructure.Persistence.Configuration;
 
 internal class BookingConfiguration : IEntityTypeConfiguration<Booking>
 {
@@ -16,10 +16,10 @@ internal class BookingConfiguration : IEntityTypeConfiguration<Booking>
 
         builder.Property(b => b.EventId)
                .IsRequired();
-        
+
         builder.Property(b => b.CreatedAt)
                .IsRequired();
-        
+
         builder.Property(b => b.ProcessedAt);
 
         builder.Property(b => b.Status)

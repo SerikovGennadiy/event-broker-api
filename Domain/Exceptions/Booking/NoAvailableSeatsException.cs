@@ -1,6 +1,4 @@
-﻿using Domain.Exceptions;
-
-namespace Domain.Exceptions.Booking;
+﻿namespace Domain.Exceptions.Booking;
 
 public class NoAvailableSeatsException : ConflictException
 {

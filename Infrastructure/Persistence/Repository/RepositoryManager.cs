@@ -1,6 +1,4 @@
-﻿using Contracts.Repository;
-
-namespace Repository;
+﻿namespace Infrastructure.Persistence.Repository;
 
 public class RepositoryManager(AppDbContext context) : IRepositoryManager
 {

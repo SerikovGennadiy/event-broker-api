@@ -1,6 +1,4 @@
-﻿using Contracts.Repository;
-using Contracts.Service;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Repository;
@@ -14,7 +12,7 @@ public class Fixture : IAsyncLifetime
     {
         var services = new ServiceCollection();
         // Регистрируем реальный сервис
-        services.AddDbContext<AppDbContext>(options => 
+        services.AddDbContext<AppDbContext>(options =>
             options.UseInMemoryDatabase($"BookDB_{Guid.CreateVersion7()}"));
         services.AddAutoMapper(cfg => cfg.AddProfile<MappingProfile>());
         services.AddScoped<IRepositoryManager, RepositoryManager>();

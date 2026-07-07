@@ -1,8 +1,8 @@
-﻿using Entities.Domain.Models;
+﻿using Domain.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Repository.Configuration;
+namespace Infrastructure.Persistence.Configuration;
 
 internal class EventConfiguration : IEntityTypeConfiguration<Event>
 {

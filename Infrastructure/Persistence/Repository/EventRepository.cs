@@ -1,10 +1,7 @@
-﻿using Contracts.Repository;
-using Entities.Domain.Models;
+﻿using Infrastructure.Persistence.Extensions;
 using Microsoft.EntityFrameworkCore;
-using Repository.Extensions;
-using Shared.RequestSpecification;
 
-namespace Repository;
+namespace Infrastructure.Persistence.Repository;
 
 public class EventRepository : RepositoryBase<Event>, IEventRepository
 {

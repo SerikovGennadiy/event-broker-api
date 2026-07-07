@@ -1,10 +1,4 @@
-﻿using Contracts.Service;
-using Entities.Domain.Models;
-using Entities.ErrorHandling.Exceptions.Event;
-using EventBrokerAPI.Tests.Fixture.EventService;
-using Microsoft.Extensions.DependencyInjection;
-using Shared.DTO;
-using Shared.ModelExtensions;
+﻿using Microsoft.Extensions.DependencyInjection;
 
 namespace EventBrokerAPI.Tests.EventService.Exceptions;
 
@@ -95,7 +89,7 @@ public class Tests(Fixture.EventService.Fixture _fixture) : IClassFixture<Fixtur
 
         // Act & Assert
         var eventService = _fixture.serviceProvider.GetRequiredService<IEventService>();
-        var exception = await  Assert.ThrowsAsync<EventBadDateRangeException>(() => eventService.UpdateEventAsync(eventId, updatedEventDTO));
+        var exception = await Assert.ThrowsAsync<EventBadDateRangeException>(() => eventService.UpdateEventAsync(eventId, updatedEventDTO));
         Assert.Equal("Некорректные даты начала и завершения мероприятия", exception.Message);
     }
 }

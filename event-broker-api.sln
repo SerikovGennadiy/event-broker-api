@@ -5,8 +5,6 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventBrokerAPI", "EventBrokerAPI\EventBrokerAPI.csproj", "{F79B2688-BB2B-A6E6-E83D-F1194E0C650B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Repository", "Repository\Repository.csproj", "{F856E71C-0AF5-4EC3-AEF8-2CD2B54FDDB7}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Service", "Service\Service.csproj", "{33B8F30B-11DD-4596-BFE1-5A9B70EAFD74}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventBrokerAPI.Tests", "EventBrokerAPI.Tests\EventBrokerAPI.Tests.csproj", "{2D24CA1B-3BD5-47C8-94C1-0A4D1308B6FD}"
@@ -36,10 +34,6 @@ Global
 		{F79B2688-BB2B-A6E6-E83D-F1194E0C650B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F79B2688-BB2B-A6E6-E83D-F1194E0C650B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F79B2688-BB2B-A6E6-E83D-F1194E0C650B}.Release|Any CPU.Build.0 = Release|Any CPU
-		{F856E71C-0AF5-4EC3-AEF8-2CD2B54FDDB7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F856E71C-0AF5-4EC3-AEF8-2CD2B54FDDB7}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{F856E71C-0AF5-4EC3-AEF8-2CD2B54FDDB7}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{F856E71C-0AF5-4EC3-AEF8-2CD2B54FDDB7}.Release|Any CPU.Build.0 = Release|Any CPU
 		{33B8F30B-11DD-4596-BFE1-5A9B70EAFD74}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{33B8F30B-11DD-4596-BFE1-5A9B70EAFD74}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{33B8F30B-11DD-4596-BFE1-5A9B70EAFD74}.Release|Any CPU.ActiveCfg = Release|Any CPU

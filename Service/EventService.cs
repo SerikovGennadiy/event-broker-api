@@ -1,13 +1,4 @@
 ﻿using AutoMapper;
-using Contracts.Repository;
-using Contracts.Service;
-using Entities.Domain.Models;
-using Entities.ErrorHandling.Exceptions.Booking;
-using Entities.ErrorHandling.Exceptions.Event;
-using Microsoft.Extensions.DependencyInjection;
-using Repository;
-using Shared.DTO;
-using Shared.RequestSpecification;
 
 namespace Service;
 
@@ -43,14 +34,14 @@ public class EventService : IEventService
 
     public async Task<EventInfo> CreateEventAsync(CreateEvent eventDTO)
     {
-       ValidateEvent(eventDTO);
+        ValidateEvent(eventDTO);
 
-       var entity = Event.Create(eventDTO.Title, eventDTO.StartAt, eventDTO.EndAt, eventDTO.Description, eventDTO.TotalSeats);
-       repositoryManager.Event.CreateEvent(entity);
+        var entity = Event.Create(eventDTO.Title, eventDTO.StartAt, eventDTO.EndAt, eventDTO.Description, eventDTO.TotalSeats);
+        repositoryManager.Event.CreateEvent(entity);
 
-       await repositoryManager.SaveAsync();
+        await repositoryManager.SaveAsync();
 
-       return mapper.Map<EventInfo>(entity);
+        return mapper.Map<EventInfo>(entity);
     }
 
     public async Task UpdateEventAsync(Guid eventId, EventDTO eventDTO)

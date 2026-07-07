@@ -1,6 +1,4 @@
-﻿using Domain.Exceptions;
-
-namespace Domain.Exceptions.Event;
+﻿namespace Domain.Exceptions.Event;
 public class EventNoTitleException : BadRequestException
 {
     public EventNoTitleException()

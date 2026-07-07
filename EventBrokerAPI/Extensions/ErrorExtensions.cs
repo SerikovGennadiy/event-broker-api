@@ -1,6 +1,4 @@
-﻿using Entities.ErrorHandling.Exceptions;
-using Entities.ErrorHandling.Model;
-using Microsoft.AspNetCore.Diagnostics;
+﻿using Microsoft.AspNetCore.Diagnostics;
 
 namespace EventBrokerAPI.Extensions
 {

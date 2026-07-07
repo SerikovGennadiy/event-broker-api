@@ -1,6 +1,4 @@
-﻿using Contracts.Repository;
-using Contracts.Service;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Repository;
 using Service;
 
@@ -36,7 +34,7 @@ public static class ServiceExtensions
         services.AddScoped<IServiceManager, ServiceManager>();
         return services;
     }
-    
+
     public static IServiceCollection ConfigureAPIServices(this IServiceCollection services)
     {
         services.AddScoped<IEventService, EventService>();
@@ -48,12 +46,12 @@ public static class ServiceExtensions
     {
         services.AddDbContext<AppDbContext>(opts =>
         {
-           var connectionString = configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Строка подключения DefaultConnection не найдена");
+            var connectionString = configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Строка подключения DefaultConnection не найдена");
             opts.UseNpgsql(connectionString, m => m.MigrationsAssembly("EventBrokerAPI"));
             //.LogTo(Console.WriteLine, LogLevel.Information) 
             //.EnableDetailedErrors()                         
             //.EnableSensitiveDataLogging();
-    });
+        });
 
         return services;
     }

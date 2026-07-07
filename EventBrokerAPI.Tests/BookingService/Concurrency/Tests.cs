@@ -1,10 +1,5 @@
-﻿using Moq;
-using Shared.DTO;
+﻿using Microsoft.Extensions.DependencyInjection;
 using System.Collections.Concurrent;
-using Contracts.Service;
-using Entities.Domain.Models;
-using Entities.ErrorHandling.Exceptions.Booking;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace EventBrokerAPI.Tests.BookingService.Concurrency;
 
