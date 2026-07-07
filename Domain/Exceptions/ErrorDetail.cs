@@ -1,6 +1,6 @@
 ﻿using System.Text.Json;
 
-namespace Entities.ErrorHandling.Model;
+namespace Domain.Exceptions;
 
 public class ErrorDetail
 {

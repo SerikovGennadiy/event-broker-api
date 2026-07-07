@@ -1,7 +1,7 @@
-﻿using Entities.Domain.Contract;
+﻿using Domain.Contracts;
 using Entities.ErrorHandling.Exceptions.Booking;
 
-namespace Entities.Domain.Models;
+namespace Domain.Models;
 
 /// <summary>Текущий статус брони на мероприятие</summary>
 public enum BookingStatus

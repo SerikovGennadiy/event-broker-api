@@ -1,6 +1,6 @@
-﻿using Entities.ErrorHandling.Exceptions;
+﻿using Domain.Exceptions;
 
-namespace Entities.ErrorHandling.Exceptions.Event;
+namespace Domain.Exceptions.Event;
 public class EventNoTitleException : BadRequestException
 {
     public EventNoTitleException()

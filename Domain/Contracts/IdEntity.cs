@@ -1,4 +1,4 @@
-﻿namespace Entities.Domain.Contract;
+﻿namespace Domain.Contracts;
 
 public interface IdEntity
 {

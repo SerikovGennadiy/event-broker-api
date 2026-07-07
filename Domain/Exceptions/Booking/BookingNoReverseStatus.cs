@@ -1,4 +1,6 @@
-﻿namespace Entities.ErrorHandling.Exceptions.Booking;
+﻿using Domain.Exceptions;
+
+namespace Domain.Exceptions.Booking;
 public class BookingNoReverseStatus : BadRequestException
 {
     public BookingNoReverseStatus(Guid eventId, Guid bookingId, string message) 

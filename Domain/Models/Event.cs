@@ -1,8 +1,8 @@
-﻿using Entities.Domain.Contract;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.Collections.Generic;
+using Domain.Contracts;
 
-namespace Entities.Domain.Models;
+namespace Domain.Models;
 
 /// <summary>Модель события - мероприятия</summary>
 public class Event : IdEntity, IReadOnlyEvent

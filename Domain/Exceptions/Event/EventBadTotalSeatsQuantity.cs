@@ -1,4 +1,6 @@
-﻿namespace Entities.ErrorHandling.Exceptions.Event;
+﻿using Domain.Exceptions;
+
+namespace Domain.Exceptions.Event;
 
 public class EventBadTotalSeatsQuantity : BadRequestException
 {
