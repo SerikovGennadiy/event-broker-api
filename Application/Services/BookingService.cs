@@ -1,7 +1,11 @@
-﻿using AutoMapper;
-using Repository;
+﻿using Application.Common.DTO;
+using Application.Contracts.Persistance;
+using Application.Contracts.Services;
+using AutoMapper;
+using Domain.Exceptions.Booking;
+using Domain.Models;
 
-namespace Service;
+namespace Application.Services;
 
 public class BookingService(IRepositoryManager repositoryManager, IEventService eventService, IMapper mapper) : IBookingService
 {
@@ -63,11 +67,6 @@ public class BookingService(IRepositoryManager repositoryManager, IEventService 
         var booking = await GetBookingAsync(bookingId);
         booking.Confirm();
 
-        if (repositoryManager.Booking is BookingRepository repo)
-        {
-            repo.Update(booking);
-        }
-
         await repositoryManager.SaveAsync();
     }
 
@@ -79,11 +78,6 @@ public class BookingService(IRepositoryManager repositoryManager, IEventService 
         var booking = await GetBookingAsync(bookingId);
         await eventService.ReleaseSeats((eventId: booking.EventId, seats: 1));
         booking.Reject();
-
-        if (repositoryManager.Booking is BookingRepository repo)
-        {
-            repo.Update(booking);
-        }
 
         await repositoryManager.SaveAsync();
     }

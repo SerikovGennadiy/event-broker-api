@@ -1,6 +1,8 @@
-﻿using AutoMapper;
+﻿using Application.Contracts.Persistance;
+using Application.Contracts.Services;
+using AutoMapper;
 
-namespace Service;
+namespace Application.Services;
 
 public class ServiceManager : IServiceManager
 {

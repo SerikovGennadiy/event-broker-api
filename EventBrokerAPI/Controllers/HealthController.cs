@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Repository;
 
 namespace EventBrokerAPI.Controllers;
 

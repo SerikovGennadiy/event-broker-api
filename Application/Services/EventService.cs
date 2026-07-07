@@ -1,6 +1,14 @@
-﻿using AutoMapper;
+﻿using Application.Common.DTO;
+using Application.Common.RequestSpecification;
+using Application.Contracts.Persistance;
+using Application.Contracts.Services;
+using AutoMapper;
+using Domain.Exceptions.Booking;
+using Domain.Exceptions.Event;
+using Domain.Models;
 
-namespace Service;
+
+namespace Application.Services;
 
 public class EventService : IEventService
 {

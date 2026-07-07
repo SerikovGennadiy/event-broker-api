@@ -1,6 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
-using Repository;
 
 namespace EventBrokerAPI.ContextFactory;
 public class AppDbContextFactory : IDesignTimeDbContextFactory<AppDbContext>

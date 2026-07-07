@@ -1,6 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Npgsql;
-using Repository;
 using Testcontainers.PostgreSql;
 
 namespace EventBrokerAPI.IntegrationTests.RepositoryTests.Bookings;

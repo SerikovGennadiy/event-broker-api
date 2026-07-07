@@ -1,7 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Repository;
 
 namespace EventBrokerAPI.Tests.Fixture.EventService;
 public class Fixture : IAsyncLifetime

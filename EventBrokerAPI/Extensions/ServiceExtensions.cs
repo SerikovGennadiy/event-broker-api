@@ -1,6 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Repository;
-using Service;
 
 namespace EventBrokerAPI.Extensions;
 

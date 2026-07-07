@@ -1,6 +1,4 @@
-﻿using AutoMapper;
-
-namespace EventBrokerAPI;
+﻿namespace EventBrokerAPI;
 
 public class MappingProfile : Profile
 {
