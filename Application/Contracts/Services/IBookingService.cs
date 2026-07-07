@@ -1,6 +1,6 @@
-﻿using Shared.DTO;
+﻿using Application.Shared.DTO;
 
-namespace Contracts.Service;
+namespace Application.Contracts.Services;
 
 public interface IBookingService
 {

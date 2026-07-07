@@ -1,6 +1,6 @@
 ﻿using Entities.Domain.Models;
 
-namespace Contracts.Repository;
+namespace Application.Contracts.Persistance;
 
 public interface IBookingRepository
 {

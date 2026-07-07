@@ -1,4 +1,4 @@
-﻿namespace Contracts.Repository;
+﻿namespace Application.Contracts.Persistance;
 
 public interface IRepositoryManager
 {

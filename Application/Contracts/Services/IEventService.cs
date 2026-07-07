@@ -1,7 +1,7 @@
-﻿using Shared.DTO;
-using Shared.RequestSpecification;
+﻿using Application.Shared.DTO;
+using Application.Shared.RequestSpecification;
 
-namespace Contracts.Service;
+namespace Application.Contracts.Services;
 
 public interface IEventService
 {

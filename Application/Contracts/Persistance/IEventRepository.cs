@@ -1,7 +1,7 @@
-﻿using Entities.Domain.Models;
-using Shared.RequestSpecification;
+﻿using Application.Shared.RequestSpecification;
+using Entities.Domain.Models;
 
-namespace Contracts.Repository;
+namespace Application.Contracts.Persistance;
 
 public interface IEventRepository
 {
