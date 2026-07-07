@@ -1,8 +1,8 @@
-﻿using Entities.Domain.Models;
-using Shared.DTO;
+﻿using Domain.Models;
+using Application.Shared.DTO;
 
-namespace Shared.ModelExtensions;
-
+namespace Application.Shared.Extensions;
+/// <summary> Для генерации DTO объекта из доменной суности </summary>
 public static class EventExtension
 {
     public static EventInfo toDTO(this IReadOnlyEvent @event)

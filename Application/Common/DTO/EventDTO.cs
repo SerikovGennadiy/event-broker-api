@@ -1,4 +1,4 @@
-﻿namespace Shared.DTO;
+﻿namespace Application.Shared.DTO;
 
 
 public record EventDTO(string Title,

@@ -1,6 +1,4 @@
-﻿using System.Text.Json.Serialization;
-
-namespace Shared.RequestSpecification;
+﻿namespace Application.Shared.RequestSpecification;
 
 public class EventParameters : Parameters
 {

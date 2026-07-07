@@ -1,4 +1,4 @@
-﻿namespace Shared.RequestSpecification;
+﻿namespace Application.Shared.RequestSpecification;
 
 public class PaginatedResult
 {
