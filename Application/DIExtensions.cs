@@ -7,6 +7,9 @@ namespace Application;
 
 public static class DIExtensions
 {
+    public static IServiceCollection ConfigureAutoMapper(this IServiceCollection services) =>
+         services.AddAutoMapper(cfg => { }, typeof(MappingProfile));
+
     public static IServiceCollection ConfigureAPIServices(this IServiceCollection services)
     {
         services.AddScoped<IEventService, EventService>();

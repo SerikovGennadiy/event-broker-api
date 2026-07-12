@@ -12,10 +12,9 @@ builder.Services.ConfigureRepositoryManager();
 builder.Services.ConfigureAPIServices();
 builder.Services.ConfigureActionFilters();
 builder.Services.ConfigureBackgroundServices();
+builder.Services.ConfigureAutoMapper();
 
 builder.Services.AddControllers();
-
-builder.Services.AddAutoMapper(cfg => { }, typeof(Program));
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
