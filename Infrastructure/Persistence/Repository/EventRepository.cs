@@ -1,4 +1,7 @@
-﻿using Infrastructure.Persistence.Extensions;
+﻿using Application.Common.RequestSpecification;
+using Application.Contracts.Persistance;
+using Domain.Models;
+using Infrastructure.Persistence.Extensions;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Persistence.Repository;

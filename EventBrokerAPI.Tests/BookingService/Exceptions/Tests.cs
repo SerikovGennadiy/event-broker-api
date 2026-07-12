@@ -1,4 +1,8 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Application.Common.DTO;
+using Application.Contracts.Services;
+using Domain.Exceptions.Booking;
+using Domain.Exceptions.Event;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace EventBrokerAPI.Tests.BookingService.Exceptions;
 

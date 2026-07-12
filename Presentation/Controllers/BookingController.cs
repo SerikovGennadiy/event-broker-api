@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Application.Contracts.Services;
+using Microsoft.AspNetCore.Mvc;
 
 namespace EventBrokerAPI.Controllers;
 

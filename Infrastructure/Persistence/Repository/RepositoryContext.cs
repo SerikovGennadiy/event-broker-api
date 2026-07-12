@@ -1,4 +1,6 @@
-﻿using System.Collections.Concurrent;
+﻿using Domain.Contracts;
+using Domain.Models;
+using System.Collections.Concurrent;
 
 namespace Infrastructure.Persistence.Repository;
 

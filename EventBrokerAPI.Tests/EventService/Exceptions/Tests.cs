@@ -1,8 +1,14 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Application.Common.DTO;
+using Application.Contracts.Services;
+using Application.Common.Extensions;
+
+using Domain.Exceptions.Event;
+using Domain.Models;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace EventBrokerAPI.Tests.EventService.Exceptions;
 
-public class Tests(Fixture.EventService.Fixture _fixture) : IClassFixture<Fixture.EventService.Fixture>
+public class Tests(Fixture _fixture) : IClassFixture<Fixture>
 {
     [Fact]
     [Trait("Event", "Exceptions")]

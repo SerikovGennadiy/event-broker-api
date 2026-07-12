@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Diagnostics;
+﻿using Domain.Exceptions;
+using Microsoft.AspNetCore.Diagnostics;
 
 namespace EventBrokerAPI.Extensions
 {

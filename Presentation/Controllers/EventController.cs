@@ -1,4 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Application.Common.DTO;
+using Application.Common.RequestSpecification;
+using Application.Contracts.Services;
+using Domain.Exceptions;
+using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
 
 namespace EventBrokerAPI.Controllers;

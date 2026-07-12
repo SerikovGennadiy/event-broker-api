@@ -1,4 +1,6 @@
-﻿using System.Linq.Expressions;
+﻿using Application.Contracts.Persistance;
+using Domain.Contracts;
+using System.Linq.Expressions;
 
 namespace Infrastructure.Persistence.Repository;
 

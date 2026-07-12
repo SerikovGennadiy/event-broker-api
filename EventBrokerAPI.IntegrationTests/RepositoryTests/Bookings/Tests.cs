@@ -1,4 +1,7 @@
-﻿namespace EventBrokerAPI.IntegrationTests.RepositoryTests.Bookings;
+﻿using Domain.Models;
+using Infrastructure.Persistence.Repository;
+
+namespace EventBrokerAPI.IntegrationTests.RepositoryTests.Bookings;
 
 public class Tests(Fixture _fixture) : IClassFixture<Fixture>
 {

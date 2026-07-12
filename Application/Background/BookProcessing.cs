@@ -1,24 +1,23 @@
-﻿using Application.Contracts.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
+﻿using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Application.Contracts.Services;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Application.Background;
 
-public class Handler : BackgroundService
+public class BookingHandler : BackgroundService
 {
     private readonly IServiceScopeFactory _serviceScopeFactory;
-    private readonly ILogger<Handler> _logger;
+    private readonly ILogger<BookingHandler> _logger;
     private readonly SemaphoreSlim _processingSemaphore = new(1, 1);
 
     private const int ITERATION_DELAY = 3;
     private const int EXTERNAL_API_CALL_IMITATION_TIME = 2;
-    public Handler(IServiceScopeFactory scopeFactory, ILogger<Handler> logger)
+    public BookingHandler(IServiceScopeFactory scopeFactory, ILogger<BookingHandler> logger)
     {
         _serviceScopeFactory = scopeFactory;
         _logger = logger;
     }
-
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {

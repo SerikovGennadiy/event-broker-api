@@ -1,8 +1,14 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Application;
+using Application.Contracts.Persistance;
+using Application.Contracts.Services;
+using Infrastructure.Persistence;
+using Infrastructure.Persistence.Repository;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Services = Application.Services;
 
-namespace EventBrokerAPI.Tests.Fixture.EventService;
+namespace EventBrokerAPI.Tests.EventService;
 public class Fixture : IAsyncLifetime
 {
     public required ServiceProvider serviceProvider;
@@ -13,7 +19,7 @@ public class Fixture : IAsyncLifetime
         services.AddDbContext<AppDbContext>(options =>
             options.UseInMemoryDatabase($"TestDb_{Guid.CreateVersion7()}"));
 
-        services.AddScoped<IEventService, Service.EventService>();
+        services.AddScoped<IEventService, Services.EventService>();
         services.AddScoped<IRepositoryManager, RepositoryManager>();
         services.AddAutoMapper(cfg => cfg.AddProfile<MappingProfile>());
 

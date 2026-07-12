@@ -1,6 +1,12 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Application;
+using Application.Contracts.Persistance;
+using Application.Contracts.Services;
+using Infrastructure.Persistence;
+using Infrastructure.Persistence.Repository;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Services = Application.Services;
 
 namespace EventBrokerAPI.Tests.BookingService;
 public class Fixture : IAsyncLifetime
@@ -15,8 +21,8 @@ public class Fixture : IAsyncLifetime
             options.UseInMemoryDatabase($"BookDB_{Guid.CreateVersion7()}"));
         services.AddAutoMapper(cfg => cfg.AddProfile<MappingProfile>());
         services.AddScoped<IRepositoryManager, RepositoryManager>();
-        services.AddScoped<IEventService, Service.EventService>();
-        services.AddScoped<IBookingService, Service.BookingService>();
+        services.AddScoped<IEventService, Services.EventService>();
+        services.AddScoped<IBookingService, Services.BookingService>();
 
         services.AddLogging(builder =>
         {

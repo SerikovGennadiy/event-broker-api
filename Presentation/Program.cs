@@ -1,7 +1,36 @@
+using Application;
+using EventBrokerAPI.Extensions;
+using Infrastructure;
+using Infrastructure.Persistence;
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddOpenApi();
+builder.Services.ConfigureCors();
+builder.Services.ConfigureContext(builder.Configuration);
+builder.Services.ConfigureRepositoryManager();
+builder.Services.ConfigureAPIServices();
+builder.Services.ConfigureActionFilters();
+builder.Services.ConfigureBackgroundServices();
+
+builder.Services.AddControllers();
+
+builder.Services.AddAutoMapper(cfg => { }, typeof(Program));
+builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-app.Run();
+if (app.Environment.IsDevelopment())
+{
+    app.MapOpenApi();
+}
+
+var logger = app.Services.GetRequiredService<ILogger<Program>>();
+app.ConfigureExceptionHandler(logger);
+
+app.UseSwagger();
+app.UseSwaggerUI();
+
+app.MapControllers();
+
+app.MigrateDatabase().Run();

@@ -3,7 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Npgsql;
 
-namespace Infrastructure.Persistence.Migration;
+namespace Infrastructure.Persistence;
 
 public static class MigrationManager
 {
