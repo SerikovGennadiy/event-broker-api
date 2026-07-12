@@ -27,7 +27,7 @@ public static class MigrationManager
 
                     _numbersOfRetries++;
 
-                    Console.WriteLine($"Сервер СУД не найден или недоступен. Повторная попытка....#{_numbersOfRetries}");
+                    Console.WriteLine($"Сервер СУБД не найден или недоступен. Повторная попытка....#{_numbersOfRetries}");
 
                     host.MigrateDatabase();
                 }

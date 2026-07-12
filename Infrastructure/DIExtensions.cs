@@ -13,8 +13,11 @@ public static class DIExtensions
     {
         services.AddDbContext<AppDbContext>(opts =>
         {
-            var connectionString = configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Строка подключения DefaultConnection не найдена");
-            opts.UseNpgsql(connectionString, m => m.MigrationsAssembly("EventBrokerAPI"));
+           var configuration = AppDbContextFactory.GetConfigurationFromProject("Presentation");
+
+            var connectionString = configuration.GetConnectionString("DefaultConnection") 
+                ?? throw new InvalidOperationException("Строка подключения DefaultConnection не найдена");
+            opts.UseNpgsql(connectionString, m => m.MigrationsAssembly("Infrastructure"));
         });
 
         return services;
@@ -25,5 +28,4 @@ public static class DIExtensions
         services.AddScoped<IRepositoryManager, RepositoryManager>();
         return services;
     }
-
 }
