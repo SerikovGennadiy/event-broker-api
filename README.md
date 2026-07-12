@@ -133,4 +133,4 @@ API использует docker-контейнер СУБД PostgreSQL (Unit-т�
 
 ## Запуск API
 1. убедитесь, что порт указанный в настройках запуска свободен
-2. выполните **dotnet run --project ./EventBrokerAPI/EventBrokerAPI.csproj**
+2. выполните **dotnet run --project ./Presentation/Presentation.csproj**
