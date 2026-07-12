@@ -1,6 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
 using Npgsql;
-using Repository;
 using Testcontainers.PostgreSql;
 
 namespace EventBrokerAPI.IntegrationTests.RepositoryTests.Events;
@@ -22,8 +22,8 @@ public class Fixture : IAsyncLifetime
     public AppDbContext CreateTestDbContext()
     {
         var options = new DbContextOptionsBuilder<AppDbContext>()
-            .UseNpgsql(connectionString: _postgres.GetConnectionString(), 
-                       npgsqlOptionsAction: m => m.MigrationsAssembly("EventBrokerAPI"))
+            .UseNpgsql(connectionString: _postgres.GetConnectionString(),
+                       npgsqlOptionsAction: m => m.MigrationsAssembly("Infrastructure"))
             .Options;
 
         return new AppDbContext(options);

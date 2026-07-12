@@ -1,5 +1,5 @@
-﻿using Repository;
-using Entities.Domain.Models;
+﻿using Domain.Models;
+using Infrastructure.Persistence.Repository;
 
 namespace EventBrokerAPI.IntegrationTests.RepositoryTests.Bookings;
 
@@ -70,7 +70,7 @@ public class Tests(Fixture _fixture) : IClassFixture<Fixture>
     {
         // Arrange
         await _fixture.ResetDatabaseAsync();
-        
+
         await using var arrangeContext = _fixture.CreateTestDbContext();
         var repo = new RepositoryManager(arrangeContext);
 

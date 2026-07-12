@@ -1,6 +1,6 @@
-﻿using Entities.Domain.Models;
-using Repository;
-using Shared.RequestSpecification;
+﻿using Application.Common.RequestSpecification;
+using Domain.Models;
+using Infrastructure.Persistence.Repository;
 
 namespace EventBrokerAPI.IntegrationTests.RepositoryTests.Events;
 

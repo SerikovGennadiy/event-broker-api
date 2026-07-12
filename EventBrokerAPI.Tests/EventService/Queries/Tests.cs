@@ -1,13 +1,10 @@
-﻿using Entities.Domain.Models;
-using EventBrokerAPI.Tests.Fixture.EventService;
-using Shared.DTO;
-using Shared.RequestSpecification;
-using Shared.ModelExtensions;
+﻿using Application.Common.DTO;
+using Application.Common.RequestSpecification;
+using Application.Contracts.Services;
 using Microsoft.Extensions.DependencyInjection;
-using Contracts.Service;
 
 namespace EventBrokerAPI.Tests.EventService.Queries;
-public class Tests(Fixture.EventService.Fixture _fixture) : IClassFixture<Fixture.EventService.Fixture>
+public class Tests(Fixture _fixture) : IClassFixture<Fixture>
 {
     [Fact]
     [Trait("Event", "Queries")]
@@ -25,12 +22,12 @@ public class Tests(Fixture.EventService.Fixture _fixture) : IClassFixture<Fixtur
         };
 
         List<CreateEvent> eventDTOs = [
-             new CreateEvent(Title: "Event 1", 
+             new CreateEvent(Title: "Event 1",
                                        Description: "Info about event",
                                        StartAt: DateTime.UtcNow,
                                        EndAt: DateTime.UtcNow.AddDays(1),
                                        TotalSeats: 4),
-             new CreateEvent(Title: "Event 2", 
+             new CreateEvent(Title: "Event 2",
                                        Description: "Info about event",
                                        StartAt: DateTime.UtcNow,
                                        EndAt: DateTime.UtcNow.AddDays(1),
@@ -55,7 +52,7 @@ public class Tests(Fixture.EventService.Fixture _fixture) : IClassFixture<Fixtur
     {
         // Arrage
         var eventService = _fixture.serviceProvider.GetRequiredService<IEventService>();
- 
+
         // Act 
         var created = await eventService.CreateEventAsync(new CreateEvent(Title: "Event 1", Description: "Description 1", StartAt: DateTime.UtcNow.AddDays(1), EndAt: DateTime.UtcNow.AddDays(2), TotalSeats: 100));
         var result = await eventService.GetEventByIdAsync(created.Id);
@@ -76,10 +73,10 @@ public class Tests(Fixture.EventService.Fixture _fixture) : IClassFixture<Fixtur
         const string searchTitle = "hiking";
 
         var eventService = _fixture.serviceProvider.GetRequiredService<IEventService>();
-            await eventService.CreateEventAsync(new CreateEvent(Title: "Hiking trip", Description: default, StartAt: DateTime.UtcNow, EndAt: DateTime.UtcNow.AddDays(1), TotalSeats: 10));
-            await eventService.CreateEventAsync(new CreateEvent(Title: "Conference", Description: default, StartAt: DateTime.UtcNow, EndAt: DateTime.UtcNow.AddDays(1), TotalSeats: 10));
-            await eventService.CreateEventAsync(new CreateEvent(Title: "hiking festival", Description: default, StartAt: DateTime.UtcNow, EndAt: DateTime.UtcNow.AddDays(1), TotalSeats: 10));
-      
+        await eventService.CreateEventAsync(new CreateEvent(Title: "Hiking trip", Description: default, StartAt: DateTime.UtcNow, EndAt: DateTime.UtcNow.AddDays(1), TotalSeats: 10));
+        await eventService.CreateEventAsync(new CreateEvent(Title: "Conference", Description: default, StartAt: DateTime.UtcNow, EndAt: DateTime.UtcNow.AddDays(1), TotalSeats: 10));
+        await eventService.CreateEventAsync(new CreateEvent(Title: "hiking festival", Description: default, StartAt: DateTime.UtcNow, EndAt: DateTime.UtcNow.AddDays(1), TotalSeats: 10));
+
         var parameters = new EventParameters { Page = 1, PageSize = 10, Title = searchTitle };
 
         // Act
@@ -101,9 +98,9 @@ public class Tests(Fixture.EventService.Fixture _fixture) : IClassFixture<Fixtur
         var to = now.AddDays(5);
 
         var eventService = _fixture.serviceProvider.GetRequiredService<IEventService>();
-           await eventService.CreateEventAsync(new CreateEvent(Title: "A", Description: default, StartAt: DateTime.UtcNow.AddDays(1), EndAt: DateTime.UtcNow.AddDays(2), TotalSeats: 10));
-           await eventService.CreateEventAsync(new CreateEvent(Title: "B", Description: default, StartAt: DateTime.UtcNow.AddDays(3), EndAt: DateTime.UtcNow.AddDays(4), TotalSeats: 10));
-           await eventService.CreateEventAsync(new CreateEvent(Title: "C", Description: default, StartAt: DateTime.UtcNow.AddDays(5), EndAt: DateTime.UtcNow.AddDays(6), TotalSeats: 10));
+        await eventService.CreateEventAsync(new CreateEvent(Title: "A", Description: default, StartAt: DateTime.UtcNow.AddDays(1), EndAt: DateTime.UtcNow.AddDays(2), TotalSeats: 10));
+        await eventService.CreateEventAsync(new CreateEvent(Title: "B", Description: default, StartAt: DateTime.UtcNow.AddDays(3), EndAt: DateTime.UtcNow.AddDays(4), TotalSeats: 10));
+        await eventService.CreateEventAsync(new CreateEvent(Title: "C", Description: default, StartAt: DateTime.UtcNow.AddDays(5), EndAt: DateTime.UtcNow.AddDays(6), TotalSeats: 10));
 
         var parameters = new EventParameters { Page = 1, PageSize = 10, From = from, To = to };
 
@@ -154,9 +151,9 @@ public class Tests(Fixture.EventService.Fixture _fixture) : IClassFixture<Fixtur
         var baseDate = DateTime.UtcNow.Date;
 
         var eventService = _fixture.serviceProvider.GetRequiredService<IEventService>();
-           await eventService.CreateEventAsync(new CreateEvent(Title: "Hiking", Description: default, StartAt: baseDate.AddDays(1), EndAt: baseDate.AddDays(2), TotalSeats: 10));
-           await eventService.CreateEventAsync(new CreateEvent(Title: "Hiking Special", Description: default, StartAt: baseDate.AddDays(10), EndAt: baseDate.AddDays(11), TotalSeats: 10));
-           await eventService.CreateEventAsync(new CreateEvent(Title: "Conference", Description: default, StartAt: baseDate.AddDays(1), EndAt: baseDate.AddDays(2), TotalSeats: 10));
+        await eventService.CreateEventAsync(new CreateEvent(Title: "Hiking", Description: default, StartAt: baseDate.AddDays(1), EndAt: baseDate.AddDays(2), TotalSeats: 10));
+        await eventService.CreateEventAsync(new CreateEvent(Title: "Hiking Special", Description: default, StartAt: baseDate.AddDays(10), EndAt: baseDate.AddDays(11), TotalSeats: 10));
+        await eventService.CreateEventAsync(new CreateEvent(Title: "Conference", Description: default, StartAt: baseDate.AddDays(1), EndAt: baseDate.AddDays(2), TotalSeats: 10));
 
         // Данные для фильтрации по всем параметрам
         var parameters = new EventParameters
