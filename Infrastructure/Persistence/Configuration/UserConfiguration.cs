@@ -15,6 +15,7 @@ internal class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(u => u.Id)
                .ValueGeneratedNever();
 
+        // не требовалось
         builder.Property(u => u.Login)
                .IsRequired()
                .HasMaxLength(100);

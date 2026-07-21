@@ -25,8 +25,8 @@ internal class BookingConfiguration : IEntityTypeConfiguration<Booking>
                .IsRequired();
 
         builder.Property(b => b.Status)
-               .IsRequired()
-               .HasConversion<int>();   
+               .HasConversion<string>()
+               .IsRequired();
 
         builder.HasOne(b => b.Event)
                .WithMany()
