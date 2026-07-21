@@ -11,7 +11,10 @@ public class BookingService(IRepositoryManager repositoryManager, IEventService 
 {
     private static readonly SemaphoreSlim _bookigSemaphore = new(1, 1);
 
-    public async Task<BookingDTO> CreateBookingAsync(Guid eventId, CancellationToken cancellationToken = default)
+    // Максимум активных броней на одного пользователя (пример)
+    private const int MAX_ACTIVE_BOOKINGS_PER_USER = 5;
+
+    public async Task<BookingDTO> CreateBookingAsync(Guid eventId, Guid userId, CancellationToken cancellationToken = default)
     {
         if (cancellationToken.IsCancellationRequested)
             throw new OperationCanceledException(cancellationToken);
@@ -20,9 +23,18 @@ public class BookingService(IRepositoryManager repositoryManager, IEventService 
 
         try
         {
-            Booking booking;
+            // Проверяем, что событие не прошло (используем публичный метод сервиса событий)
+            var eventInfo = await eventService.GetEventByIdAsync(eventId);
+            if (eventInfo.StartAt <= DateTime.UtcNow)
+                throw new BookingPastEventException(eventId);
 
-            booking = new Booking(eventId);
+            // Базовый подсчёт активных ожиданий (в текущей реализации считаем Pending)
+            var pendingBookings = await repositoryManager.Booking.GetAllBookingsByUserIdAsync(userId);
+            var userPendingCount = pendingBookings.Count(b => b.UserId == userId);
+            if (userPendingCount >= MAX_ACTIVE_BOOKINGS_PER_USER)
+                throw new BookingLimitExceededException(userId, MAX_ACTIVE_BOOKINGS_PER_USER);
+
+            Booking booking = new Booking(eventId, userId);
             repositoryManager.Booking.CreateBooking(booking);
 
             await eventService.ReserveSeats((eventId: booking.EventId, seats: 1));
