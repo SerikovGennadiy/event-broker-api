@@ -10,7 +10,7 @@ public class RepositoryContext
     private readonly ConcurrentDictionary<Type, object> _dbSets = new();
     public List<Event> Events { get; set; } = new();
     public List<Booking> Bookings { get; set; } = new();
-
+    public List<User> Users { get; set; } = new();
     public RepositoryContext()
     {
         // получить все List'ы в классе
