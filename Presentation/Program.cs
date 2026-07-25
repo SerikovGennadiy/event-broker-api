@@ -24,11 +24,13 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
-var logger = app.Services.GetRequiredService<ILogger<Program>>();
-app.ConfigureExceptionHandler(logger);
+app.UseExceptionHandling();
 
 app.UseSwagger();
 app.UseSwaggerUI();
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapControllers();
 
