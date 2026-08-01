@@ -2,6 +2,7 @@
 using Application.Contracts.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Application.Background;
+using Application.Services.Auth;
 
 namespace Application;
 

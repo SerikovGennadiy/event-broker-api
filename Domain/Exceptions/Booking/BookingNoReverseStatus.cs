@@ -2,6 +2,6 @@
 public class BookingNoReverseStatus : BadRequestException
 {
     public BookingNoReverseStatus(Guid eventId, Guid bookingId, string message)
-        : base($"Бронь (ID: {bookingId}) мероприятия (ID: {eventId})  и бронирование. {message}")
+        : base($"Ошибка смены статуса на предыдущий (ID: {bookingId}) мероприятия (ID: {eventId})  и бронирование. {message}")
     { }
 }

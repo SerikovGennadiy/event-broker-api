@@ -3,7 +3,7 @@ using Domain.Models;
 using Microsoft.AspNetCore.Http;
 using System.Security.Claims;
 
-namespace Application.Services;
+namespace Application.Services.Auth;
 
 internal class CurrectUserService(IHttpContextAccessor httpContextAccessor): ICurrectUserService
 {
