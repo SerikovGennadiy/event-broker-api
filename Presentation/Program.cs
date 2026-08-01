@@ -1,24 +1,9 @@
-using Application;
 using EventBrokerAPI.Extensions;
-using Infrastructure;
 using Infrastructure.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddOpenApi();
-builder.Services.ConfigureCors();
-builder.Services.ConfigureContext(builder.Configuration);
-builder.Services.ConfigureRepositoryManager();
-builder.Services.ConfigureAPIServices();
-builder.Services.ConfigureActionFilters();
-builder.Services.ConfigureBackgroundServices();
-builder.Services.ConfigureAutoMapper();
-
-builder.Services.ConfigureJwtConfiguration(builder.Configuration);
-builder.Services.ConfigureJwtAuth(builder.Configuration);
-
-builder.Services.AddControllers();
-builder.Services.AddSwaggerGen();
+builder.Services.ConfigureEventAPI(builder.Configuration);
 
 var app = builder.Build();
 

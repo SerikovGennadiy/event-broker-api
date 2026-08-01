@@ -3,6 +3,7 @@ using Application.Contracts.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Application.Background;
 using Application.Services.Auth;
+using Application.Contracts.Services.Auth;
 
 namespace Application;
 
@@ -22,4 +23,11 @@ public static class DIExtensions
 
     public static IServiceCollection ConfigureBackgroundServices(this IServiceCollection services) =>
         services.AddHostedService<BookingHandler>();
+
+    public static IServiceCollection ConfigureAuthServices(this IServiceCollection services)
+    {
+        services.AddScoped<IHashService, HashService>();
+        services.AddScoped<IAuthenticationService, AuthenticationService>();
+        return services;
+    }
 }

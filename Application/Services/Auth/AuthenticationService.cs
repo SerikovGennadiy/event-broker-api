@@ -1,7 +1,6 @@
 ﻿using Application.Common.DTO;
 using Application.Contracts.Persistance;
 using Application.Contracts.Services.Auth;
-using AutoMapper;
 using Domain.Models;
 using Domain.Options;
 using Microsoft.Extensions.Options;
@@ -12,9 +11,9 @@ using System.Text;
 
 namespace Application.Services.Auth;
 
-internal class AuthenticationService(IRepositoryManager repo,
-                                     IHashService hashService,
-                                     IOptionsSnapshot<JwtSettings> config) : IAuthenticationService
+public class AuthenticationService(IRepositoryManager repo,
+                                   IHashService hashService,
+                                   IOptionsSnapshot<JwtSettings> config) : IAuthenticationService
 {
     public async Task<(bool IsSuccess, string Token)> RegisterUser(UserRegisterDTO userDTO)
     {

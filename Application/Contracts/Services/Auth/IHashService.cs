@@ -1,6 +1,6 @@
 ﻿namespace Application.Contracts.Services.Auth;
 
-internal interface IHashService
+public interface IHashService
 {
     string Hash(string password);
     bool Verify(string password, string hash);

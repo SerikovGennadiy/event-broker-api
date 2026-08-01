@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Application.Services.Auth;
 
-internal class HashService : IHashService
+public class HashService : IHashService
 {
     public string Hash(string password)
     {
