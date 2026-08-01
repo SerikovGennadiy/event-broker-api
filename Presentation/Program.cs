@@ -14,6 +14,9 @@ builder.Services.ConfigureActionFilters();
 builder.Services.ConfigureBackgroundServices();
 builder.Services.ConfigureAutoMapper();
 
+builder.Services.ConfigureJwtConfiguration(builder.Configuration);
+builder.Services.ConfigureJwtAuth(builder.Configuration);
+
 builder.Services.AddControllers();
 builder.Services.AddSwaggerGen();
 
