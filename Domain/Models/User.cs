@@ -31,12 +31,11 @@ public class User : IdEntity
         };
     }
 
-    public static User Empty() => new User() { Id = Guid.Empty, Name = string.Empty, PasswordHash = string.Empty, Role = Role.None };
+    public static User Empty() => new User() { Id = Guid.Empty, Name = string.Empty, PasswordHash = string.Empty, Role = Role.User };
 }
 
 public enum Role
 {
-    None = 0,
-    User = 1,
-    Admin = 2
+    User = 0,
+    Admin = 1
 }

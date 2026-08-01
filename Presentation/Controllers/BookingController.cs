@@ -1,9 +1,11 @@
 ﻿using Application.Contracts.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EventBrokerAPI.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("bookings")]
 public class BookingController : ControllerBase
 {

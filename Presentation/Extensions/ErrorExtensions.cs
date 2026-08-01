@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Diagnostics;
 using System.Security.Authentication;
 using Microsoft.IdentityModel.Tokens;
+using Domain.Exceptions.Auth;
 
 namespace EventBrokerAPI.Extensions
 {
@@ -26,9 +27,8 @@ namespace EventBrokerAPI.Extensions
                             NotFoundException => StatusCodes.Status404NotFound,
                             BadRequestException => StatusCodes.Status400BadRequest,
                             ConflictException => StatusCodes.Status409Conflict,
-                            AuthenticationException => StatusCodes.Status401Unauthorized,
+                            WhoAreYouException => StatusCodes.Status401Unauthorized,
                             SecurityTokenException => StatusCodes.Status401Unauthorized,
-                            UnauthorizedAccessException => StatusCodes.Status403Forbidden,
                             _ => StatusCodes.Status500InternalServerError
                         };
 

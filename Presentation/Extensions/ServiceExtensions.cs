@@ -26,14 +26,15 @@ public static class ServiceExtensions
                 .ConfigureJwtAuth(configuration)
                 .AddControllers();
 
-        services.AddSwaggerGen(options => {
+        services.AddSwaggerGen(options =>
+        {
 
             options.SwaggerDoc("v1", new OpenApiInfo
             {
                 Title = "Event Broker API",
                 Description = "API с JWT аутентификацией для бронирования мероприятий"
             });
-
+            // описательная часть схемы авторизации
             options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
             {
                 Description = @"Использование JWT-токена в заголовке Authorization со схемой Bearer.
@@ -44,10 +45,25 @@ public static class ServiceExtensions
                 Type = SecuritySchemeType.ApiKey,
                 Scheme = "Bearer"
             });
+            // требование добавить описанный Header
+            options.AddSecurityRequirement(new OpenApiSecurityRequirement
+            {
+                {
+                    new OpenApiSecurityScheme
+                    {
+                        Reference = new OpenApiReference
+                        {
+                            Type = ReferenceType.SecurityScheme,
+                            Id = "Bearer"
+                        }
+                    },
+                    new string[] {}
+                }
+            });
         });
         return services;
     }
-  
+
     #region основная DI конфигурация сервисов API
     public static IServiceCollection ConfigureCors(this IServiceCollection services)
     {
@@ -102,6 +118,8 @@ public static class ServiceExtensions
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey))
                 };
             });
+
+        services.AddAuthorization();
 
         return services;
     }

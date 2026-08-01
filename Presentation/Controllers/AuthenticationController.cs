@@ -1,5 +1,6 @@
 ﻿using Application.Common.DTO;
 using Application.Contracts.Services.Auth;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Presentation.Controllers;
@@ -11,12 +12,12 @@ public class AuthenticationController(IAuthenticationService service) : Controll
     [HttpPost("register")]
     public async Task<ActionResult> Register([FromBody] UserRegisterDTO userForRegistrationDTO)
     {
-        var (isSuccess, token) = await service.RegisterUser(userForRegistrationDTO);
+        var (isSuccess, _) = await service.RegisterUser(userForRegistrationDTO);
 
         if (isSuccess)
-            return Ok(token);
+            return NoContent();
         else
-            return Unauthorized("Пользователь с таким именем уже существует");
+            return BadRequest("Пользователь с таким именем уже существует");
     }
 
     [HttpPost("login")]

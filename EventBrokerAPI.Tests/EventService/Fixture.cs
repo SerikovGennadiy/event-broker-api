@@ -1,6 +1,8 @@
 ﻿using Application;
 using Application.Contracts.Persistance;
 using Application.Contracts.Services;
+using Application.Contracts.Services.Auth;
+using Domain.Models;
 using Infrastructure.Persistence;
 using Infrastructure.Persistence.Repository;
 using Microsoft.EntityFrameworkCore;
@@ -21,6 +23,7 @@ public class Fixture : IAsyncLifetime
 
         services.AddScoped<IEventService, Services.EventService>();
         services.AddScoped<IRepositoryManager, RepositoryManager>();
+
         services.AddAutoMapper(cfg => cfg.AddProfile<MappingProfile>());
 
         services.AddLogging(builder =>
@@ -47,5 +50,16 @@ public class Fixture : IAsyncLifetime
 
         context.Database.EnsureDeleted();
         context.Database.EnsureCreated();
+    }
+
+    public class TestUser : ICurrentUserService
+    {
+        public Guid UserId => Guid.CreateVersion7();
+
+        public string? UserName => "TestUser";
+
+        public Role Role => Role.Admin;
+
+        public bool IsAuthenticated => true;
     }
 }
