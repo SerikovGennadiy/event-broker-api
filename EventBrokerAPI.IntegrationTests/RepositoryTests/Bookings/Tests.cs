@@ -11,13 +11,14 @@ public class Tests(Fixture _fixture) : IClassFixture<Fixture>
         // Arrange
         await _fixture.ResetDatabaseAsync();
 
+        var userId = Guid.CreateVersion7();
         await using var arrangeContext = _fixture.CreateTestDbContext();
         var repo = new RepositoryManager(arrangeContext);
         var @event = Event.Create(title: "Testing", startAt: DateTime.UtcNow, endAt: DateTime.UtcNow.AddDays(1), description: "integration tests", totalSeats: 1);
         repo.Event.CreateEvent(@event);
         await repo.SaveAsync();
 
-        var booking = new Booking(@event.Id);
+        var booking = new Booking(@event.Id, userId);
         repo.Booking.CreateBooking(booking);
         await repo.SaveAsync();
 
@@ -39,6 +40,8 @@ public class Tests(Fixture _fixture) : IClassFixture<Fixture>
         // Arrange
         await _fixture.ResetDatabaseAsync();
 
+        var userId = Guid.CreateVersion7();
+
         await using var arrangeContext = _fixture.CreateTestDbContext();
         var repo = new RepositoryManager(arrangeContext);
         var @event = Event.Create(title: "Testing",
@@ -49,7 +52,7 @@ public class Tests(Fixture _fixture) : IClassFixture<Fixture>
         repo.Event.CreateEvent(@event);
         await repo.SaveAsync();
 
-        Booking booking = new(@event.Id);
+        Booking booking = new(@event.Id, userId);
         repo.Booking.CreateBooking(booking);
         await repo.SaveAsync();
 
@@ -74,6 +77,7 @@ public class Tests(Fixture _fixture) : IClassFixture<Fixture>
         await using var arrangeContext = _fixture.CreateTestDbContext();
         var repo = new RepositoryManager(arrangeContext);
 
+        var userId = Guid.CreateVersion7();
         var @event1 = Event.Create("Event 1", DateTime.UtcNow.AddDays(1), DateTime.UtcNow.AddDays(2), null, 100);
         var @event2 = Event.Create("Event 2", DateTime.UtcNow.AddDays(3), DateTime.UtcNow.AddDays(4), null, 100);
         repo.Event.CreateEvent(@event1);
@@ -81,10 +85,10 @@ public class Tests(Fixture _fixture) : IClassFixture<Fixture>
 
         await repo.SaveAsync();
 
-        var booking1 = new Booking(@event1.Id);
-        var booking2 = new Booking(@event1.Id);
-        var booking3 = new Booking(@event2.Id);
-        var booking4 = new Booking(@event2.Id);
+        var booking1 = new Booking(@event1.Id, userId);
+        var booking2 = new Booking(@event1.Id, userId);
+        var booking3 = new Booking(@event2.Id, userId);
+        var booking4 = new Booking(@event2.Id, userId);
 
         repo.Booking.CreateBooking(booking1);
         repo.Booking.CreateBooking(booking2);

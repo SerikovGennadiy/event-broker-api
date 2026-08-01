@@ -15,13 +15,14 @@ public class Tests(Fixture fixture) : IClassFixture<Fixture>
     public async Task GetBookingById_ReturnsCorrectInformation()
     {
         // Arrange
+        var userId = Guid.CreateVersion7();
         var eventService = _fixture.serviceProvider.GetRequiredService<IEventService>();
         var bookingService = _fixture.serviceProvider.GetRequiredService<IBookingService>();
         var eventDTO = CreateTestEvent(totalSeats: 5);
         var @event = await eventService.CreateEventAsync(eventDTO);
 
         // Act
-        var booking = await bookingService.CreateBookingAsync(@event.Id);
+        var booking = await bookingService.CreateBookingAsync(@event.Id, userId);
         var result = await bookingService.GetBookingByIdAsync(booking.Id);
 
         // Assert

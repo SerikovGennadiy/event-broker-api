@@ -9,7 +9,7 @@ namespace EventBrokerAPI.Controllers;
 
 [ApiController]
 [Route("events")]
-public class EventController(IEventService eventService, IBookingService bookingService) : ControllerBase
+public class EventController(IEventService eventService, IBookingService bookingService, ICurrectUserService currentUser): ControllerBase
 {
     [HttpGet]
     public async Task<IActionResult> GetAllEvents([FromQuery] EventParameters eventParameters)
@@ -43,7 +43,10 @@ public class EventController(IEventService eventService, IBookingService booking
     [ProducesResponseType(typeof(ErrorDetail), StatusCodes.Status409Conflict)]
     public async Task<IActionResult> CreateEventBooking(Guid eventId, CancellationToken token)
     {
-        var bookingDTO = await bookingService.CreateBookingAsync(eventId);
+        if (!currentUser.IsAuthenticated)
+            return Unauthorized();
+
+        var bookingDTO = await bookingService.CreateBookingAsync(eventId, currentUser.UserId);
 
         return AcceptedAtRoute(
             routeName: "BookingById",

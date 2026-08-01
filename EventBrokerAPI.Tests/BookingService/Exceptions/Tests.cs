@@ -16,11 +16,12 @@ public class Tests(Fixture fixture) : IClassFixture<Fixture>
     public async Task CreateBooking_ForNonExistingOrDeletedEvent_ThrowsEventNotFoundException()
     {
         // Arrange
+        var userId = Guid.CreateVersion7();
         var bookingService = _fixture.serviceProvider.GetRequiredService<IBookingService>();
         var notExistEventGuid = Guid.NewGuid();
 
         // Act
-        var ex = await Record.ExceptionAsync(() => bookingService.CreateBookingAsync(notExistEventGuid));
+        var ex = await Record.ExceptionAsync(() => bookingService.CreateBookingAsync(notExistEventGuid, userId));
 
         // Assert
         Assert.NotNull(ex);
@@ -44,6 +45,8 @@ public class Tests(Fixture fixture) : IClassFixture<Fixture>
     public async Task CreateBooking_WhenNoSeatsAvailable_ThrowsNoAvailableSeatsException()
     {
         // Arrange
+        var userId = Guid.CreateVersion7();
+
         var onlyOneSeat = 1;
 
         var eventService = _fixture.serviceProvider.GetRequiredService<IEventService>();
@@ -52,11 +55,11 @@ public class Tests(Fixture fixture) : IClassFixture<Fixture>
         var @event = await eventService.CreateEventAsync(eventDTO);
 
         // Занимаем единственное место
-        await bookingService.CreateBookingAsync(@event.Id);
+        await bookingService.CreateBookingAsync(@event.Id, userId);
 
         // Act & Assert
         var exception = await Assert.ThrowsAsync<NoAvailableSeatsException>(
-            () => bookingService.CreateBookingAsync(@event.Id)
+            () => bookingService.CreateBookingAsync(@event.Id, userId)
         );
     }
 
