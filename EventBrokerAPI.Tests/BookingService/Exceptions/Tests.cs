@@ -17,11 +17,13 @@ public class Tests(Fixture fixture) : IClassFixture<Fixture>
     {
         // Arrange
         var userId = Guid.CreateVersion7();
+        await _fixture.InitProviderWithUserContext(userId);
+
         var bookingService = _fixture.serviceProvider.GetRequiredService<IBookingService>();
         var notExistEventGuid = Guid.NewGuid();
 
         // Act
-        var ex = await Record.ExceptionAsync(() => bookingService.CreateBookingAsync(notExistEventGuid, userId));
+        var ex = await Record.ExceptionAsync(() => bookingService.CreateBookingAsync(notExistEventGuid));
 
         // Assert
         Assert.NotNull(ex);
@@ -35,6 +37,9 @@ public class Tests(Fixture fixture) : IClassFixture<Fixture>
         // Arrange
         var bookingId = Guid.NewGuid();
 
+        var userId = Guid.CreateVersion7();
+        await _fixture.InitProviderWithUserContext(userId);
+
         // Act & Assert
         var bookingService = _fixture.serviceProvider.GetRequiredService<IBookingService>();
         await Assert.ThrowsAsync<BookingNotFoundException>(() => bookingService.GetBookingByIdAsync(bookingId));
@@ -46,6 +51,7 @@ public class Tests(Fixture fixture) : IClassFixture<Fixture>
     {
         // Arrange
         var userId = Guid.CreateVersion7();
+        await _fixture.InitProviderWithUserContext(userId);
 
         var onlyOneSeat = 1;
 
@@ -55,21 +61,22 @@ public class Tests(Fixture fixture) : IClassFixture<Fixture>
         var @event = await eventService.CreateEventAsync(eventDTO);
 
         // Занимаем единственное место
-        await bookingService.CreateBookingAsync(@event.Id, userId);
+        await bookingService.CreateBookingAsync(@event.Id);
 
         // Act & Assert
         var exception = await Assert.ThrowsAsync<NoAvailableSeatsException>(
-            () => bookingService.CreateBookingAsync(@event.Id, userId)
+            () => bookingService.CreateBookingAsync(@event.Id)
         );
     }
 
     private static CreateEvent CreateTestEvent(int totalSeats = 10)
     {
+        // нельзя бронировать событие, которое уже прошло, поэтому устанавливаем дату начала в будущем
         return new CreateEvent(
             Title: "Test event",
             Description: "Initial description",
-            StartAt: DateTime.UtcNow,
-            EndAt: DateTime.UtcNow.AddDays(1),
+            StartAt: DateTime.UtcNow.AddDays(10),
+            EndAt: DateTime.UtcNow.AddDays(15),
             TotalSeats: totalSeats
         );
     }

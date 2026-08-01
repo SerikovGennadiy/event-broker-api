@@ -1,9 +1,9 @@
 ﻿using Application.Common.DTO;
 using Domain.Models;
 
-namespace Application.Contracts.Services;
+namespace Application.Contracts.Services.Auth;
 
-public interface ICurrectUserService
+public interface ICurrentUserService
 {
     Guid UserId { get; }
     string? UserName { get; }

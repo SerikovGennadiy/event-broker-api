@@ -1,5 +1,11 @@
-﻿using Domain.Models;
+﻿using Application.Common.DTO;
+using Application.Common.Extensions;
+using Application.Contracts.Persistance;
+using Application.Contracts.Services;
+using Domain.Exceptions.Booking;
+using Domain.Models;
 using Infrastructure.Persistence.Repository;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace EventBrokerAPI.IntegrationTests.RepositoryTests.Bookings;
 
@@ -16,6 +22,9 @@ public class Tests(Fixture _fixture) : IClassFixture<Fixture>
         var repo = new RepositoryManager(arrangeContext);
         var @event = Event.Create(title: "Testing", startAt: DateTime.UtcNow, endAt: DateTime.UtcNow.AddDays(1), description: "integration tests", totalSeats: 1);
         repo.Event.CreateEvent(@event);
+        await repo.SaveAsync();
+
+        repo.User.CreateUser(User.Restore(userId, "testuser", string.Empty));
         await repo.SaveAsync();
 
         var booking = new Booking(@event.Id, userId);
@@ -44,6 +53,9 @@ public class Tests(Fixture _fixture) : IClassFixture<Fixture>
 
         await using var arrangeContext = _fixture.CreateTestDbContext();
         var repo = new RepositoryManager(arrangeContext);
+        repo.User.CreateUser(User.Restore(userId, "testuser", string.Empty));
+        await repo.SaveAsync();
+
         var @event = Event.Create(title: "Testing",
                                   startAt: DateTime.UtcNow,
                                   endAt: DateTime.UtcNow.AddDays(1),
@@ -74,16 +86,22 @@ public class Tests(Fixture _fixture) : IClassFixture<Fixture>
         // Arrange
         await _fixture.ResetDatabaseAsync();
 
-        await using var arrangeContext = _fixture.CreateTestDbContext();
-        var repo = new RepositoryManager(arrangeContext);
-
         var userId = Guid.CreateVersion7();
-        var @event1 = Event.Create("Event 1", DateTime.UtcNow.AddDays(1), DateTime.UtcNow.AddDays(2), null, 100);
-        var @event2 = Event.Create("Event 2", DateTime.UtcNow.AddDays(3), DateTime.UtcNow.AddDays(4), null, 100);
+        _fixture.CurrentUser.Setup(x => x.UserId).Returns(userId);
+        _fixture.CurrentUser.Setup(x => x.IsAuthenticated).Returns(true);
+        var currentUser = _fixture.CurrentUser.Object;
+
+        using var sp = _fixture.CreateServiceProvider(currentUser);
+        using var scope = sp.CreateScope();
+       
+        var repo = scope.ServiceProvider.GetRequiredService<IRepositoryManager>();
+        repo.User.CreateUser(User.Restore(userId, "testuser", string.Empty));
+        await repo.SaveAsync();
+
+        Event @event1 = Event.Create("Event 1", DateTime.UtcNow.AddDays(1), DateTime.UtcNow.AddDays(2), null, 100);
+        Event @event2 = Event.Create("Event 2", DateTime.UtcNow.AddDays(3), DateTime.UtcNow.AddDays(4), null, 100);
         repo.Event.CreateEvent(@event1);
         repo.Event.CreateEvent(@event2);
-
-        await repo.SaveAsync();
 
         var booking1 = new Booking(@event1.Id, userId);
         var booking2 = new Booking(@event1.Id, userId);
@@ -123,5 +141,144 @@ public class Tests(Fixture _fixture) : IClassFixture<Fixture>
 
         // Assert
         Assert.Empty(result);
+    }
+
+    [Fact]
+    public async Task CreateBooking_PastEvent_Throws()
+    {
+        await _fixture.ResetDatabaseAsync();
+
+        var userId = Guid.CreateVersion7();
+        _fixture.CurrentUser.Setup(x => x.UserId).Returns(userId);
+        _fixture.CurrentUser.Setup(x => x.IsAuthenticated).Returns(true);
+        var currentUser = _fixture.CurrentUser.Object;
+
+        using var sp = _fixture.CreateServiceProvider(currentUser);
+        var repo = sp.GetRequiredService<IRepositoryManager>();
+        repo.User.CreateUser(User.Restore(userId, "testuser", string.Empty));
+        await repo.SaveAsync();
+
+        using var scope = sp.CreateScope();
+
+        var eventService = scope.ServiceProvider.GetRequiredService<IEventService>();
+        var bookingService = scope.ServiceProvider.GetRequiredService<IBookingService>();
+
+        var pastEvent = new CreateEvent(
+            Title: "Past event",
+            Description: "already happened",
+            StartAt: DateTime.UtcNow.AddDays(-2),
+            EndAt: DateTime.UtcNow.AddDays(-1),
+            TotalSeats: 10
+        );
+
+        var created = await eventService.CreateEventAsync(pastEvent);
+
+        await Assert.ThrowsAsync<BookingPastEventException>(() => bookingService.CreateBookingAsync(created.Id));
+    }
+
+    [Fact]
+    public async Task CreateBooking_BeyondLimit_Throws()
+    {
+        await _fixture.ResetDatabaseAsync();
+        
+        var userId = Guid.CreateVersion7();
+        _fixture.CurrentUser.Setup(x => x.UserId).Returns(userId);
+        _fixture.CurrentUser.Setup(x => x.IsAuthenticated).Returns(true);
+        var currentUser = _fixture.CurrentUser.Object;
+
+        using var sp = _fixture.CreateServiceProvider(currentUser);
+        var repo = sp.GetRequiredService<IRepositoryManager>();
+        repo.User.CreateUser(User.Restore(userId, "testuser", string.Empty));
+        await repo.SaveAsync();
+
+        using var scope = sp.CreateScope();
+
+        var eventService = scope.ServiceProvider.GetRequiredService<IEventService>();
+        var bookingService = scope.ServiceProvider.GetRequiredService<IBookingService>();
+
+        // пользователь может иметь максимум 20 активных ожиданий (как в сервисе)
+        var createdEvent = await eventService.CreateEventAsync(new CreateEvent(
+            Title: "B Event",
+            Description: "test",
+            StartAt: DateTime.UtcNow.AddDays(1),
+            EndAt: DateTime.UtcNow.AddDays(2),
+            TotalSeats: 100
+        ));
+        
+
+        // Создаём 5 броней — должны пройти
+        var exception = await Record.ExceptionAsync(async () =>
+        {
+            for (int i = 0; i < 21; i++)
+            {
+                await bookingService.CreateBookingAsync(createdEvent.Id);
+            }
+        });
+
+        Assert.IsType<BookingLimitExceededException>(exception);
+    }
+
+    [Fact]
+    public async Task Limits_ArePerUser()
+    {
+        await _fixture.ResetDatabaseAsync();
+
+        var userA = Guid.CreateVersion7();
+        _fixture.CurrentUser.Setup(x => x.UserId).Returns(userA);
+        _fixture.CurrentUser.Setup(x => x.IsAuthenticated).Returns(true);
+        var currentUser = _fixture.CurrentUser.Object; 
+        
+        // Пользователь A: создаёт 5 броней
+        using var spA = _fixture.CreateServiceProvider(currentUser);
+        using var scopeA = spA.CreateScope();
+        var repo = scopeA.ServiceProvider.GetRequiredService<IRepositoryManager>();
+        repo.User.CreateUser(User.Restore(userA, "testuserA", string.Empty));
+        await repo.SaveAsync();
+
+        var eventServiceA = scopeA.ServiceProvider.GetRequiredService<IEventService>();
+        var bookingServiceA = scopeA.ServiceProvider.GetRequiredService<IBookingService>();
+
+        // Создаём 5 событий и 5 броней для userA
+        var events = new List<EventInfo>();
+        for (int i = 0; i < 5; i++)
+        {
+            var ev = new CreateEvent(
+                Title: $"A Event #{i}",
+                Description: "test",
+                StartAt: DateTime.UtcNow.AddDays(1),
+                EndAt: DateTime.UtcNow.AddDays(2),
+                TotalSeats: 10
+            );
+            events.Add(await eventServiceA.CreateEventAsync(ev));
+            await bookingServiceA.CreateBookingAsync(events[i].Id);
+        }
+
+        // Пользователь B: использует тот же DB, но другой userId — должен иметь возможность создать бронь
+        var userB = Guid.CreateVersion7();
+        _fixture.CurrentUser.Setup(x => x.UserId).Returns(userB);
+        _fixture.CurrentUser.Setup(x => x.IsAuthenticated).Returns(true);
+        currentUser = _fixture.CurrentUser.Object;
+
+        using var spB = _fixture.CreateServiceProvider(currentUser);
+        using var scopeB = spB.CreateScope();
+        var bookingServiceB = scopeB.ServiceProvider.GetRequiredService<IBookingService>();
+        
+        repo = scopeB.ServiceProvider.GetRequiredService<IRepositoryManager>();
+        repo.User.CreateUser(User.Restore(userB, "testuserB", string.Empty));
+        await repo.SaveAsync();
+
+        // Попытка создать бронь на новое событие (или даже на один из существующих) должна пройти для userB
+        // Создадим отдельное событие
+        var evB = new CreateEvent(
+            Title: "B Event",
+            Description: "test",
+            StartAt: DateTime.UtcNow.AddDays(1),
+            EndAt: DateTime.UtcNow.AddDays(2),
+            TotalSeats: 10
+        );
+        var createdForB = await scopeB.ServiceProvider.GetRequiredService<IEventService>().CreateEventAsync(evB);
+
+        var ex = await Record.ExceptionAsync(() => bookingServiceB.CreateBookingAsync(createdForB.Id));
+        Assert.Null(ex);
     }
 }

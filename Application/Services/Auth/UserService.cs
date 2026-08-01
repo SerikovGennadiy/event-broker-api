@@ -1,11 +1,11 @@
-﻿using Application.Contracts.Services;
+﻿using Application.Contracts.Services.Auth;
 using Domain.Models;
 using Microsoft.AspNetCore.Http;
 using System.Security.Claims;
 
 namespace Application.Services.Auth;
 
-internal class CurrectUserService(IHttpContextAccessor httpContextAccessor): ICurrectUserService
+internal class CurrectUserService(IHttpContextAccessor httpContextAccessor): ICurrentUserService
 {
     public Guid UserId
     {

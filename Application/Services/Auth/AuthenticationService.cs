@@ -1,6 +1,8 @@
 ﻿using Application.Common.DTO;
 using Application.Contracts.Persistance;
 using Application.Contracts.Services.Auth;
+using Domain.Exceptions;
+using Domain.Exceptions.Auth;
 using Domain.Models;
 using Domain.Options;
 using Microsoft.Extensions.Options;
@@ -17,9 +19,12 @@ public class AuthenticationService(IRepositoryManager repo,
 {
     public async Task<(bool IsSuccess, string Token)> RegisterUser(UserRegisterDTO userDTO)
     {
+        if (string.IsNullOrEmpty(userDTO.UserName) || string.IsNullOrEmpty(userDTO.Password))
+            throw new UserValidationException();
+
         var user = await repo.User.GetUserByNameAsync(userDTO.UserName);
         if (user is not null)
-            return await Task.FromResult((IsSuccess: false, Token: string.Empty));
+            throw new WhoAreYouException($"{nameof(AuthenticationService)}: пользователь с именем {userDTO.UserName} уже существет");
 
         var passwordHash = hashService.Hash(userDTO.Password);
         var newUser = User.Restore(Guid.CreateVersion7(), userDTO.UserName, passwordHash, userDTO.Role);
@@ -32,12 +37,17 @@ public class AuthenticationService(IRepositoryManager repo,
 
     public async Task<(bool IsSuccess, string Token)> ValidateUser(UserLoginDTO userDTO)
     {
+        if (string.IsNullOrEmpty(userDTO.UserName) || string.IsNullOrEmpty(userDTO.Password))
+            throw new UserValidationException();
+
         var user = await repo.User.GetUserByNameAsync(userDTO.UserName);
         if (user is null)
-            return (IsSuccess: false, Token: string.Empty);
+           throw new WhoAreYouException($"{nameof(AuthenticationService)}: неправильные логин или пароль");
 
         // Проверяем введённый пароль против сохранённого хеша пользователя
         var hashMatches = hashService.Verify(userDTO.Password, user.PasswordHash ?? string.Empty);
+        if(!hashMatches)
+            throw new WhoAreYouException($"{nameof(AuthenticationService)}: неправильные логин или пароль");
 
         return (IsSuccess: hashMatches, Token: hashMatches ? CreateToken(user) : string.Empty);
     }
@@ -56,7 +66,7 @@ public class AuthenticationService(IRepositoryManager repo,
         var _jwtSettings = config.Value;
 
         if (string.IsNullOrEmpty(_jwtSettings.Secret))
-            throw new Exception ($"{nameof(AuthenticationService)}: на сервере не настроена подсистема доступа");
+            throw new SecurityTokenException ($"{nameof(AuthenticationService)}: на сервере не настроена подсистема доступа");
 
         var key = Encoding.UTF8.GetBytes(_jwtSettings.Secret);
         var secret = new SymmetricSecurityKey(key);

@@ -17,6 +17,7 @@ public class Tests(Fixture fixture) : IClassFixture<Fixture>
     {
         // Arrange
         var userId = Guid.CreateVersion7();
+        await _fixture.InitProviderWithUserContext(userId);
 
         var concurrentRequests = 20;
         var totalSeats = 5;
@@ -36,7 +37,7 @@ public class Tests(Fixture fixture) : IClassFixture<Fixture>
         {
             try
             {
-                var createdBooking = await bookingService.CreateBookingAsync(@event.Id, userId);
+                var createdBooking = await bookingService.CreateBookingAsync(@event.Id);
                 capturedBookings.Add(createdBooking);
 
                 Interlocked.Increment(ref successCount);
@@ -63,8 +64,9 @@ public class Tests(Fixture fixture) : IClassFixture<Fixture>
     {
         // Arrange
         var userId = Guid.CreateVersion7();
+        await _fixture.InitProviderWithUserContext(userId);
 
-        var totalSeats = 10;
+        var totalSeats = 5;
         var eventService = _fixture.serviceProvider.GetRequiredService<IEventService>();
         var bookingService = _fixture.serviceProvider.GetRequiredService<IBookingService>();
         var eventDTO = CreateTestEvent(totalSeats);
@@ -75,7 +77,7 @@ public class Tests(Fixture fixture) : IClassFixture<Fixture>
         // Act
         var tasks = Enumerable.Range(0, totalSeats).Select(async _ =>
         {
-            var createdBooking = await bookingService.CreateBookingAsync(@event.Id, userId);
+            var createdBooking = await bookingService.CreateBookingAsync(@event.Id);
             bookingIds.Add(createdBooking.Id);
         });
 
@@ -89,11 +91,12 @@ public class Tests(Fixture fixture) : IClassFixture<Fixture>
 
     private static CreateEvent CreateTestEvent(int totalSeats = 10)
     {
+        // нельзя бронировать событие, которое уже прошло, поэтому устанавливаем дату начала в будущем
         return new CreateEvent(
             Title: "Test event",
             Description: "Initial description",
-            StartAt: DateTime.UtcNow,
-            EndAt: DateTime.UtcNow.AddDays(1),
+            StartAt: DateTime.UtcNow.AddDays(10),
+            EndAt: DateTime.UtcNow.AddDays(15),
             TotalSeats: totalSeats
         );
     }

@@ -4,20 +4,20 @@ namespace Application.Common.DTO;
 
 public record UserDTO
 {
-    public required Guid Id { get; init; }
-    public required string UserName { get; init; }
-    public Role Role { get; init; }
+    public required Guid Id { get; set; }
+    public required string UserName { get; set; }
+    public Role Role { get; set; }
 }
 
 public record UserLoginDTO
 {
-    public required string UserName { get; init; }
-    public required string Password { get; init; }
+    public required string UserName { get; set; }
+    public required string Password { get; set; }
 }
 
 public record UserRegisterDTO
 {
-    public required string UserName { get; init; }
-    public required string Password { get; init; }
-    public required Role Role { get; init; }
+    public required string UserName { get; set; }
+    public required string Password { get; set; }
+    public required Role Role { get; set; } = Role.User;
 }

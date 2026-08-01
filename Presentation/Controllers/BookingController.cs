@@ -1,9 +1,11 @@
 ﻿using Application.Contracts.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EventBrokerAPI.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("bookings")]
 public class BookingController : ControllerBase
 {
@@ -15,5 +17,11 @@ public class BookingController : ControllerBase
     {
         var booking = await _service.GetBookingByIdAsync(bookingId);
         return Ok(booking);
+    }
+
+    [HttpDelete]
+    public async Task<IActionResult> DeleteBooking(Guid bookingId, CancellationToken token = default)
+    {
+        return Ok(await _service.CancelBookingAsync(bookingId));
     }
 }

@@ -1,5 +1,11 @@
-﻿using Infrastructure.Persistence;
+﻿using Application;
+using Application.Contracts.Persistance;
+using Application.Contracts.Services.Auth;
+using Infrastructure.Persistence;
+using Infrastructure.Persistence.Repository;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Moq;
 using Npgsql;
 using Testcontainers.PostgreSql;
 
@@ -8,7 +14,7 @@ namespace EventBrokerAPI.IntegrationTests.RepositoryTests.Events;
 public class Fixture : IAsyncLifetime
 {
     private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder("postgres:16-alpine").Build();
-
+    public Mock<ICurrentUserService> CurrentUser { get; } = new();
     public async Task InitializeAsync()
     {
         await _postgres.StartAsync();
@@ -80,5 +86,26 @@ public class Fixture : IAsyncLifetime
                 $"Проверьте, успешно ли применились миграции. Отсутствующая таблица может быть частью ошибки. " +
                 $"Список таблиц из модели: [{string.Join(", ", tablesToTruncate)}]", ex);
         }
+    }
+
+    // Создаёт ServiceProvider, настроенный на тот же контейнер Postgres, с регистрацией
+    // репозитория, сервисов и ICurrectUserService с заданным userId.
+    public ServiceProvider CreateServiceProvider(ICurrentUserService currentUser)
+    {
+        var services = new ServiceCollection();
+
+        services.AddDbContext<AppDbContext>(options =>
+            options.UseNpgsql(_postgres.GetConnectionString(), npgsqlOptionsAction: m => m.MigrationsAssembly("Infrastructure")));
+
+        services.AddAutoMapper(cfg => cfg.AddProfile<MappingProfile>());
+
+        services.AddScoped<IRepositoryManager, RepositoryManager>();
+        services.AddScoped<Application.Contracts.Services.IEventService, Application.Services.EventService>();
+        services.AddScoped<Application.Contracts.Services.IBookingService, Application.Services.BookingService>();
+        services.AddScoped<ICurrentUserService>(_ => currentUser);
+
+        services.AddLogging();
+
+        return services.BuildServiceProvider() ?? throw new InvalidOperationException("Не удалось создать ServiceProvider");
     }
 }

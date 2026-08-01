@@ -16,7 +16,7 @@ public static class DIExtensions
     {
         services.AddScoped<IEventService, EventService>();
         services.AddScoped<IBookingService, BookingService>();
-        services.AddScoped<ICurrectUserService, CurrectUserService>();
+        services.AddScoped<ICurrentUserService, CurrectUserService>();
 
         return services;
     }
