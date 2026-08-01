@@ -1,12 +1,16 @@
 ﻿using Domain.Exceptions;
 using Microsoft.AspNetCore.Diagnostics;
+using System.Security.Authentication;
+using Microsoft.IdentityModel.Tokens;
 
 namespace EventBrokerAPI.Extensions
 {
     public static class ExceptionMiddlewareExtensions
     {
-        public static void ConfigureExceptionHandler(this WebApplication app, ILogger logger)
+        public static void UseExceptionHandling(this WebApplication app)
         {
+            var logger = app.Services.GetRequiredService<ILogger<Program>>();
+
             app.UseExceptionHandler((IApplicationBuilder appError) =>
             {
                 appError.Run(async context =>
@@ -22,6 +26,9 @@ namespace EventBrokerAPI.Extensions
                             NotFoundException => StatusCodes.Status404NotFound,
                             BadRequestException => StatusCodes.Status400BadRequest,
                             ConflictException => StatusCodes.Status409Conflict,
+                            AuthenticationException => StatusCodes.Status401Unauthorized,
+                            SecurityTokenException => StatusCodes.Status401Unauthorized,
+                            UnauthorizedAccessException => StatusCodes.Status403Forbidden,
                             _ => StatusCodes.Status500InternalServerError
                         };
 
