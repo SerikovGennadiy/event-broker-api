@@ -9,10 +9,10 @@ public class User : IdEntity
     public Guid Id { get; init; }
 
     /// <summary>Логин пользователя</summary>
-    public required string Login { get; init; }
+    public required string Name { get; init; }
 
     /// <summary>Хеш пароля</summary>
-    public required string PasswordHash { get; init; }
+    public string? PasswordHash { get; init; }
 
     /// <summary>Роль пользователя</summary>
     public Role Role { get; private set; }
@@ -20,20 +20,23 @@ public class User : IdEntity
     // приватный конструктор для EFCore
     private User() { }
 
-    public static User Create(string login, string passwordHash, Role role = Role.User)
+    public static User Restore(Guid guid, string userName, string passwordHash, Role role = Role.User)
     {
-       return new User()
+        return new User()
         {
-            Id = Guid.CreateVersion7(),
-            Login = login,
+            Id = guid,
+            Name = userName,
             PasswordHash = passwordHash,
             Role = role
         };
     }
+
+    public static User Empty() => new User() { Id = Guid.Empty, Name = string.Empty, PasswordHash = string.Empty, Role = Role.None };
 }
 
 public enum Role
 {
-    User,
-    Admin
+    None = 0,
+    User = 1,
+    Admin = 2
 }

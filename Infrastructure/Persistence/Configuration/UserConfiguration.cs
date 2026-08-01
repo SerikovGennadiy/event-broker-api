@@ -16,11 +16,11 @@ internal class UserConfiguration : IEntityTypeConfiguration<User>
                .ValueGeneratedNever();
 
         // не требовалось
-        builder.Property(u => u.Login)
+        builder.Property(u => u.Name)
                .IsRequired()
                .HasMaxLength(100);
 
-        builder.HasIndex(u => u.Login)
+        builder.HasIndex(u => u.Name)
                .IsUnique();
 
         builder.Property(u => u.PasswordHash)
