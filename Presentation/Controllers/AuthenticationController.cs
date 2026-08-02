@@ -28,6 +28,6 @@ public class AuthenticationController(IAuthenticationService service) : Controll
         if(isSuccess)
             return Ok(token);
         else
-            return Forbid("Неверные логин или пароль");
+            return BadRequest("Неверные логин или пароль");
     }
 }
