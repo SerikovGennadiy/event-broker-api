@@ -14,7 +14,7 @@ public class BookingService(IRepositoryManager repositoryManager, IEventService 
     private static readonly SemaphoreSlim _bookigSemaphore = new(1, 1);
 
     // Максимум активных броней на одного пользователя (пример)
-    private const int MAX_ACTIVE_BOOKINGS_PER_USER = 20;
+    private const int MAX_ACTIVE_BOOKINGS_PER_USER = 10;
 
     public async Task<BookingDTO> CreateBookingAsync(Guid eventId, CancellationToken cancellationToken = default)
     {

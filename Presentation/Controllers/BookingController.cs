@@ -1,4 +1,5 @@
-﻿using Application.Contracts.Services;
+﻿using Application.Common.DTO;
+using Application.Contracts.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -19,9 +20,11 @@ public class BookingController : ControllerBase
         return Ok(booking);
     }
 
-    [HttpDelete]
+    [HttpDelete("{bookingId}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> DeleteBooking(Guid bookingId, CancellationToken token = default)
     {
-        return Ok(await _service.CancelBookingAsync(bookingId));
+        await _service.CancelBookingAsync(bookingId);
+        return NoContent();
     }
 }

@@ -204,22 +204,25 @@ public class Tests(Fixture _fixture) : IClassFixture<Fixture>
             EndAt: DateTime.UtcNow.AddDays(2),
             TotalSeats: 100
         ));
-        
 
-        // Создаём 5 броней — должны пройти
+
+        // Создаём 10 броней согласно лимиту MAX_ACTIVE_BOOKINGS_PER_USER
         var exception = await Record.ExceptionAsync(async () =>
         {
-            for (int i = 0; i < 21; i++)
+            for (int i = 0; i < 10; i++)
             {
                 await bookingService.CreateBookingAsync(createdEvent.Id);
             }
         });
 
-        Assert.IsType<BookingLimitExceededException>(exception);
+        Assert.IsNotType<BookingLimitExceededException>(exception);
+
+        // Попытка создать 11 бронь вызовет исключение
+        await Assert.ThrowsAsync<BookingLimitExceededException>(() => bookingService.CreateBookingAsync(createdEvent.Id));
     }
 
     [Fact]
-    public async Task Limits_ArePerUser()
+    public async Task CreateBooking_LimitsPerUser_AreCommonAndIndependentOfEvent()
     {
         await _fixture.ResetDatabaseAsync();
 
@@ -238,9 +241,9 @@ public class Tests(Fixture _fixture) : IClassFixture<Fixture>
         var eventServiceA = scopeA.ServiceProvider.GetRequiredService<IEventService>();
         var bookingServiceA = scopeA.ServiceProvider.GetRequiredService<IBookingService>();
 
-        // Создаём 5 событий и 5 броней для userA
+        // Создаём 10 событий и 10 броней для userA (10 лимит пользователя - антибарыга)
         var events = new List<EventInfo>();
-        for (int i = 0; i < 5; i++)
+        for (int i = 0; i < 10; i++)
         {
             var ev = new CreateEvent(
                 Title: $"A Event #{i}",
