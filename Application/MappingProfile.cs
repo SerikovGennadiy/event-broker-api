@@ -1,6 +1,7 @@
 ﻿using Application.Common.DTO;
 using AutoMapper;
 using Domain.Models;
+using Microsoft.AspNetCore.Identity;
 
 namespace Application;
 
@@ -29,5 +30,8 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
             .ForMember(dest => dest.Status, opt => opt.Ignore())
             .ForMember(dest => dest.ProcessedAt, opt => opt.Ignore());
+
+        CreateMap<UserDTO, User>();
+        CreateMap<User, UserDTO>();
     }
 }

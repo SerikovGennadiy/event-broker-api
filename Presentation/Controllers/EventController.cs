@@ -2,16 +2,19 @@
 using Application.Common.RequestSpecification;
 using Application.Contracts.Services;
 using Domain.Exceptions;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
 
 namespace EventBrokerAPI.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("events")]
-public class EventController(IEventService eventService, IBookingService bookingService) : ControllerBase
+public class EventController(IEventService eventService, IBookingService bookingService): ControllerBase
 {
     [HttpGet]
+    [AllowAnonymous]
     public async Task<IActionResult> GetAllEvents([FromQuery] EventParameters eventParameters)
     {
         var result = await eventService.GetAllEventsAsync(eventParameters);
@@ -23,6 +26,7 @@ public class EventController(IEventService eventService, IBookingService booking
     }
 
     [HttpGet("{id:guid}", Name = "EventById")]
+    [Authorize]
     public async Task<IActionResult> GetEvent(Guid id)
     {
         var eventDTO = await eventService.GetEventByIdAsync(id);
@@ -30,6 +34,7 @@ public class EventController(IEventService eventService, IBookingService booking
     }
 
     [HttpPost]
+    [Authorize(Roles = "Admin")]
     [ValidateDTOFilter]
     public async Task<IActionResult> CreateEvent([FromBody] CreateEvent eventDTO)
     {
@@ -38,6 +43,7 @@ public class EventController(IEventService eventService, IBookingService booking
     }
 
     [HttpPost("{eventId}/book")]
+    [Authorize]
     [ProducesResponseType(typeof(BookingDTO), StatusCodes.Status202Accepted)]
     [ProducesResponseType(typeof(ErrorDetail), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ErrorDetail), StatusCodes.Status409Conflict)]
@@ -53,6 +59,7 @@ public class EventController(IEventService eventService, IBookingService booking
     }
 
     [HttpPut("{id:guid}")]
+    [Authorize(Roles = "Admin")]
     [ValidateDTOFilter]
     public async Task<IActionResult> UpdateEvent([FromRoute] Guid id, [FromBody] EventDTO eventDTO)
     {
@@ -61,6 +68,7 @@ public class EventController(IEventService eventService, IBookingService booking
     }
 
     [HttpDelete("{id:guid}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> DeleteEvent(Guid id)
     {
         await eventService.DeleteEventAsync(id);

@@ -16,6 +16,9 @@ public class Tests(Fixture fixture) : IClassFixture<Fixture>
     public async Task ConcurrentBookings_WithOverbooking_OnlyAllowsUpToCapacity()
     {
         // Arrange
+        var userId = Guid.CreateVersion7();
+        await _fixture.InitProviderWithUserContext(userId);
+
         var concurrentRequests = 20;
         var totalSeats = 5;
 
@@ -60,7 +63,10 @@ public class Tests(Fixture fixture) : IClassFixture<Fixture>
     public async Task ConcurrentBookings_AllHaveUniqueIds()
     {
         // Arrange
-        var totalSeats = 10;
+        var userId = Guid.CreateVersion7();
+        await _fixture.InitProviderWithUserContext(userId);
+
+        var totalSeats = 5;
         var eventService = _fixture.serviceProvider.GetRequiredService<IEventService>();
         var bookingService = _fixture.serviceProvider.GetRequiredService<IBookingService>();
         var eventDTO = CreateTestEvent(totalSeats);
@@ -85,11 +91,12 @@ public class Tests(Fixture fixture) : IClassFixture<Fixture>
 
     private static CreateEvent CreateTestEvent(int totalSeats = 10)
     {
+        // нельзя бронировать событие, которое уже прошло, поэтому устанавливаем дату начала в будущем
         return new CreateEvent(
             Title: "Test event",
             Description: "Initial description",
-            StartAt: DateTime.UtcNow,
-            EndAt: DateTime.UtcNow.AddDays(1),
+            StartAt: DateTime.UtcNow.AddDays(10),
+            EndAt: DateTime.UtcNow.AddDays(15),
             TotalSeats: totalSeats
         );
     }

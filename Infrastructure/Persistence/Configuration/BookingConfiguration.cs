@@ -1,6 +1,6 @@
-﻿using Domain.Models;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Domain.Models;
 
 namespace Infrastructure.Persistence.Configuration;
 
@@ -11,23 +11,31 @@ internal class BookingConfiguration : IEntityTypeConfiguration<Booking>
         builder.ToTable("Bookings");
 
         builder.HasKey(b => b.Id);
+
         builder.Property(b => b.Id)
                .ValueGeneratedNever();
 
         builder.Property(b => b.EventId)
                .IsRequired();
 
-        builder.Property(b => b.CreatedAt)
+        builder.Property(b => b.UserId)
                .IsRequired();
 
-        builder.Property(b => b.ProcessedAt);
+        builder.Property(b => b.CreatedAt)
+               .IsRequired();
 
         builder.Property(b => b.Status)
                .HasConversion<string>()
                .IsRequired();
 
         builder.HasOne(b => b.Event)
-               .WithMany(e => e.Bookings)
-               .HasForeignKey(b => b.EventId);
+               .WithMany()
+               .HasForeignKey(b => b.EventId)
+               .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasOne(b => b.User)
+               .WithMany()
+               .HasForeignKey(b => b.UserId)
+               .OnDelete(DeleteBehavior.Cascade);
     }
 }

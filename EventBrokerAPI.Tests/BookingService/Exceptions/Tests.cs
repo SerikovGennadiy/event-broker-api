@@ -16,6 +16,9 @@ public class Tests(Fixture fixture) : IClassFixture<Fixture>
     public async Task CreateBooking_ForNonExistingOrDeletedEvent_ThrowsEventNotFoundException()
     {
         // Arrange
+        var userId = Guid.CreateVersion7();
+        await _fixture.InitProviderWithUserContext(userId);
+
         var bookingService = _fixture.serviceProvider.GetRequiredService<IBookingService>();
         var notExistEventGuid = Guid.NewGuid();
 
@@ -34,6 +37,9 @@ public class Tests(Fixture fixture) : IClassFixture<Fixture>
         // Arrange
         var bookingId = Guid.NewGuid();
 
+        var userId = Guid.CreateVersion7();
+        await _fixture.InitProviderWithUserContext(userId);
+
         // Act & Assert
         var bookingService = _fixture.serviceProvider.GetRequiredService<IBookingService>();
         await Assert.ThrowsAsync<BookingNotFoundException>(() => bookingService.GetBookingByIdAsync(bookingId));
@@ -44,6 +50,9 @@ public class Tests(Fixture fixture) : IClassFixture<Fixture>
     public async Task CreateBooking_WhenNoSeatsAvailable_ThrowsNoAvailableSeatsException()
     {
         // Arrange
+        var userId = Guid.CreateVersion7();
+        await _fixture.InitProviderWithUserContext(userId);
+
         var onlyOneSeat = 1;
 
         var eventService = _fixture.serviceProvider.GetRequiredService<IEventService>();
@@ -62,11 +71,12 @@ public class Tests(Fixture fixture) : IClassFixture<Fixture>
 
     private static CreateEvent CreateTestEvent(int totalSeats = 10)
     {
+        // нельзя бронировать событие, которое уже прошло, поэтому устанавливаем дату начала в будущем
         return new CreateEvent(
             Title: "Test event",
             Description: "Initial description",
-            StartAt: DateTime.UtcNow,
-            EndAt: DateTime.UtcNow.AddDays(1),
+            StartAt: DateTime.UtcNow.AddDays(10),
+            EndAt: DateTime.UtcNow.AddDays(15),
             TotalSeats: totalSeats
         );
     }

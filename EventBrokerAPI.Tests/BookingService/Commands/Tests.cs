@@ -1,8 +1,10 @@
 ﻿using Application.Common.DTO;
 using Application.Contracts.Services;
+using Application.Contracts.Services.Auth;
 using Domain.Exceptions.Booking;
 using Domain.Models;
 using Microsoft.Extensions.DependencyInjection;
+using Moq;
 using System.Collections.Concurrent;
 
 namespace EventBrokerAPI.Tests.BookingService.Commands;
@@ -10,7 +12,7 @@ namespace EventBrokerAPI.Tests.BookingService.Commands;
 [Collection("BookingServiceTests")]
 public class Tests : IClassFixture<Fixture>
 {
-    private readonly Fixture _fixture;
+    private readonly Fixture _fixture; 
     public Tests(Fixture fixture)
     {
         _fixture = fixture;
@@ -22,6 +24,9 @@ public class Tests : IClassFixture<Fixture>
     public async Task CreateBooking_ForExistingEvent_ReturnsPendingBooking()
     {
         // Arrange
+        var userId = Guid.CreateVersion7();
+        await _fixture.InitProviderWithUserContext(userId);
+
         var eventService = _fixture.serviceProvider.GetRequiredService<IEventService>();
         var bookingService = _fixture.serviceProvider.GetRequiredService<IBookingService>();
         var eventDTO = CreateTestEvent();
@@ -41,6 +46,9 @@ public class Tests : IClassFixture<Fixture>
     public async Task CreateBookings_UniqueIds_AllCreated()
     {
         // Arrange
+        var userId = Guid.CreateVersion7();
+        await _fixture.InitProviderWithUserContext(userId);
+
         var eventService = _fixture.serviceProvider.GetRequiredService<IEventService>();
         var bookingService = _fixture.serviceProvider.GetRequiredService<IBookingService>();
         var eventDTO = CreateTestEvent();
@@ -61,6 +69,9 @@ public class Tests : IClassFixture<Fixture>
     public async Task GetBooking_ChangeStatus_ReturnCorrectStatus()
     {
         // Arrange
+        var userId = Guid.CreateVersion7();
+        await _fixture.InitProviderWithUserContext(userId);
+
         var eventService = _fixture.serviceProvider.GetRequiredService<IEventService>();
         var bookingService = _fixture.serviceProvider.GetRequiredService<IBookingService>();
         var eventDTO = CreateTestEvent(totalSeats: 5);
@@ -99,6 +110,9 @@ public class Tests : IClassFixture<Fixture>
     public async Task RejectBooking_AllowsNewBooking_OnSameSeat()
     {
         // Arrange
+        var userId = Guid.CreateVersion7();
+        await _fixture.InitProviderWithUserContext(userId);
+
         var eventService = _fixture.serviceProvider.GetRequiredService<IEventService>();
         var bookingService = _fixture.serviceProvider.GetRequiredService<IBookingService>();
         var eventDTO = CreateTestEvent(totalSeats: 1);
@@ -126,6 +140,9 @@ public class Tests : IClassFixture<Fixture>
     public async Task CreateBooking_DecreasesAvailableSeats_ByOne()
     {
         // Arrange
+        var userId = Guid.CreateVersion7();
+        await _fixture.InitProviderWithUserContext(userId);
+
         var eventService = _fixture.serviceProvider.GetRequiredService<IEventService>();
         var bookingService = _fixture.serviceProvider.GetRequiredService<IBookingService>();
         var eventDTO = CreateTestEvent();
@@ -146,8 +163,10 @@ public class Tests : IClassFixture<Fixture>
     public async Task CreateMultipleBookings_UpToLimit_AllSuccessfulWithUniqueIds()
     {
         // Arrange
-        var totalSeats = 5;
+        var userId = Guid.CreateVersion7();
+        await _fixture.InitProviderWithUserContext(userId);
 
+        var totalSeats = 5;
         var eventService = _fixture.serviceProvider.GetRequiredService<IEventService>();
         var bookingService = _fixture.serviceProvider.GetRequiredService<IBookingService>();
         var eventDTO = CreateTestEvent(totalSeats);
@@ -171,13 +190,48 @@ public class Tests : IClassFixture<Fixture>
         Assert.Equal(0, updatedEvent.AvailableSeats);
     }
 
+    [Fact]
+    [Trait("Booking", "Commands")]
+    public async Task CancelBooking_WhenCalledByOwner_ChangesStatusToCancelled_AndReleasesSeat()
+    {
+        // Arrange
+        var userId = Guid.CreateVersion7();
+        await _fixture.InitProviderWithUserContext(userId);
+
+        var totalSeats = 1;
+        var eventService = _fixture.serviceProvider.GetRequiredService<IEventService>();
+        var bookingService = _fixture.serviceProvider.GetRequiredService<IBookingService>();
+        var eventDTO = CreateTestEvent(totalSeats);
+        var @event = await eventService.CreateEventAsync(eventDTO);
+
+        // Act - создаем бронь
+        var booking = await bookingService.CreateBookingAsync(@event.Id);
+
+        // Убедимся, что место занято
+        var afterCreateEvent = await eventService.GetEventByIdAsync(@event.Id);
+        Assert.Equal(0, afterCreateEvent.AvailableSeats);
+
+        // Act - отменяем бронь владельцем
+        var result = await bookingService.CancelBookingAsync(booking.Id);
+
+        // Assert
+        Assert.True(result);
+        var cancelledDTO = await bookingService.GetBookingByIdAsync(booking.Id);
+        var updatedEvent = await eventService.GetEventByIdAsync(@event.Id);
+
+        Assert.Equal(BookingStatus.Cancelled, cancelledDTO.Status);
+        Assert.NotNull(cancelledDTO.ProcessedAt);
+        Assert.Equal(totalSeats, updatedEvent.AvailableSeats);
+    }
+
     private static CreateEvent CreateTestEvent(int totalSeats = 10)
     {
+        // нельзя бронировать событие, которое уже прошло, поэтому устанавливаем дату начала в будущем
         return new CreateEvent(
             Title: "Test event",
             Description: "Initial description",
-            StartAt: DateTime.UtcNow,
-            EndAt: DateTime.UtcNow.AddDays(1),
+            StartAt: DateTime.UtcNow.AddDays(10),
+            EndAt: DateTime.UtcNow.AddDays(15),
             TotalSeats: totalSeats
         );
     }

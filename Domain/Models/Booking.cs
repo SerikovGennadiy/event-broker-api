@@ -12,6 +12,8 @@ public enum BookingStatus
     Confirmed,
     /// <summary>Бронь отклонена</summary>
     Rejected,
+    /// <summary>Бронь отменена</summary>
+    Cancelled,
 }
 
 /// <summary>Модель брони на мероприятие</summary>
@@ -22,6 +24,9 @@ public class Booking : IdEntity
 
     /// <summary>Идентификатор мероприятия</summary>
     public Guid EventId { get; }
+
+    /// <summary>Идентификатор пользователя, создавшего бронь</summary>
+    public Guid UserId { get; }
 
     /// <summary>Дата и время создания брони</summary>
     public DateTime CreatedAt { get; }
@@ -35,16 +40,20 @@ public class Booking : IdEntity
     /// <summary> Навигация на событие </summary>
     public Event Event { get; set; } = null!;
 
+    /// <summary> Навигация на пользователя </summary>
+    public User? User { get; set; }
+
     // приватный конструктор под EFCore
     private Booking() { }
 
     /// <summary> Конструктор для создания новой брони</summary>
-    /// <param name="bookingId">Идентификатор брони</param>
     /// <param name="eventId">Идентификатор мероприятия</param>
-    public Booking(Guid eventId)
+    /// <param name="userId">Идентификатор пользователя</param>
+    public Booking(Guid eventId, Guid userId)
     {
         Id = Guid.NewGuid();
         EventId = eventId;
+        UserId = userId;
         CreatedAt = DateTime.UtcNow;
         OnPending();
     }
@@ -66,6 +75,21 @@ public class Booking : IdEntity
             throw new BookingNoReverseStatus(EventId, Id, $"Нельзя отклонить бронь в статусе {Status}");
 
         Status = BookingStatus.Rejected;
+        ProcessedAt = DateTime.UtcNow;
+    }
+
+    /// <summary> Отмена брони </summary>
+    public void Cancel()
+    {
+        // Защита от повторной отмены и некорректных переходов
+        if (Status == BookingStatus.Cancelled)
+            throw new BookingNoReverseStatus(EventId, Id, "Бронь уже отменена");
+
+        if (Status == BookingStatus.Rejected)
+            throw new BookingNoReverseStatus(EventId, Id, $"Нельзя отменить бронь в статусе {Status}");
+
+        // Разрешаем отменять Pending и Confirmed
+        Status = BookingStatus.Cancelled;
         ProcessedAt = DateTime.UtcNow;
     }
 
