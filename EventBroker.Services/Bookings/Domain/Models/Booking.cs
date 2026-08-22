@@ -38,6 +38,12 @@ public class Booking : IdEntity
     /// <summary>Дата и время обработки брони</summary>
     public DateTime? ProcessedAt { get; private set; }
 
+    /// <summary> Навигация на событие </summary>
+    //public Event Event { get; set; } = null!;
+
+    /// <summary> Навигация на пользователя </summary>
+    //public User? User { get; set; }
+
     // приватный конструктор под EFCore
     private Booking() { }
 

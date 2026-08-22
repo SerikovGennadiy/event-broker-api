@@ -1,4 +1,4 @@
-﻿namespace Domain.Options;
+﻿namespace Users.Application.Security;
 
 public class JwtSettings
 {
