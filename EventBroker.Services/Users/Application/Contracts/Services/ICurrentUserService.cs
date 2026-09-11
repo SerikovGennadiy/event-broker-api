@@ -1,7 +1,5 @@
-﻿using Application.Common.DTO;
-using Domain.Models;
-
-namespace Application.Contracts.Services.Auth;
+﻿using Enums.Users;
+namespace Users.Application.Contracts.Services;
 
 public interface ICurrentUserService
 {

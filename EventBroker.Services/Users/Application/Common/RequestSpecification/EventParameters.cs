@@ -1,4 +1,4 @@
-﻿using Users.Domain.Models;
+﻿using Enums.Users;
 
 namespace Users.Application.Common.RequestSpecification;
 

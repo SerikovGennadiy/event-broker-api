@@ -1,4 +1,4 @@
-﻿using Domain.Models;
+﻿using Enums.Users;
 
 namespace Users.Application.Common.DTO;
 

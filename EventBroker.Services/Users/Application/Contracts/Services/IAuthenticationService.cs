@@ -1,7 +1,6 @@
-﻿using Application.Common.DTO;
-using Domain.Models;
+﻿using Users.Application.Common.DTO;
 
-namespace Application.Contracts.Services.Auth;
+namespace Users.Application.Contracts.Services;
 
 public interface IAuthenticationService
 {

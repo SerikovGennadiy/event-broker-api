@@ -1,32 +1,18 @@
-﻿using Application.Services;
-using Application.Contracts.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Application.Background;
-using Application.Services.Auth;
-using Application.Contracts.Services.Auth;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Users.Application.Contracts.Services;
+using Users.Application.Services.Auth;
 
-namespace Application;
+namespace Users.Application;
 
 public static class DIExtensions
 {
     public static IServiceCollection ConfigureAutoMapper(this IServiceCollection services) =>
          services.AddAutoMapper(cfg => { }, typeof(MappingProfile));
 
-    public static IServiceCollection ConfigureAPIServices(this IServiceCollection services)
-    {
-        services.AddScoped<IEventService, EventService>();
-        services.AddScoped<IBookingService, BookingService>();
-        services.AddScoped<ICurrentUserService, CurrectUserService>();
-
-        return services;
-    }
-
-    public static IServiceCollection ConfigureBackgroundServices(this IServiceCollection services) =>
-        services.AddHostedService<BookingHandler>();
-
-    public static IServiceCollection ConfigureAuthServices(this IServiceCollection services)
+    public static IServiceCollection ConfigureServices(this IServiceCollection services)
     {
         services.AddScoped<IHashService, HashService>();
+        services.AddScoped<ICurrentUserService, CurrectUserService>();
         services.AddScoped<IAuthenticationService, AuthenticationService>();
         return services;
     }

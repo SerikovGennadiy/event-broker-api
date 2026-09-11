@@ -1,6 +1,6 @@
-﻿using Domain.Models;
+﻿using Users.Domain.Models;
 
-namespace Application.Contracts.Persistance;
+namespace Users.Application.Contracts.Persistence;
 
 public interface IUserRepository
 {

@@ -1,4 +1,5 @@
-﻿using Users.Domain.Models.Contract;
+﻿using Enums.Users;
+using Users.Domain.Models.Contract;
 
 namespace Users.Domain.Models;
 
@@ -34,8 +35,3 @@ public class User : IdEntity
     public static User Empty() => new User() { Id = Guid.Empty, Name = string.Empty, PasswordHash = string.Empty, Role = Role.User };
 }
 
-public enum Role
-{
-    User = 0,
-    Admin = 1
-}
