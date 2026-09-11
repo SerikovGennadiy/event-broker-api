@@ -1,5 +1,4 @@
-﻿namespace Events.Application.Security;
-
+﻿namespace Events.Domain.Options;
 public class JwtSettings
 {
     public string Section { get; set; } = "JwtSettings";

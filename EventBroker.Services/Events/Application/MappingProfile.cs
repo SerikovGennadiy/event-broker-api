@@ -2,7 +2,7 @@
 using Events.Application.Common.DTO;
 using Events.Domain.Models;
 
-namespace Application;
+namespace Events.Application;
 
 public class MappingProfile : Profile
 {

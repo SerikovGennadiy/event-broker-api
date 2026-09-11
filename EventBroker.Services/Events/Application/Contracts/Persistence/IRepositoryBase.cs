@@ -1,6 +1,6 @@
 ﻿using System.Linq.Expressions;
 
-namespace Application.Contracts.Persistance;
+namespace Events.Application.Contracts.Persistence;
 
 public interface IRepositoryBase<T>
 {

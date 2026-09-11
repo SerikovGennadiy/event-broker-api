@@ -1,9 +1,7 @@
-﻿namespace Application.Contracts.Persistance;
+﻿namespace Events.Application.Contracts.Persistence;
 
 public interface IRepositoryManager
 {
     IEventRepository Event { get; }
-    IBookingRepository Booking { get; }
-    IUserRepository User { get; }
     Task SaveAsync();
 }

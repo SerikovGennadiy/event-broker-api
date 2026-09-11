@@ -1,4 +1,6 @@
-﻿namespace Domain.Exceptions.Event;
+﻿using Events.Domain.Exceptions.Common;
+
+namespace Events.Domain.Exceptions;
 
 public class EventNotFoundException : NotFoundException
 {

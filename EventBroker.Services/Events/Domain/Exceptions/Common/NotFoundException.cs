@@ -1,4 +1,4 @@
-﻿namespace Domain.Exceptions;
+﻿namespace Events.Domain.Exceptions.Common;
 
 public abstract class NotFoundException : Exception
 {

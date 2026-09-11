@@ -1,7 +1,7 @@
-﻿using Application.Common.RequestSpecification;
-using Domain.Models;
+﻿using Events.Application.Common.RequestSpecification;
+using Events.Domain.Models;
 
-namespace Application.Contracts.Persistance;
+namespace Events.Application.Contracts.Persistence;
 
 public interface IEventRepository
 {

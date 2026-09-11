@@ -1,5 +1,5 @@
-﻿using Application.Common.DTO;
-using Domain.Models;
+﻿using Events.Application.Common.DTO;
+using Events.Domain.Models;
 
 namespace Events.Application.Common.Extensions;
 /// <summary> Для генерации DTO объекта из доменной суности </summary>
