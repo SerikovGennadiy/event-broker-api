@@ -1,6 +1,5 @@
-﻿using Bookings.Domain.Models.Contract;
-using Domain.Exceptions.Booking;
-using Domain.Models;
+﻿using Bookings.Domain.Exceptions;
+using Bookings.Domain.Models.Contract;
 
 namespace Bookings.Domain.Models;
 
@@ -62,9 +61,6 @@ public class Booking : IdEntity
     /// <summary> Подтверждение брони </summary>
     public void Confirm()
     {
-        if (Status != BookingStatus.Pending)
-            throw new BookingNoReverseStatus(EventId, Id, $"Нельзя подтвердить бронь в статусе {Status}");
-
         Status = BookingStatus.Confirmed;
         ProcessedAt = DateTime.UtcNow;
     }
@@ -82,14 +78,6 @@ public class Booking : IdEntity
     /// <summary> Отмена брони </summary>
     public void Cancel()
     {
-        // Защита от повторной отмены и некорректных переходов
-        if (Status == BookingStatus.Cancelled)
-            throw new BookingNoReverseStatus(EventId, Id, "Бронь уже отменена");
-
-        if (Status == BookingStatus.Rejected)
-            throw new BookingNoReverseStatus(EventId, Id, $"Нельзя отменить бронь в статусе {Status}");
-
-        // Разрешаем отменять Pending и Confirmed
         Status = BookingStatus.Cancelled;
         ProcessedAt = DateTime.UtcNow;
     }

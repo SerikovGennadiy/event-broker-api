@@ -1,4 +1,4 @@
-﻿namespace Bookings.Application.Security;
+﻿namespace Bookings.Domain.Options;
 
 public class JwtSettings
 {

@@ -1,6 +1,6 @@
 ﻿using Bookings.Domain.Exceptions.Common;
 
-namespace Domain.Exceptions.Booking;
+namespace Bookings.Domain.Exceptions;
 public class BookingNoReverseStatus : BadRequestException
 {
     public BookingNoReverseStatus(Guid eventId, Guid bookingId, string message)

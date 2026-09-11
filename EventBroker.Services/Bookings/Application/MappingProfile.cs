@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Bookings.Application.Common.DTO;
-using Bookings.Domain.Models;namespace Application;
+using Bookings.Domain.Models;
+namespace Bookings.Application;
 
 public class MappingProfile : Profile
 {

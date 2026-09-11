@@ -1,13 +1,12 @@
-﻿using Application.Common.DTO;
+﻿using Bookings.Application.Common.DTO;
 
-namespace Application.Contracts.Services;
+namespace Bookings.Application.Contracts.Services;
 
 public interface IBookingService
 {
-    Task<BookingDTO> GetBookingByIdAsync(Guid bookingId);
-    Task<ICollection<BookingDTO>> GetPendingBookingsAsync();
-    Task ConfirmBookingAsync(Guid bookingId, CancellationToken cancellationToken = default);
-    Task RejectBooingAsync(Guid bookingId, CancellationToken cancellationToken = default);
-    Task<bool> CancelBookingAsync(Guid bookingId, CancellationToken cancellationToken = default);
     Task<BookingDTO> CreateBookingAsync(Guid eventId, CancellationToken cancellationToken = default);
+    Task<BookingDTO> GetBookingByIdAsync(Guid bookingId);
+    Task ConfirmBookingAsync(Guid traceId, Guid bookingId, Guid eventId, Guid userId, CancellationToken cancellationToken = default);
+    Task RejectBooingAsync(Guid traceId, Guid bookingId, Guid eventId, Guid userId, CancellationToken cancellationToken = default);
+    Task<bool> CancelBookingAsync(Guid traceId, Guid bookingId, Guid userId, CancellationToken cancellationToken = default);
 }
