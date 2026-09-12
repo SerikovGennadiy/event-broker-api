@@ -1,12 +1,15 @@
+using Bookings.API.Extensions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.ConfigureAPI(builder.Configuration);
+
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-//builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen();
 
 // JWT
 var jwt = builder.Configuration.GetSection("Jwt");
@@ -30,10 +33,10 @@ builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
-//if (app.Environment.IsDevelopment())
-//    app.UseSwagger();
+if (app.Environment.IsDevelopment())
+    app.UseSwagger();
 
-//app.UseSwaggerUI();
+app.UseSwaggerUI();
 
 app.UseAuthentication();
 app.UseAuthorization();

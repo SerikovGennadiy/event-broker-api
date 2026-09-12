@@ -22,6 +22,11 @@ public static class ServiceExtensions
                 .ConfigureAutoMapper()
                 .ConfigureJwtConfiguration(configuration)
                 .ConfigureJwtAuth(configuration)
+                .ConfigureMessaging(settings =>
+                {
+                    settings.BootstrapServers = configuration["Kafka:BootstrapServers"] ?? "localhost:9092";
+                    settings.GroupId = configuration["Kafka:GroupId"] ?? "bookings-service-group";
+                })
                 .AddControllers();
 
         services.AddSwaggerGen(options =>

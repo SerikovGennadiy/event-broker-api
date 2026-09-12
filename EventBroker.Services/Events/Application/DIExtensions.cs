@@ -1,6 +1,9 @@
 ﻿using Confluent.Kafka;
+using Events.Application.Background;
 using Events.Application.Contracts.Services;
+using Events.Application.Contracts.Services.Messaging;
 using Events.Application.Services;
+using Events.Application.Services.Messaging;
 using Events.Domain.Options;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -19,16 +22,12 @@ public static class DIExtensions
         return services;
     }
 
-    public static IServiceCollection AddKafkaInfrastructure(
-         this IServiceCollection services,
-         Action<KafkaSettings> configureOptions)
+    public static IServiceCollection ConfigureMessaging(this IServiceCollection services, Action<KafkaSettings> configure)
     {
         var kafkaSettings = new KafkaSettings();
+        configure(kafkaSettings);
 
-        // 🟢 МАГИЯ: Запускаем делегат, который заполнит свойства объекта
-        configureOptions(kafkaSettings);
-
-        // Инициализируем Singleton Продюсер
+        // 1. Продюсер (Singleton - один коннект на приложение)
         services.AddSingleton<IProducer<string, string>>(sp =>
         {
             var config = new ProducerConfig
@@ -36,11 +35,13 @@ public static class DIExtensions
                 BootstrapServers = kafkaSettings.BootstrapServers,
                 Acks = Acks.All,
                 EnableIdempotence = true,
+                MaxInFlight = 1
             };
+
             return new ProducerBuilder<string, string>(config).Build();
         });
 
-        // Инициализируем Transient Консьюмер
+        // 2. Консьюмер (Transient - фабрика для изолированного потока воркера)
         services.AddTransient<IConsumer<string, string>>(sp =>
         {
             var config = new ConsumerConfig
@@ -48,10 +49,19 @@ public static class DIExtensions
                 BootstrapServers = kafkaSettings.BootstrapServers,
                 GroupId = kafkaSettings.GroupId,
                 EnableAutoCommit = false,
-                AutoOffsetReset = AutoOffsetReset.Earliest,
+                AutoOffsetReset = AutoOffsetReset.Earliest
             };
+
             return new ConsumerBuilder<string, string>(config).Build();
         });
+
+        // 3. Инфраструктурные сервисы обмена
+        services.AddScoped<IOutboxService, OutboxService>();
+        services.AddScoped<IInboxService, InboxService>();
+
+        // 4. Фоновые воркеры 
+        services.AddHostedService<Producer>();
+        services.AddHostedService<Consumer>();
 
         return services;
     }

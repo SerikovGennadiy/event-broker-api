@@ -22,11 +22,12 @@ public static class DIExtensions
         return services;
     }
 
-    public static IServiceCollection ConfigureAMQPMessaging(this IServiceCollection services, Action<KafkaSettings> configure)
+    public static IServiceCollection ConfigureMessaging(this IServiceCollection services, Action<KafkaSettings> configure)
     {
         var kafkaSettings = new KafkaSettings();
         configure(kafkaSettings);
 
+        // 1. Продюсер (Singleton - один коннект на приложение)
         services.AddSingleton<IProducer<string, string>>(sp =>
         {
             var config = new ProducerConfig
@@ -34,12 +35,13 @@ public static class DIExtensions
                 BootstrapServers = kafkaSettings.BootstrapServers,
                 Acks = Acks.All,
                 EnableIdempotence = true,
-                MaxInFlight = 1,
+                MaxInFlight = 1 
             };
 
             return new ProducerBuilder<string, string>(config).Build();
         });
 
+        // 2. Консьюмер (Transient - фабрика для изолированного потока воркера)
         services.AddTransient<IConsumer<string, string>>(sp =>
         {
             var config = new ConsumerConfig
@@ -47,22 +49,20 @@ public static class DIExtensions
                 BootstrapServers = kafkaSettings.BootstrapServers,
                 GroupId = kafkaSettings.GroupId,
                 EnableAutoCommit = false,
-                AutoOffsetReset = AutoOffsetReset.Earliest,
-                MaxInFlight = 1
+                AutoOffsetReset = AutoOffsetReset.Earliest
             };
 
             return new ConsumerBuilder<string, string>(config).Build();
         });
 
+        // 3. Инфраструктурные сервисы обмена
         services.AddScoped<IOutboxService, OutboxService>();
         services.AddScoped<IInboxService, InboxService>();
 
+        // 4. Фоновые воркеры 
+        services.AddHostedService<Producer>(); 
+        services.AddHostedService<Consumer>();
+
         return services;
     }
-
-    public static IServiceCollection InitKafkaProducer(this IServiceCollection services) =>
-        services.AddHostedService<Producer>();
-
-    public static IServiceCollection InitLKafkaConsumer(this IServiceCollection services) =>
-        services.AddHostedService<Consumer>();
 }
