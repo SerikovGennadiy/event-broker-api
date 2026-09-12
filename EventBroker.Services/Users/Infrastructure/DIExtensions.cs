@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Users.Application.Contracts.Persistence;
 using Users.Infrastructure.Persistance.Repository;
+using Users.Infrastructure.Persistence;
 
 namespace Users.Infrastructure;
 

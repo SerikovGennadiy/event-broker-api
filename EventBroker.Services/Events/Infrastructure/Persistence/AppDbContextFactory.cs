@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Events.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
 
@@ -8,57 +9,60 @@ public class AppDbContextFactory : IDesignTimeDbContextFactory<AppDbContext>
 {
     public AppDbContext CreateDbContext(string[] args)
     {
-        // Передаем точное имя папки API-проекта
-        var configuration = GetConfigurationFromProject("Events.API");
+        // Передаем РЕАЛЬНОЕ имя папки, где лежит ваш appsettings.json (Bookings.API) со времен монолита
+        var configuration = GetConfigurationFromProject("Presentation");
 
         var builder = new DbContextOptionsBuilder<AppDbContext>()
             .UseNpgsql(
                 connectionString: configuration.GetConnectionString("DefaultConnection"),
-                npgsqlOptionsAction: m => m.MigrationsAssembly("Bookings.Infrastructure")); // Указываем полное имя сборки миграций
+                npgsqlOptionsAction: m => m.MigrationsAssembly("Events.Infrastructure"));
 
         return new AppDbContext(builder.Options);
     }
 
-    /// <summary>Получает конфигурацию из appsettings.json указанного проекта решения.</summary>
-    /// <param name="apiProjectName">Название папки проекта API (например, "Bookings.API")</param>
-    public static IConfigurationRoot GetConfigurationFromProject(string apiProjectName)
+    public static IConfigurationRoot GetConfigurationFromProject(string apiFolderName)
     {
-        if (string.IsNullOrWhiteSpace(apiProjectName))
-            throw new ArgumentException("Название проекта не может быть пустым.", nameof(apiProjectName));
+        // 1. Пытаемся прочитать переменную окружения (Docker/Production стандарт)
+        var envConnectionString = Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection");
 
-        var solutionDirectory = FindSolutionDirectory();
+        // 2. Если мы запускаем локально на машине разработчика (Design-time CLI)
+        var microserviceDirectory = FindMicroserviceDirectory();
 
-        // Строим путь согласно структуре: sln -> Services -> Bookings -> Bookings.API
-        var projectPath = Path.Combine(solutionDirectory, "EventBroker.Services", "Bookings", apiProjectName);
+        // Cтроим путь к реальной папке "Presentation"
+        var projectPath = Path.Combine(microserviceDirectory, apiFolderName);
 
+        // Если папка Presentation не найдена (например, мы уже внутри Docker-контейнера без .sln)
         if (!Directory.Exists(projectPath))
-            throw new DirectoryNotFoundException($"Папка проекта '{apiProjectName}' не найдена по пути '{projectPath}'");
-
-        var appsettingsPath = Path.Combine(projectPath, "appsettings.json");
-
-        if (!File.Exists(appsettingsPath))
-            throw new FileNotFoundException($"Файл 'appsettings.json' не найден в проекте '{apiProjectName}'");
+        {
+            // Подстраховка: берем appsettings.json из текущей директории запуска
+            projectPath = AppContext.BaseDirectory;
+        }
 
         return new ConfigurationBuilder()
             .SetBasePath(projectPath)
-            .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false)
+            .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
             .Build();
 
-        string FindSolutionDirectory()
+        string FindMicroserviceDirectory()
         {
-            // При выполнении миграций CurrentDirectory может быть папкой проекта Infrastructure.
-            // Нам нужно подняться вверх до файла .sln
+            // Начинаем оттуда, где запущена фабрика (например, bin/Debug/net9.0)
             var currentDir = AppContext.BaseDirectory;
 
             while (currentDir != null)
             {
-                if (Directory.GetFiles(currentDir, "*.sln").Any())
+                var dirInfo = new DirectoryInfo(currentDir);
+
+                // Ищем папку "Events", внутри которой лежат слои Infrastructure, Presentation и т.д.
+                if (dirInfo.Name.Equals("Events", StringComparison.OrdinalIgnoreCase))
+                {
                     return currentDir;
+                }
 
                 currentDir = Directory.GetParent(currentDir)?.FullName;
             }
 
-            throw new FileNotFoundException("Файл решения (.sln) не найден при поиске вверх от папки выполнения.");
+            // Если папка "Events" не найдена, возвращаем базовый путь (страховка для Docker)
+            return AppContext.BaseDirectory;
         }
     }
 }
