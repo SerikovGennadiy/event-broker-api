@@ -2,25 +2,119 @@
 # Запуск из корня репозитория: docker compose up -d
 # Остановка: docker compose down
 # Данные сохраняются в именованном томе eventapi_pgdata
+version: '3.8'
 
 services:
-  postgres:
+  # ---------------------------------------------------------------------------
+  # ИНФРАСТРУКТУРА: Базы Данных PostgreSQL (Разделение Database-per-Service)
+  # ---------------------------------------------------------------------------
+  users-db:
     image: postgres:16-alpine
-    container_name: eventapi-postgres
-    restart: unless-stopped
+    container_name: users-db
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: eventapi
+      POSTGRES_PASSWORD: SecretPassword123
+      POSTGRES_DB: users_db
+    ports:
+      - "5431:5432"
+    volumes:
+      - users_db_data:/var/lib/postgresql/data
+
+  events-db:
+    image: postgres:16-alpine
+    container_name: events-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: SecretPassword123
+      POSTGRES_DB: events_db
     ports:
       - "5432:5432"
     volumes:
-      - eventapi_pgdata:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d eventapi"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
+      - events_db_data:/var/lib/postgresql/data
+
+  bookings-db:
+    image: postgres:16-alpine
+    container_name: bookings-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: SecretPassword123
+      POSTGRES_DB: bookings_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - bookings_db_data:/var/lib/postgresql/data
+
+  # ---------------------------------------------------------------------------
+  # ИНФРАСТРУКТУРА: Брокер сообщений Kafka (KRaft режим без Zookeeper)
+  # ---------------------------------------------------------------------------
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: kafka-broker
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT'
+      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092'
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REREPLICATION_FACTOR: 1
+      KAFKA_PROCESS_ROLES: 'broker,controller'
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@kafka:29093'
+      KAFKA_LISTENERS: 'PLAINTEXT://0.0.0.0:29092,CONTROLLER://0.0.0.0:29093,PLAINTEXT_HOST://0.0.0.0:9092'
+      KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
+      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      KAFKA_LOG_DIRS: '/tmp/kraft-combined-logs'
+      CLUSTER_ID: 'MkU3OEVBNTcwNTJENDM2Qk'
+
+  # ---------------------------------------------------------------------------
+  # МИКРОСЕРВИСЫ ПРИЛОЖЕНИЯ
+  # ---------------------------------------------------------------------------
+  users-service:
+    image: users-service:latest
+    build:
+      context: .
+      dockerfile: EventBroker.Services/Users/Users.API/Dockerfile
+    container_name: users-service
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Host=users-db;Port=5432;Database=users_db;Username=postgres;Password=SecretPassword123
+    depends_on:
+      - users-db
+
+  events-service:
+    image: events-service:latest
+    build:
+      context: .
+      dockerfile: EventBroker.Services/Events/Events.API/Dockerfile
+    container_name: events-service
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Host=events-db;Port=5432;Database=events_db;Username=postgres;Password=SecretPassword123
+      - Kafka__BootstrapServers=kafka:29092 # 🟢 Настройка сети для докера
+      - Kafka__GroupId=events-service-group
+    depends_on:
+      - events-db
+      - kafka
+
+  bookings-service:
+    image: bookings-service:latest
+    build:
+      context: .
+      dockerfile: EventBroker.Services/Bookings/Bookings.API/Dockerfile
+    container_name: bookings-service
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Host=bookings-db;Port=5432;Database=bookings_db;Username=postgres;Password=SecretPassword123
+      - Kafka__BootstrapServers=kafka:29092 # 🟢 Настройка сети для докера
+      - Kafka__GroupId=bookings-service-group
+    depends_on:
+      - bookings-db
+      - kafka
 
 volumes:
-  eventapi_pgdata:
+  users_db_data:
+  events_db_data:
+  bookings_db_data:
+

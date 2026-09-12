@@ -1,9 +1,6 @@
 ﻿using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
-using Events.Domain.Exceptions;
 using Events.Application.Common.DTO;
-using Bookings.Application.Common.DTO;
-using Bookings.Application.Contracts.Services;
 using Events.Application.Common.RequestSpecification;
 using Events.Application.Contracts.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -14,7 +11,7 @@ namespace Events.API;
 [ApiController]
 [Authorize]
 [Route("events")]
-public class EventController(IEventService eventService, IBookingService bookingService) : ControllerBase
+public class EventController(IEventService eventService) : ControllerBase
 {
     [HttpGet]
     [AllowAnonymous]
@@ -42,22 +39,6 @@ public class EventController(IEventService eventService, IBookingService booking
     {
         var _event = await eventService.CreateEventAsync(eventDTO, stoppingToken);
         return CreatedAtRoute(routeName: "EventById", new { id = _event.Id }, _event);
-    }
-
-    [HttpPost("{eventId}/book")]
-    [Authorize]
-    [ProducesResponseType(typeof(BookingDTO), StatusCodes.Status202Accepted)]
-    [ProducesResponseType(typeof(ErrorDetail), StatusCodes.Status404NotFound)]
-    [ProducesResponseType(typeof(ErrorDetail), StatusCodes.Status409Conflict)]
-    public async Task<IActionResult> CreateEventBooking(Guid eventId, CancellationToken token)
-    {
-        var bookingDTO = await bookingService.CreateBookingAsync(eventId);
-
-        return AcceptedAtRoute(
-            routeName: "BookingById",
-            routeValues: new { bookingId = bookingDTO.Id },
-            value: bookingDTO
-        );
     }
 
     [HttpPut("{id:guid}")]

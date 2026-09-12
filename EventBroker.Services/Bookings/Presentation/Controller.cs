@@ -1,4 +1,7 @@
-﻿using Bookings.Application.Contracts.Services;
+﻿using Bookings.Application.Common.DTO;
+using Bookings.Application.Contracts.Services;
+using Bookings.Application.Services;
+using Bookings.Domain.Exceptions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -25,5 +28,21 @@ public class BookingController : ControllerBase
     {
         await _service.CancelBookingAsync(bookingId);
         return NoContent();
+    }
+
+    [HttpPost("{eventId}/book")]
+    [Authorize]
+    [ProducesResponseType(typeof(BookingDTO), StatusCodes.Status202Accepted)]
+    [ProducesResponseType(typeof(ErrorDetail), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ErrorDetail), StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> CreateEventBooking(Guid eventId, CancellationToken token)
+    {
+        var bookingDTO = await _service.CreateBookingAsync(eventId, token);
+
+        return AcceptedAtRoute(
+            routeName: "BookingById",
+            routeValues: new { bookingId = bookingDTO.Id },
+            value: bookingDTO
+        );
     }
 }

@@ -14,7 +14,7 @@ public static class DIExtensions
     public static IServiceCollection ConfigureAutoMapper(this IServiceCollection services) =>
          services.AddAutoMapper(cfg => { }, typeof(MappingProfile));
 
-    public static IServiceCollection ConfigureAPIServices(this IServiceCollection services)
+    public static IServiceCollection ConfigureServices(this IServiceCollection services)
     {
         services.AddScoped<IBookingService, BookingService>();
         services.AddScoped<ICurrentUserService, CurrentUserService>();
@@ -22,16 +22,7 @@ public static class DIExtensions
         return services;
     }
 
-    public static IServiceCollection ConfigureMessaging(this IServiceCollection services)
-    {
-        services.AddScoped<IInboxService, InboxService>();
-        services.AddScoped<IOutboxService, OutboxService>();
-        services.AddHostedService<Consumer>();
-
-        return services;
-    }
-
-    public static IServiceCollection ConfigureKafka(this IServiceCollection services, Action<KafkaSettings> configure)
+    public static IServiceCollection ConfigureAMQPMessaging(this IServiceCollection services, Action<KafkaSettings> configure)
     {
         var kafkaSettings = new KafkaSettings();
         configure(kafkaSettings);
@@ -62,6 +53,9 @@ public static class DIExtensions
 
             return new ConsumerBuilder<string, string>(config).Build();
         });
+
+        services.AddScoped<IOutboxService, OutboxService>();
+        services.AddScoped<IInboxService, InboxService>();
 
         return services;
     }

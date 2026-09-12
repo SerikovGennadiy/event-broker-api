@@ -30,7 +30,7 @@ public static class ServiceExtensions
             options.SwaggerDoc("v1", new OpenApiInfo
             {
                 Title = "Event Broker API",
-                Description = "API с JWT аутентификацией для бронирования мероприятий"
+                Description = "API с JWT аутентификацией для бронирования мероприятий" 
             });
             // описательная часть схемы авторизации
             options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme

@@ -8,14 +8,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "deploy", "deploy", "{754FC0
 		docker-compose.yml = docker-compose.yml
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Application", "Application\Application.csproj", "{99EE55DB-1945-4AE6-A7EE-0C1EC3967E52}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Infrastructure", "Infrastructure\Infrastructure.csproj", "{CEDCC0F8-A044-4C9B-AA73-51C496A6E02D}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Domain", "Domain\Domain.csproj", "{1CC3B50F-3EEA-4B45-9522-7FFEFBA7FB57}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Presentation", "Presentation\Presentation.csproj", "{4ADBCE98-3A44-479B-B6D5-94A72CF41724}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "EventBroker.Services", "EventBroker.Services", "{36D591C7-65C7-A0D1-1CBC-10CDE441BDC8}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Bookings", "Bookings", "{F938BB52-8E0A-49B7-B0E7-049A53290B0C}"
@@ -40,8 +32,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Users.Application", "EventB
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Users.API", "EventBroker.Services\Users\Presentation\Users.API.csproj", "{66EC96A3-2940-C006-E7F9-42A6DA9975A2}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "EventBroker.Tests", "EventBroker.Tests", "{10242083-DF63-4071-AD50-D044876BB6A1}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "EventBroker.Contracts", "EventBroker.Contracts", "{1AF9B27E-332E-4E37-A698-A39DD6705E0D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Messaging", "EventBroker.Contracts\Messaging\Messaging.csproj", "{963CDBF3-27A5-31E9-1FAC-37A97A49AF34}"
@@ -54,9 +44,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bookings.Infrastructure", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bookings.API", "EventBroker.Services\Bookings\Presentation\Bookings.API.csproj", "{69E10229-BA48-C7A5-CE49-53891FE818EB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventBrokerAPI.IntegrationTests", "EventBroker.Tests\EventBrokerAPI.IntegrationTests\EventBrokerAPI.IntegrationTests.csproj", "{F4FAB91D-41D2-2FF7-1C34-028F7502C29B}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventBrokerAPI.Tests", "EventBroker.Tests\EventBrokerAPI.Tests\EventBrokerAPI.Tests.csproj", "{8687F11E-1012-68F6-4C9D-0ED50E52B13B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Enums", "EventBroker.Contracts\Enums\Enums.csproj", "{F53EA46E-D6D9-4903-8FED-424106F7BF43}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -64,22 +52,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{99EE55DB-1945-4AE6-A7EE-0C1EC3967E52}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{99EE55DB-1945-4AE6-A7EE-0C1EC3967E52}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{99EE55DB-1945-4AE6-A7EE-0C1EC3967E52}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{99EE55DB-1945-4AE6-A7EE-0C1EC3967E52}.Release|Any CPU.Build.0 = Release|Any CPU
-		{CEDCC0F8-A044-4C9B-AA73-51C496A6E02D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{CEDCC0F8-A044-4C9B-AA73-51C496A6E02D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{CEDCC0F8-A044-4C9B-AA73-51C496A6E02D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{CEDCC0F8-A044-4C9B-AA73-51C496A6E02D}.Release|Any CPU.Build.0 = Release|Any CPU
-		{1CC3B50F-3EEA-4B45-9522-7FFEFBA7FB57}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{1CC3B50F-3EEA-4B45-9522-7FFEFBA7FB57}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{1CC3B50F-3EEA-4B45-9522-7FFEFBA7FB57}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{1CC3B50F-3EEA-4B45-9522-7FFEFBA7FB57}.Release|Any CPU.Build.0 = Release|Any CPU
-		{4ADBCE98-3A44-479B-B6D5-94A72CF41724}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4ADBCE98-3A44-479B-B6D5-94A72CF41724}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4ADBCE98-3A44-479B-B6D5-94A72CF41724}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{4ADBCE98-3A44-479B-B6D5-94A72CF41724}.Release|Any CPU.Build.0 = Release|Any CPU
 		{EC391B5C-8492-5293-ECB7-BB74EDD8CB4B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{EC391B5C-8492-5293-ECB7-BB74EDD8CB4B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EC391B5C-8492-5293-ECB7-BB74EDD8CB4B}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -132,14 +104,10 @@ Global
 		{69E10229-BA48-C7A5-CE49-53891FE818EB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{69E10229-BA48-C7A5-CE49-53891FE818EB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{69E10229-BA48-C7A5-CE49-53891FE818EB}.Release|Any CPU.Build.0 = Release|Any CPU
-		{F4FAB91D-41D2-2FF7-1C34-028F7502C29B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F4FAB91D-41D2-2FF7-1C34-028F7502C29B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{F4FAB91D-41D2-2FF7-1C34-028F7502C29B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{F4FAB91D-41D2-2FF7-1C34-028F7502C29B}.Release|Any CPU.Build.0 = Release|Any CPU
-		{8687F11E-1012-68F6-4C9D-0ED50E52B13B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{8687F11E-1012-68F6-4C9D-0ED50E52B13B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{8687F11E-1012-68F6-4C9D-0ED50E52B13B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{8687F11E-1012-68F6-4C9D-0ED50E52B13B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F53EA46E-D6D9-4903-8FED-424106F7BF43}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F53EA46E-D6D9-4903-8FED-424106F7BF43}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F53EA46E-D6D9-4903-8FED-424106F7BF43}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F53EA46E-D6D9-4903-8FED-424106F7BF43}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -161,8 +129,7 @@ Global
 		{C02F479B-EEA7-B2F8-E350-EA1FE5C3D381} = {F938BB52-8E0A-49B7-B0E7-049A53290B0C}
 		{518E2EDA-7BFF-56DA-3516-73099A8DF6BF} = {F938BB52-8E0A-49B7-B0E7-049A53290B0C}
 		{69E10229-BA48-C7A5-CE49-53891FE818EB} = {F938BB52-8E0A-49B7-B0E7-049A53290B0C}
-		{F4FAB91D-41D2-2FF7-1C34-028F7502C29B} = {10242083-DF63-4071-AD50-D044876BB6A1}
-		{8687F11E-1012-68F6-4C9D-0ED50E52B13B} = {10242083-DF63-4071-AD50-D044876BB6A1}
+		{F53EA46E-D6D9-4903-8FED-424106F7BF43} = {1AF9B27E-332E-4E37-A698-A39DD6705E0D}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {415B115A-A1CC-4159-A63E-80B2DE2CC430}
