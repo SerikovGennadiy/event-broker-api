@@ -1,13 +1,15 @@
 ﻿using AutoMapper;
-using Messaging;
-using Messaging.Bookings;
-using Bookings.Domain.Models;
-using Bookings.Domain.Exceptions;
-using Microsoft.Extensions.Logging;
 using Bookings.Application.Common.DTO;
-using Bookings.Application.Contracts.Services;
 using Bookings.Application.Contracts.Messaging;
 using Bookings.Application.Contracts.Persistence;
+using Bookings.Application.Contracts.Services;
+using Bookings.Domain.Exceptions;
+using Bookings.Domain.Models;
+using Enums.Users;
+using Messaging;
+using Messaging.Bookings;
+using Microsoft.Extensions.Logging;
+using System.Threading;
 
 namespace Bookings.Application.Services;
 
@@ -79,11 +81,9 @@ public class BookingService(IRepositoryManager repositoryManager, IOutboxService
     {
         // Извлекаем бронь из репозитория
         var booking = await repositoryManager.Booking.GetByIdAsync(bookingId);
-
-        // 🟢 Счастливый путь (Happy Path): бронь на месте и ждет подтверждения
+        // бронь на месте и ждет подтверждения
         if (booking is not null && booking.Status == BookingStatus.Pending)
         {
-            // Вызываем доменный метод успеха
             booking.Confirm();
 
             var confirmedEvent = new BookingConfirmed(
@@ -97,39 +97,96 @@ public class BookingService(IRepositoryManager repositoryManager, IOutboxService
         }
         else
         {
-            string cancelReason;
-
-            if (booking is null)
+            string rejectReason;
+            if(booking is null)
             {
-                cancelReason = "Бронь физически не существует в БД бронирований";
-                logger.LogCritical("Авария данных саги: Получен ответ по несуществующей брони {BookingId}", bookingId);
+                rejectReason = $"Сервис событий отклонил запрос. Указанная бронь не существует";
             }
             else
             {
-                cancelReason = $"Сервис событий отклонил запрос. Текущий статус брони в БД: {booking.Status}";
-                booking.Reject();
+                rejectReason = $"Сервис событий отклонил запрос. Текущий статус брони в БД: {booking.Status}";
             }
+            booking.Reject();
+            
 
             // Формируем компенсирующее интеграционное событие для шины
-            var cancelledEvent = new BookingCancelled(
+            var cancelledEvent = new BookingRejected(
                 TraceId: traceId,
                 BookingId: booking?.Id ?? bookingId, // Страховка от null
                 EventId: booking?.EventId ?? eventId,
                 UserId: booking?.UserId ?? userId,
-                Reason: cancelReason
+                Reason: rejectReason
             );
 
             await outboxService.EnqueueMessageAsync(cancelledEvent, Topics.BookingProcessing, stoppingToken);
         }
     }
 
-    public Task RejectBooingAsync(Guid traceId, Guid bookingId, Guid eventId, Guid userId, CancellationToken stoppingToken = default)
+    public async Task RejectBooingAsync(Guid traceId, Guid bookingId, Guid eventId, Guid userId, CancellationToken stoppingToken = default)
     {
-        throw new NotImplementedException();
+        var booking = await repositoryManager.Booking.GetByIdAsync(bookingId);
+        if(booking is not null)
+        {
+
+        }
     }
 
-    public Task<bool> CancelBookingAsync(Guid traceId, Guid bookingId, Guid userId, CancellationToken stoppingToken = default)
+    public async Task<bool> CancelBookingAsync(Guid bookingId, CancellationToken stoppingToken = default)
     {
-        throw new NotImplementedException();
+        if (stoppingToken.IsCancellationRequested)
+            throw new OperationCanceledException(stoppingToken);
+
+        var booking = await repositoryManager.Booking.GetByIdAsync(bookingId) ??
+            throw new BookingNotFoundException(bookingId);
+       
+        if (currentUser.Role == Role.Admin || currentUser.UserId == booking.UserId)
+        {
+            await outboxService.EnqueueMessageAsync(@event: new BookingCancelled(TraceId: Guid.CreateVersion7(),
+                                                                                 BookingId: bookingId,
+                                                                                 EventId: booking.EventId,
+                                                                                 UserId: booking.UserId),
+                                                    topic: Topics.BookingProcessing,
+                                                    cancellationToken: stoppingToken);
+            booking.Cancel();
+
+            await repositoryManager.SaveAsync();
+            return true;
+        }
+        else
+            throw new AccessDeniedException("полностью отменить бронирование может только владелец брони или администратор сервиса");
+
     }
 }
+/*
+  public async Task RejectBooingAsync(Guid bookingId, CancellationToken cancellationToken = default)
+    {
+        if (cancellationToken.IsCancellationRequested)
+            throw new OperationCanceledException(cancellationToken);
+
+        var booking = await GetBookingAsync(bookingId);
+        await eventService.ReleaseSeats((eventId: booking.EventId, seats: 1));
+        booking.Reject();
+
+        await repositoryManager.SaveAsync();
+    }
+
+    public async Task<bool> CancelBookingAsync(Guid bookingId, CancellationToken cancellationToken = default)
+    {
+        if (cancellationToken.IsCancellationRequested)
+            throw new OperationCanceledException(cancellationToken);
+
+        var booking = await GetBookingAsync(bookingId);
+        if (currentUser.Role == Role.Admin || currentUser.UserId == booking.UserId)
+        {
+            await eventService.ReleaseSeats((eventId: booking.EventId, seats: 1));
+            booking.Cancel();
+
+            await repositoryManager.SaveAsync();
+            return true;
+        }
+        else
+            throw new AccessDeniedException("полностью отменить бронирование может только владелец брони или администратор сервиса");
+
+    }
+
+ */

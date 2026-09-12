@@ -28,10 +28,10 @@ public interface IEventService
     #region Шаги саг IBookingProcessing
     /// <summary>Зарезервировать места на мероприятие</summary>
     /// <remarks>сага BookingCreated : IBookingProcessing. запуск см в <see cref="Events.Application.Background.Consumer"/></remarks>
-    Task ReserveSeats(Guid traceId, Guid eventId, Guid bookingId, Guid userId, int callSeats, CancellationToken cancellationToken);
+    Task ReserveSeats(Guid traceId, Guid eventId, Guid bookingId, Guid userId, CancellationToken cancellationToken);
 
     /// <summary>Освободить забронированные места на мероприятие</summary>
     /// <remarks>сага BookingCancelled : IBookingProcessingзапуск см в <see cref="Events.Application.Background.Consumer"/></remarks>
-    Task ReleaseSeats(Guid traceId, Guid eventId, Guid bookingId, Guid userId, int recallSeats, CancellationToken cancellationToken);
+    Task ReleaseSeats(Guid traceId, Guid eventId, Guid bookingId, Guid userId, CancellationToken cancellationToken);
     #endregion
 }

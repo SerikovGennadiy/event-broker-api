@@ -1,11 +1,8 @@
-﻿using Bookings.Application.Common.DTO;
-using Bookings.Application.Contracts.Persistence;
-using Bookings.Application.Contracts.Services;
-using Bookings.Domain.Exceptions;
-using Confluent.Kafka;
-using Events.Application.Contracts.Persistence;
+﻿using Confluent.Kafka;
+using Events.Application.Contracts.Services;
 using Events.Application.Contracts.Services.Messaging;
-using Messaging.Events;
+using Events.Domain.Exceptions;
+using Messaging.Bookings;
 using Messaging.Saga;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -101,7 +98,6 @@ internal class Consumer(IServiceProvider provider, ILogger<Consumer> logger) : B
                 {
                     await (result.Topic switch
                     {
-                        Messaging.Topics.EventIntegration => HandleEventIntegrationAsync(result, scope, stoppingToken),
                         Messaging.Topics.BookingProcessing => HandleBookingProcessingAsync(result, scope, stoppingToken),
                         _ => throw new InvalidOperationException($"{MARKER}: Сервис не обрабатывает топик: {result.Topic}")
                     });
@@ -125,30 +121,28 @@ internal class Consumer(IServiceProvider provider, ILogger<Consumer> logger) : B
         }
     }
 
-    private async Task HandleEventIntegrationAsync(ConsumeResult<string, string> result, IServiceScope scope, CancellationToken stoppingToken)
-    {
-        var bookingService = scope.ServiceProvider.GetRequiredService<IBookingService>();
-        var readRepository = scope.ServiceProvider.GetRequiredService<IEventReadRepository>();
-
-        var @event = JsonSerializer.Deserialize<IEventIntegration>(result.Message.Value);
-
-        await (@event switch
-        {
-            EventCreatedOrUpdated m => readRepository.AddAsync(new EventReadDTO(m.EventId, m.StartAt), stoppingToken),
-            EventDeleted m => readRepository.DeleteAsync(m.EventId, stoppingToken),
-            _ => throw new DomainException($"{MARKER}: сообщение неизвестного типа, чтение не выполнено")
-        });
-    }
-
     private async Task HandleBookingProcessingAsync(ConsumeResult<string, string> result, IServiceScope scope, CancellationToken stoppingToken)
     {
-        var bookingService = scope.ServiceProvider.GetRequiredService<IBookingService>();
-        var @event = JsonSerializer.Deserialize<IIntegarationEvent>(result.Message.Value);
+        var eventService = scope.ServiceProvider.GetRequiredService<IEventService>();
+        var @event = JsonSerializer.Deserialize<IBookingProcessing>(result.Message.Value);
 
-        //await (@event switch
-        //{
-        //    //SeatReserved m => bookingService.
-        //});
+        switch(@event)
+        {
+            case BookingStarted booking:
+                await eventService.ReserveSeats(traceId: booking.TraceId,
+                                                eventId: booking.EventId,
+                                                bookingId: booking.BookingId,
+                                                userId: booking.UserId,
+                                                cancellationToken: stoppingToken);
+                break;
+            case BookingRejected booking:
+                await eventService.ReleaseSeats(traceId: booking.TraceId,
+                                eventId: booking.EventId,
+                                bookingId: booking.BookingId,
+                                userId: booking.UserId,
+                                cancellationToken: stoppingToken);
+                break;
+        }
     }
 
     private static Guid ExtractTraceId(ConsumeResult<string, string> result)

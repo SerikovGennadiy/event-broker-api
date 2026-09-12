@@ -14,13 +14,13 @@ public class OutboxService(IAppDbContext context) : IOutboxService
         WriteIndented = false,
     };
 
-    public async Task EnqueueMessageAsync<TEvent>(TEvent @event, string topic, CancellationToken cancellationToken) where TEvent : IIntegarationEvent
+    public async Task EnqueueMessageAsync<TEvent>(TEvent @event, string topic, CancellationToken cancellationToken) where TEvent : IIntegrationMessage
     {
         var outboxMessage = new OutboxMessage
         {
             TraceId = Guid.CreateVersion7(),
             Type = @event.GetType().FullName ?? throw new InvalidOperationException("Тип сообщения не определен"),
-            Content = JsonSerializer.Serialize<IIntegarationEvent>(@event, Options),
+            Content = JsonSerializer.Serialize<IIntegrationMessage>(@event, Options),
             Topic = topic,
             PartitionKey = @event.PartitionKey,
             TimeStampUtc = DateTime.UtcNow,

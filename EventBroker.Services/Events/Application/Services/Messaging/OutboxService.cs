@@ -14,7 +14,7 @@ public class OutboxService(IAppDbContext context) : IOutboxService
         WriteIndented = false,
     };
 
-    public async Task EnqueueMessageAsync<IEvent>(IEvent @event, string topic, CancellationToken cancellationToken) where IEvent : IIntegrationEvent
+    public async Task EnqueueMessageAsync<IEvent>(IEvent @event, string topic, CancellationToken cancellationToken) where IEvent : IIntegrationMessage
     {
         var outputMessage = new OutboxMessage
         {

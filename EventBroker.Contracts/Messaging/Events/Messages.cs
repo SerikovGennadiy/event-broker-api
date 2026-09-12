@@ -8,7 +8,7 @@ public sealed record EventDeleted(Guid TraceId, Guid EventId) : IEventIntegratio
 #endregion
 
 #region Статус-сообщения событий бронирования на мероприятие (topic: event-booking)
-public sealed record SeatReserved(Guid TraceId, Guid BookingId, Guid EventId, Guid UserId) : IIntegarationEvent;
-public sealed record SeatReleased(Guid TraceId, Guid BookingId, Guid EventId, Guid UserId) : IIntegarationEvent;
-public sealed record SeatReservationFailed(Guid TraceId, Guid BookingId, Guid EventId, Guid UserId, string Error) : IIntegarationEvent;
+public sealed record SeatReserved(Guid TraceId, Guid BookingId, Guid EventId, Guid UserId) : IBookingProcessing;
+public sealed record SeatReleased(Guid TraceId, Guid BookingId, Guid EventId, Guid UserId) : IBookingProcessing;
+public sealed record SeatReservationFailed(Guid TraceId, Guid BookingId, Guid EventId, Guid UserId, string Error) : IBookingProcessing;
 #endregion

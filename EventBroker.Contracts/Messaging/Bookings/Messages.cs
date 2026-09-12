@@ -6,7 +6,7 @@ namespace Messaging.Bookings;
 public sealed record BookingStarted(Guid TraceId,
                                     Guid BookingId,
                                     Guid EventId,
-                                    Guid UserId) : IIntegarationEvent
+                                    Guid UserId) : IBookingProcessing
 {
     public DateTime CreatedAt { get; } = DateTime.UtcNow;
 }
@@ -14,7 +14,7 @@ public sealed record BookingStarted(Guid TraceId,
 public sealed record BookingConfirmed(Guid TraceId,
                                       Guid BookingId,
                                       Guid EventId,
-                                      Guid UserId) : IIntegarationEvent
+                                      Guid UserId) : IBookingProcessing
 {
     public DateTime ProcessedAt { get; } = DateTime.UtcNow;
 }
@@ -23,7 +23,7 @@ public sealed record BookingRejected(Guid TraceId,
                                      Guid BookingId,
                                      Guid EventId,
                                      Guid UserId,
-                                     string Reason) : IIntegarationEvent
+                                     string Reason) : IBookingProcessing
 {
     public DateTime ProcessedAt { get; } = DateTime.UtcNow;
 }
@@ -31,8 +31,7 @@ public sealed record BookingRejected(Guid TraceId,
 public sealed record BookingCancelled(Guid TraceId,
                                       Guid BookingId,
                                       Guid EventId,
-                                      Guid UserId,
-                                      string Reason) : IIntegarationEvent
+                                      Guid UserId) : IBookingProcessing
 {
     public DateTime ProcessedAt { get; } = DateTime.UtcNow;
 }

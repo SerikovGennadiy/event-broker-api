@@ -79,34 +79,40 @@ public class EventService(IRepositoryManager repositoryManager, IMapper mapper, 
         await repositoryManager.SaveAsync();
     }
 
-    public async Task ReserveSeats(Guid traceId, Guid eventId, Guid bookingId, Guid userId, int callSeats, CancellationToken stoppingToken)
+    public async Task ReserveSeats(Guid traceId, Guid eventId, Guid bookingId, Guid userId, CancellationToken stoppingToken)
     {
         var @event = await GetEvent(eventId);
-        if (@event.TryReserveSeats(callSeats))       
-            await outboxService.EnqueueMessageAsync(new SeatReserved(TraceId: traceId,
-                                                                     BookingId: bookingId,
-                                                                     EventId: eventId,
-                                                                     UserId: userId), Topics.BookingProcessing, stoppingToken);        
+        if (@event.TryReserveSeats(count: 1))       
+            await outboxService.EnqueueMessageAsync(@event: new SeatReserved(TraceId: traceId,
+                                                                             BookingId: bookingId,
+                                                                             EventId: eventId,
+                                                                             UserId: userId),
+                                                    topic: Topics.BookingProcessing,
+                                                    cancellationToken: stoppingToken);        
         else
-            await outboxService.EnqueueMessageAsync(new SeatReservationFailed(TraceId: traceId,
-                                                                              BookingId: bookingId,
-                                                                              EventId: eventId,
-                                                                              UserId: userId,
-                                                                              Error: "Нет доступного кол-ва мест"), Topics.BookingProcessing, stoppingToken);
+            await outboxService.EnqueueMessageAsync(@event: new SeatReservationFailed(TraceId: traceId,
+                                                                                      BookingId: bookingId,
+                                                                                      EventId: eventId,
+                                                                                      UserId: userId,
+                                                                                      Error: "Нет доступного кол-ва мест"),
+                                                    topic: Topics.BookingProcessing,
+                                                    cancellationToken: stoppingToken);
 
 
         await repositoryManager.SaveAsync();
     }
 
-    public async Task ReleaseSeats(Guid traceId, Guid eventId, Guid bookingId, Guid userId, int recallSeats, CancellationToken stoppingToken)
+    public async Task ReleaseSeats(Guid traceId, Guid eventId, Guid bookingId, Guid userId,  CancellationToken stoppingToken)
     {
         var @event = await GetEvent(eventId);
-        @event.ReleaseSeats(recallSeats);
+        @event.ReleaseSeats(count: 1);
 
-        await outboxService.EnqueueMessageAsync(new SeatReleased(TraceId: traceId,
-                                                                  BookingId: bookingId,
-                                                                  EventId: eventId,
-                                                                  UserId: userId), Topics.BookingProcessing, stoppingToken);
+        await outboxService.EnqueueMessageAsync(@event: new SeatReleased(TraceId: traceId,
+                                                                         BookingId: bookingId,
+                                                                         EventId: eventId,
+                                                                         UserId: userId),
+                                                topic: Topics.BookingProcessing,
+                                                cancellationToken: stoppingToken);
 
         await repositoryManager.SaveAsync();
     }

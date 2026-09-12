@@ -68,6 +68,7 @@ internal sealed class InboxService(IAppDbContext context) : IInboxService
     public async Task MarkAsFailedAsync(Guid messageId, string errorMessage, CancellationToken cancellationToken = default)
     {
         var message = await GetOrThrowAsync(messageId, cancellationToken);
+        message.ProcessedAtUtc = DateTime.UtcNow;
         message.Error = errorMessage;
     }
 

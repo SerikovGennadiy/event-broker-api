@@ -140,12 +140,14 @@ internal sealed class Consumer(IServiceProvider provider, ILogger<Consumer> logg
     private async Task HandleBookingProcessingAsync(ConsumeResult<string, string> result, IServiceScope scope, CancellationToken stoppingToken)
     {
         var bookingService = scope.ServiceProvider.GetRequiredService<IBookingService>();
-        var @event = JsonSerializer.Deserialize<IIntegarationEvent>(result.Message.Value);
+        var @event = JsonSerializer.Deserialize<IIntegrationMessage>(result.Message.Value);
 
-        //await (@event switch
-        //{
-        //    //SeatReserved m => bookingService.
-        //});
+       switch (@event)
+        {
+            case SeatReserved booking:
+                await bookingService.ConfirmBookingAsync(booking.TraceId, booking.BookingId, booking.EventId, booking.UserId, stoppingToken);
+                break;
+        }
     }
 
     private static Guid ExtractTraceId(ConsumeResult<string, string> result)

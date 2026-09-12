@@ -13,7 +13,7 @@ public class InboxService(IAppDbContext context) : IInboxService
         var message = await context.Inbox.AsNoTracking()
                                    .FirstOrDefaultAsync(m => m.TraceId == messageId, cancellationToken);
 
-        return message?.ProcessedAt is not null;
+        return message?.ProcessedAtUtc is not null;
     }
 
     public async Task<bool> ReceiveAsync(Guid messageId, string messageType, string content, CancellationToken cancellationToken = default)
@@ -22,14 +22,14 @@ public class InboxService(IAppDbContext context) : IInboxService
 
         if (existingMessage is not null)
         {
-            if (existingMessage.ProcessedAt is not null)
+            if (existingMessage.ProcessedAtUtc is not null)
                 return false; // уже обработано - чистый дубль
 
             if (existingMessage.ReadAttempts > MAX_DELIVERY_ATTEMPTS)
             {
                 existingMessage.Content = content ?? "y";
                 existingMessage.Error = $"Нечитаемое сообщение [Poison Pill]: превышен лимит попыток {MAX_DELIVERY_ATTEMPTS}";
-                existingMessage.ProcessedAt = DateTime.UtcNow; // Искусственно закрываем шаг, чтобы сдвинуть офсет в Kafka
+                existingMessage.ProcessedAtUtc = DateTime.UtcNow; // Искусственно закрываем шаг, чтобы сдвинуть офсет в Kafka
 
                 return false; // консьюмер пропустит вызов бизнес-логики, но закоммитит inbox СУБД и offset в Kafka
             }
@@ -46,7 +46,7 @@ public class InboxService(IAppDbContext context) : IInboxService
                 Type = messageType,
                 Content = null, // в при нормально работе в БД ничего пишем
                 ReadAttempts = 1, // рабочая попытка чтения
-                ReceivedAt = DateTime.UtcNow,
+                ProcessedAtUtc = DateTime.UtcNow,
             }, cancellationToken);
 
             return true;
@@ -62,13 +62,14 @@ public class InboxService(IAppDbContext context) : IInboxService
     {
         var message = await GetOrThrowAsync(messageId, cancellationToken);
 
-        message.ProcessedAt = DateTime.UtcNow;
+        message.ProcessedAtUtc = DateTime.UtcNow;
         message.Error = null;
     }
 
     public async Task MarkAsFailedAsync(Guid messageId, string errorMessage, CancellationToken cancellationToken = default)
     {
         var message = await GetOrThrowAsync(messageId, cancellationToken);
+        message.ProcessedAtUtc = DateTime.UtcNow;
         message.Error = errorMessage;
     }
 
