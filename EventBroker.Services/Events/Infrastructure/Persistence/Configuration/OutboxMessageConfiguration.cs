@@ -1,8 +1,8 @@
-using Bookings.Application.Common.Messaging;
-using Microsoft.EntityFrameworkCore;
+ï»¿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Events.Application.Common.Messaging; 
 
-namespace Bookings.Infrastructure.Persistence.Configuration;
+namespace Events.Infrastructure.Persistence.Configuration;
 
 public sealed class OutboxMessageConfiguration : IEntityTypeConfiguration<OutboxMessage>
 {
@@ -10,10 +10,10 @@ public sealed class OutboxMessageConfiguration : IEntityTypeConfiguration<Outbox
     {
         builder.ToTable("OutboxMessages");
 
-        // ÏÅÐÂÈ×ÍÛÉ ÊËÞ×: Íàø õðîíîëîãè÷åñêèé UUIDv7
+        // ÐŸÐ•Ð Ð’Ð˜Ð§ÐÐ«Ð™ ÐšÐ›Ð®Ð§: ÐÐ°Ñˆ Ñ…Ñ€Ð¾Ð½Ð¾Ð»Ð¾Ð³Ð¸Ñ‡ÐµÑÐºÐ¸Ð¹ UUIDv7
         builder.HasKey(x => x.TraceId);
 
-        // ÇÀÙÈÒÀ: Ãîâîðèì EF Core íå âìåøèâàòüñÿ â ãåíåðàöèþ êëþ÷à, ìû ïèøåì òóäà ãîòîâûé UUIDv7
+        // Ð—ÐÐ©Ð˜Ð¢Ð: Ð“Ð¾Ð²Ð¾Ñ€Ð¸Ð¼ EF Core Ð½Ðµ Ð²Ð¼ÐµÑˆÐ¸Ð²Ð°Ñ‚ÑŒÑÑ Ð² Ð³ÐµÐ½ÐµÑ€Ð°Ñ†Ð¸ÑŽ ÐºÐ»ÑŽÑ‡Ð°, Ð¼Ñ‹ Ð¿Ð¸ÑˆÐµÐ¼ Ñ‚ÑƒÐ´Ð° Ð³Ð¾Ñ‚Ð¾Ð²Ñ‹Ð¹ UUIDv7
         builder.Property(x => x.TraceId)
                .ValueGeneratedNever()
                .IsRequired();
@@ -30,7 +30,7 @@ public sealed class OutboxMessageConfiguration : IEntityTypeConfiguration<Outbox
                .HasMaxLength(255)
                .IsRequired();
 
-        // Òåëî ñîîáùåíèÿ (Ñûðîé JSON-êîíòåíò)
+        // Ð¢ÐµÐ»Ð¾ ÑÐ¾Ð¾Ð±Ñ‰ÐµÐ½Ð¸Ñ (Ð¡Ñ‹Ñ€Ð¾Ð¹ JSON-ÐºÐ¾Ð½Ñ‚ÐµÐ½Ñ‚)
         builder.Property(x => x.Content)
                .HasColumnType("text")
                .IsRequired();
@@ -39,16 +39,16 @@ public sealed class OutboxMessageConfiguration : IEntityTypeConfiguration<Outbox
                .HasColumnType("text")
                .IsRequired(false);
 
-        builder.Property(x => x.TimeStampUtc)
+        builder.Property(x => x.TimeStampAt)
                .IsRequired();
 
         builder.Property(x => x.ProcessedAtUtc)
                .IsRequired(false);
 
-        // ÑÎÑÒÀÂÍÎÉ ÈÍÄÅÊÑ: Êðèòè÷åñêè âàæåí äëÿ OutboxWorker'à!
-        // Îáåñïå÷èâàåò ìãíîâåííûé SELECT ïà÷åê ïî 50 øòóê áåç ïîëíîãî ñêàíèðîâàíèÿ òàáëèöû (Table Scan)
-        // Çàïðîñ: .Where(x => x.ProcessedAtUtc == null).OrderBy(x => x.TimeStampAt).Take(50)
-        builder.HasIndex(x => new { x.ProcessedAtUtc, x.TimeStampUtc })
+        // Ð¡ÐžÐ¡Ð¢ÐÐ’ÐÐžÐ™ Ð˜ÐÐ”Ð•ÐšÐ¡: ÐšÑ€Ð¸Ñ‚Ð¸Ñ‡ÐµÑÐºÐ¸ Ð²Ð°Ð¶ÐµÐ½ Ð´Ð»Ñ OutboxWorker'Ð°!
+        // ÐžÐ±ÐµÑÐ¿ÐµÑ‡Ð¸Ð²Ð°ÐµÑ‚ Ð¼Ð³Ð½Ð¾Ð²ÐµÐ½Ð½Ñ‹Ð¹ SELECT Ð¿Ð°Ñ‡ÐµÐº Ð¿Ð¾ 50 ÑˆÑ‚ÑƒÐº Ð±ÐµÐ· Ð¿Ð¾Ð»Ð½Ð¾Ð³Ð¾ ÑÐºÐ°Ð½Ð¸Ñ€Ð¾Ð²Ð°Ð½Ð¸Ñ Ñ‚Ð°Ð±Ð»Ð¸Ñ†Ñ‹ (Table Scan)
+        // Ð—Ð°Ð¿Ñ€Ð¾Ñ: .Where(x => x.ProcessedAtUtc == null).OrderBy(x => x.TimeStampAt).Take(50)
+        builder.HasIndex(x => new { x.ProcessedAtUtc, x.TimeStampAt })
                .HasDatabaseName("IX_OutboxMessages_Pending");
     }
 }

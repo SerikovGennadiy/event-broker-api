@@ -8,44 +8,47 @@ public class AppDbContextFactory : IDesignTimeDbContextFactory<AppDbContext>
 {
     public AppDbContext CreateDbContext(string[] args)
     {
+        // Передаем точное имя папки API-проекта
         var configuration = GetConfigurationFromProject("Events.API");
 
         var builder = new DbContextOptionsBuilder<AppDbContext>()
             .UseNpgsql(
                 connectionString: configuration.GetConnectionString("DefaultConnection"),
-                npgsqlOptionsAction: m => m.MigrationsAssembly("Infrastructure"));
+                npgsqlOptionsAction: m => m.MigrationsAssembly("Bookings.Infrastructure")); // Указываем полное имя сборки миграций
 
         return new AppDbContext(builder.Options);
     }
 
     /// <summary>Получает конфигурацию из appsettings.json указанного проекта решения.</summary>
-    /// <param name="projectName">Название папки проекта внутри решения</param>
-    /// <returns>Конфигурация из appsettings.json проекта</returns>
-    /// <exception cref="FileNotFoundException">Если файл решения (.sln) или appsettings.json не найдены</exception>
-    /// <exception cref="DirectoryNotFoundException">Если папка проекта не найдена</exception>
-    public static IConfigurationRoot GetConfigurationFromProject(string projectName)
+    /// <param name="apiProjectName">Название папки проекта API (например, "Bookings.API")</param>
+    public static IConfigurationRoot GetConfigurationFromProject(string apiProjectName)
     {
-        if (string.IsNullOrWhiteSpace(projectName))
-            throw new ArgumentException("Название проекта не может быть пустым.", nameof(projectName));
+        if (string.IsNullOrWhiteSpace(apiProjectName))
+            throw new ArgumentException("Название проекта не может быть пустым.", nameof(apiProjectName));
 
         var solutionDirectory = FindSolutionDirectory();
-        var projectPath = Path.Combine(solutionDirectory, projectName);
+
+        // Строим путь согласно структуре: sln -> Services -> Bookings -> Bookings.API
+        var projectPath = Path.Combine(solutionDirectory, "EventBroker.Services", "Bookings", apiProjectName);
 
         if (!Directory.Exists(projectPath))
-            throw new DirectoryNotFoundException($"Папка проекта '{projectName}' не найдена по пути '{projectPath}'");
+            throw new DirectoryNotFoundException($"Папка проекта '{apiProjectName}' не найдена по пути '{projectPath}'");
 
         var appsettingsPath = Path.Combine(projectPath, "appsettings.json");
 
         if (!File.Exists(appsettingsPath))
-            throw new FileNotFoundException($"Файл 'appsettings.json' не найден в проекте '{projectName}'");
+            throw new FileNotFoundException($"Файл 'appsettings.json' не найден в проекте '{apiProjectName}'");
 
-        return new ConfigurationBuilder().SetBasePath(projectPath)
-                                         .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false)
-                                         .Build();
+        return new ConfigurationBuilder()
+            .SetBasePath(projectPath)
+            .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false)
+            .Build();
 
         string FindSolutionDirectory()
         {
-            var currentDir = Directory.GetCurrentDirectory();
+            // При выполнении миграций CurrentDirectory может быть папкой проекта Infrastructure.
+            // Нам нужно подняться вверх до файла .sln
+            var currentDir = AppContext.BaseDirectory;
 
             while (currentDir != null)
             {
@@ -55,7 +58,7 @@ public class AppDbContextFactory : IDesignTimeDbContextFactory<AppDbContext>
                 currentDir = Directory.GetParent(currentDir)?.FullName;
             }
 
-            throw new FileNotFoundException("Файл решения (.sln) не найден");
+            throw new FileNotFoundException("Файл решения (.sln) не найден при поиске вверх от папки выполнения.");
         }
     }
 }

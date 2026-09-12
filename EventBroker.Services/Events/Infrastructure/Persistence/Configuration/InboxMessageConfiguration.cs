@@ -1,20 +1,20 @@
-using Bookings.Application.Common.Messaging;
-using Microsoft.EntityFrameworkCore;
+ï»¿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Events.Application.Common.Messaging;
 
-namespace Bookings.Infrastructure.Persistence.Configuration;
+namespace Events.Infrastructure.Persistence.Configuration;
 
 public sealed class InboxMessageConfiguration : IEntityTypeConfiguration<InboxMessage>
 {
     public void Configure(EntityTypeBuilder<InboxMessage> builder)
     {
-        // Èìÿ òàáëèöû â PostgreSQL (æåëàòåëüíî â snake_case èëè PascalCase, êàê ïðèíÿòî â ïðîåêòå)
+        // Ð˜Ð¼Ñ Ñ‚Ð°Ð±Ð»Ð¸Ñ†Ñ‹ Ð² PostgreSQL (Ð¶ÐµÐ»Ð°Ñ‚ÐµÐ»ÑŒÐ½Ð¾ Ð² snake_case Ð¸Ð»Ð¸ PascalCase, ÐºÐ°Ðº Ð¿Ñ€Ð¸Ð½ÑÑ‚Ð¾ Ð² Ð¿Ñ€Ð¾ÐµÐºÑ‚Ðµ)
         builder.ToTable("InboxMessages");
 
-        // ÏÅÐÂÈ×ÍÛÉ ÊËÞ×: Ñêâîçíîé TraceId ñîîáùåíèÿ
+        // ÐŸÐ•Ð Ð’Ð˜Ð§ÐÐ«Ð™ ÐšÐ›Ð®Ð§: Ð¡ÐºÐ²Ð¾Ð·Ð½Ð¾Ð¹ TraceId ÑÐ¾Ð¾Ð±Ñ‰ÐµÐ½Ð¸Ñ
         builder.HasKey(x => x.TraceId);
 
-        // ÇÀÙÈÒÀ: Îòêëþ÷àåì àâòîìàòè÷åñêóþ ãåíåðàöèþ ID áàçîé äàííûõ, òàê êàê êëþ÷ âñåãäà ïèøåòñÿ ðóêàìè
+        // Ð—ÐÐ©Ð˜Ð¢Ð: ÐžÑ‚ÐºÐ»ÑŽÑ‡Ð°ÐµÐ¼ Ð°Ð²Ñ‚Ð¾Ð¼Ð°Ñ‚Ð¸Ñ‡ÐµÑÐºÑƒÑŽ Ð³ÐµÐ½ÐµÑ€Ð°Ñ†Ð¸ÑŽ ID Ð±Ð°Ð·Ð¾Ð¹ Ð´Ð°Ð½Ð½Ñ‹Ñ…, Ñ‚Ð°Ðº ÐºÐ°Ðº ÐºÐ»ÑŽÑ‡ Ð²ÑÐµÐ³Ð´Ð° Ð¿Ð¸ÑˆÐµÑ‚ÑÑ Ñ€ÑƒÐºÐ°Ð¼Ð¸
         builder.Property(x => x.TraceId)
                .ValueGeneratedNever()
                .IsRequired();
@@ -23,8 +23,8 @@ public sealed class InboxMessageConfiguration : IEntityTypeConfiguration<InboxMe
                .HasMaxLength(255)
                .IsRequired();
 
-        // Ïîëå Content ìîæåò áûòü null ïðè øòàòíîé ðàáîòå, òèï text â Postgres èäåàëåí äëÿ JSON ñòðîê
-        // Content - çàïîëíÿåòñÿ òîëüêî ïðè îøèáêå!
+        // ÐŸÐ¾Ð»Ðµ Content Ð¼Ð¾Ð¶ÐµÑ‚ Ð±Ñ‹Ñ‚ÑŒ null Ð¿Ñ€Ð¸ ÑˆÑ‚Ð°Ñ‚Ð½Ð¾Ð¹ Ñ€Ð°Ð±Ð¾Ñ‚Ðµ, Ñ‚Ð¸Ð¿ text Ð² Postgres Ð¸Ð´ÐµÐ°Ð»ÐµÐ½ Ð´Ð»Ñ JSON ÑÑ‚Ñ€Ð¾Ðº
+        // Content - Ð·Ð°Ð¿Ð¾Ð»Ð½ÑÐµÑ‚ÑÑ Ñ‚Ð¾Ð»ÑŒÐºÐ¾ Ð¿Ñ€Ð¸ Ð¾ÑˆÐ¸Ð±ÐºÐµ!
         builder.Property(x => x.Content)
                .HasColumnType("text")
                .IsRequired(false);
@@ -43,8 +43,8 @@ public sealed class InboxMessageConfiguration : IEntityTypeConfiguration<InboxMe
         builder.Property(x => x.ProcessedAtUtc)
                .IsRequired(false);
 
-        // ÈÍÄÅÊÑ: Îáåñïå÷èâàåò ìãíîâåííóþ ôèëüòðàöèþ äóáëèêàòîâ íà Øàãå 1 êîíñüþìåðà
-        // Çàïðîñ: .AnyAsync(m => m.TraceId == id && m.ProcessedAtUtc != null)
+        // Ð˜ÐÐ”Ð•ÐšÐ¡: ÐžÐ±ÐµÑÐ¿ÐµÑ‡Ð¸Ð²Ð°ÐµÑ‚ Ð¼Ð³Ð½Ð¾Ð²ÐµÐ½Ð½ÑƒÑŽ Ñ„Ð¸Ð»ÑŒÑ‚Ñ€Ð°Ñ†Ð¸ÑŽ Ð´ÑƒÐ±Ð»Ð¸ÐºÐ°Ñ‚Ð¾Ð² Ð½Ð° Ð¨Ð°Ð³Ðµ 1 ÐºÐ¾Ð½ÑÑŒÑŽÐ¼ÐµÑ€Ð°
+        // Ð—Ð°Ð¿Ñ€Ð¾Ñ: .AnyAsync(m => m.TraceId == id && m.ProcessedAtUtc != null)
         builder.HasIndex(x => new { x.TraceId, x.ProcessedAtUtc })
                .HasDatabaseName("IX_InboxMessages_Verification");
     }
