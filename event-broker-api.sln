@@ -46,6 +46,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bookings.API", "EventBroker
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Enums", "EventBroker.Contracts\Enums\Enums.csproj", "{F53EA46E-D6D9-4903-8FED-424106F7BF43}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventBroker.API", "EventBroker.API\EventBroker.API.csproj", "{51F391CA-72B8-4C28-A06B-F337B0831F75}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -108,6 +110,10 @@ Global
 		{F53EA46E-D6D9-4903-8FED-424106F7BF43}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F53EA46E-D6D9-4903-8FED-424106F7BF43}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F53EA46E-D6D9-4903-8FED-424106F7BF43}.Release|Any CPU.Build.0 = Release|Any CPU
+		{51F391CA-72B8-4C28-A06B-F337B0831F75}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{51F391CA-72B8-4C28-A06B-F337B0831F75}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{51F391CA-72B8-4C28-A06B-F337B0831F75}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{51F391CA-72B8-4C28-A06B-F337B0831F75}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

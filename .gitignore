@@ -55,3 +55,22 @@ CodeCoverage/
 *.VisualState.xml
 TestResult.xml
 nunit-*.xml
+
+# Docker
+*.user
+*.userosscache
+
+# Локальные файлы конфигурации Docker Compose (секреты, переопределения)
+docker-compose.override.yml
+*.env
+
+# Скрытая техническая папка Visual Studio для контейнерной отладки Fast Mode
+.dockerignore
+.docker/
+.containers/
+
+# Кэш сборщика Docker Buildx (если собирается локально)
+.buildx/
+
+# Временные SSL-сертификаты для HTTPS внутри контейнеров (из папки AppData/UserSecrets)
+.aspnet/https/

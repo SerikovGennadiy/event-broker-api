@@ -13,10 +13,10 @@ services:
     container_name: users-db
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: SecretPassword123
+      POSTGRES_PASSWORD: postgres
       POSTGRES_DB: users_db
     ports:
-      - "5431:5432"
+      - "127.0.0.1:7050:5432"
     volumes:
       - users_db_data:/var/lib/postgresql/data
 
@@ -25,10 +25,10 @@ services:
     container_name: events-db
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: SecretPassword123
+      POSTGRES_PASSWORD: postgres
       POSTGRES_DB: events_db
     ports:
-      - "5432:5432"
+      - "127.0.0.1:7051:5432"
     volumes:
       - events_db_data:/var/lib/postgresql/data
 
@@ -37,10 +37,10 @@ services:
     container_name: bookings-db
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: SecretPassword123
+      POSTGRES_PASSWORD: postgres
       POSTGRES_DB: bookings_db
     ports:
-      - "5433:5432"
+      - "127.0.0.1:7052:5433"
     volumes:
       - bookings_db_data:/var/lib/postgresql/data
 
@@ -75,11 +75,11 @@ services:
     image: users-service:latest
     build:
       context: .
-      dockerfile: EventBroker.Services/Users/Users.API/Dockerfile
+      dockerfile: EventBroker.Services/Users/Presentation/Dockerfile
     container_name: users-service
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ConnectionStrings__DefaultConnection=Host=users-db;Port=5432;Database=users_db;Username=postgres;Password=SecretPassword123
+      - ConnectionStrings__DefaultConnection=Host=users-db;Port=5432;Database=users_db;Username=postgres;Password=postgres
     depends_on:
       - users-db
 
@@ -87,12 +87,12 @@ services:
     image: events-service:latest
     build:
       context: .
-      dockerfile: EventBroker.Services/Events/Events.API/Dockerfile
+      dockerfile: EventBroker.Services/Events/Presentation/Dockerfile
     container_name: events-service
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ConnectionStrings__DefaultConnection=Host=events-db;Port=5432;Database=events_db;Username=postgres;Password=SecretPassword123
-      - Kafka__BootstrapServers=kafka:29092 # 🟢 Настройка сети для докера
+      - ConnectionStrings__DefaultConnection=Host=events-db;Port=5432;Database=events_db;Username=postgres;Password=postgres
+      - Kafka__BootstrapServers=kafka:29092 # Настройка сети для докера
       - Kafka__GroupId=events-service-group
     depends_on:
       - events-db
@@ -102,16 +102,31 @@ services:
     image: bookings-service:latest
     build:
       context: .
-      dockerfile: EventBroker.Services/Bookings/Bookings.API/Dockerfile
+      dockerfile: EventBroker.Services/Bookings/Presentation/Dockerfile
     container_name: bookings-service
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ConnectionStrings__DefaultConnection=Host=bookings-db;Port=5432;Database=bookings_db;Username=postgres;Password=SecretPassword123
-      - Kafka__BootstrapServers=kafka:29092 # 🟢 Настройка сети для докера
+      - ConnectionStrings__DefaultConnection=Host=bookings-db;Port=5432;Database=bookings_db;Username=postgres;Password=postgres
+      - Kafka__BootstrapServers=kafka:29092 # Настройка сети для докера
       - Kafka__GroupId=bookings-service-group
     depends_on:
       - bookings-db
       - kafka
+
+  api-gateway:
+    image: api-gateway:latest
+    build:
+      context: .
+      dockerfile: EventBroker.API/Dockerfile
+    container_name: api-gateway
+    ports:
+      - "5000:8080" # Единственный публичный порт системы во внешний мир!
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    depends_on:
+      - users-service
+      - events-service
+      - bookings-service
 
 volumes:
   users_db_data:
