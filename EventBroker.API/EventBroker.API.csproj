@@ -8,6 +8,8 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<PackageReference Include="MMLib.OpenApiForYarp" Version="1.1.0" />
+		<PackageReference Include="MMLib.OpenApiForYarp.Scalar" Version="1.1.0" />
 		<PackageReference Include="Yarp.ReverseProxy" Version="2.3.0" />
 		<PackageReference Include="Swashbuckle.AspNetCore" Version="7.2.0" />
 		<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.2" />
