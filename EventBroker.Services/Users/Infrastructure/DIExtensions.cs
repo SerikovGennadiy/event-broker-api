@@ -17,7 +17,7 @@ public static class DIExtensions
 
             var connectionString = configuration.GetConnectionString("DefaultConnection")
                 ?? throw new InvalidOperationException("Строка подключения DefaultConnection не найдена");
-            opts.UseNpgsql(connectionString, m => m.MigrationsAssembly("Infrastructure"));
+            opts.UseNpgsql(connectionString, m => m.MigrationsAssembly("Users.Infrastructure"));
         });
 
         return services;

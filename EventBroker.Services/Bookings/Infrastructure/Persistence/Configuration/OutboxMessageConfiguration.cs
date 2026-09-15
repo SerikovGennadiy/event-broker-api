@@ -10,10 +10,17 @@ public sealed class OutboxMessageConfiguration : IEntityTypeConfiguration<Outbox
     {
         builder.ToTable("OutboxMessages");
 
-        // ÏÅÐÂÈ×ÍÛÉ ÊËÞ×: Íàø õðîíîëîãè÷åñêèé UUIDv7
-        builder.HasKey(x => x.TraceId);
+        // ÐŸÐ•Ð Ð’Ð˜Ð§ÐÐ«Ð™ ÐšÐ›Ð®Ð§: ÑÑƒÑ€Ñ€Ð¾Ð³Ð°Ñ‚Ð½Ñ‹Ð¹ Ñ…Ñ€Ð¾Ð½Ð¾Ð»Ð¾Ð³Ð¸Ñ‡ÐµÑÐºÐ¸Ð¹ UUIDv7.
+        // TraceId key Ð±Ñ‹Ñ‚ÑŒ Ð½Ðµ Ð¼Ð¾Ð¶ÐµÑ‚: Ð¾Ð´Ð¸Ð½ TraceId ÑÐ°Ð³Ð¸ Ð¿ÐµÑ€ÐµÐ¸ÑÐ¿Ð¾Ð»ÑŒÐ·ÑƒÐµÑ‚ÑÑ
+        // Ð½Ð° Ð½ÐµÑÐºÐ¾Ð»ÑŒÐºÐ¸Ñ… ÑˆÐ°Ð³Ð°Ñ… (BookingStarted -> SeatReserved -> ...),
+        // Ð¸ Ð²Ñ‚Ð¾Ñ€Ð¾Ðµ ÑÐ¾Ð¾Ð±Ñ‰ÐµÐ½Ð¸Ðµ Ñ Ñ‚ÐµÐ¼ Ð¶Ðµ TraceId Ð´Ð°Ð»Ð¾ Ð±Ñ‹ PK-ÐºÐ¾Ð½Ñ„Ð»Ð¸ÐºÑ‚.
+        builder.HasKey(x => x.Id);
 
-        // ÇÀÙÈÒÀ: Ãîâîðèì EF Core íå âìåøèâàòüñÿ â ãåíåðàöèþ êëþ÷à, ìû ïèøåì òóäà ãîòîâûé UUIDv7
+        builder.Property(x => x.Id)
+               .ValueGeneratedNever()
+               .IsRequired();
+
+        // TraceId - ÐºÐ¾Ñ€Ñ€ÐµÐ»ÑÑ†Ð¸Ð¾Ð½Ð½Ñ‹Ð¹ Ð¸Ð´ÐµÐ½Ñ‚Ð¸Ñ„Ð¸ÐºÐ°Ñ‚Ð¾Ñ€ ÑÐ°Ð³Ð¸, Ð½Ðµ ÐºÐ»ÑŽÑ‡.
         builder.Property(x => x.TraceId)
                .ValueGeneratedNever()
                .IsRequired();
@@ -30,7 +37,6 @@ public sealed class OutboxMessageConfiguration : IEntityTypeConfiguration<Outbox
                .HasMaxLength(255)
                .IsRequired();
 
-        // Òåëî ñîîáùåíèÿ (Ñûðîé JSON-êîíòåíò)
         builder.Property(x => x.Content)
                .HasColumnType("text")
                .IsRequired();
@@ -45,9 +51,6 @@ public sealed class OutboxMessageConfiguration : IEntityTypeConfiguration<Outbox
         builder.Property(x => x.ProcessedAtUtc)
                .IsRequired(false);
 
-        // ÑÎÑÒÀÂÍÎÉ ÈÍÄÅÊÑ: Êðèòè÷åñêè âàæåí äëÿ OutboxWorker'à!
-        // Îáåñïå÷èâàåò ìãíîâåííûé SELECT ïà÷åê ïî 50 øòóê áåç ïîëíîãî ñêàíèðîâàíèÿ òàáëèöû (Table Scan)
-        // Çàïðîñ: .Where(x => x.ProcessedAtUtc == null).OrderBy(x => x.TimeStampAt).Take(50)
         builder.HasIndex(x => new { x.ProcessedAtUtc, x.TimeStampUtc })
                .HasDatabaseName("IX_OutboxMessages_Pending");
     }

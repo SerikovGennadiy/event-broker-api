@@ -30,7 +30,7 @@ public class BookingController : ControllerBase
         return NoContent();
     }
 
-    [HttpPost("{eventId}/book")]
+    [HttpPost("book/{eventId:guid}")]
     [Authorize]
     [ProducesResponseType(typeof(BookingDTO), StatusCodes.Status202Accepted)]
     [ProducesResponseType(typeof(ErrorDetail), StatusCodes.Status404NotFound)]

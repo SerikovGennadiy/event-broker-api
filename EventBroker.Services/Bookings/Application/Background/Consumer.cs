@@ -2,6 +2,7 @@
 using Bookings.Application.Contracts.Persistence;
 using Bookings.Application.Contracts.Services;
 using Bookings.Domain.Exceptions;
+using Bookings.Domain.Models;
 using Confluent.Kafka;
 using Messaging.Events;
 using Messaging.Saga;
@@ -20,6 +21,13 @@ internal sealed class Consumer(IServiceProvider provider, ILogger<Consumer> logg
     private const string MARKER = "Booking.API:[Consumer]";
     private const string TRACE_HEADER = "trace-id";
 
+    private static readonly JsonSerializerOptions Options = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        PropertyNameCaseInsensitive = true,
+        WriteIndented = false,
+    };
+
     private static readonly string[] TopicsList = [
         Messaging.Topics.BookingProcessing,
         Messaging.Topics.EventIntegration,
@@ -27,6 +35,8 @@ internal sealed class Consumer(IServiceProvider provider, ILogger<Consumer> logg
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        await Task.Yield();
+
         logger.LogInformation("{Marker} : запуск...", MARKER);
         using var consumer = provider.GetRequiredService<IConsumer<string, string>>();
 
@@ -84,14 +94,13 @@ internal sealed class Consumer(IServiceProvider provider, ILogger<Consumer> logg
         var messageId = ExtractTraceId(result);
         var messageType = ExtractMessageType(result);
 
-        if (await inboxService.HasBeenProcessedAsync(messageId, stoppingToken))
+        if (await inboxService.HasBeenProcessedAsync(messageId, messageType, stoppingToken))
             return;
 
         using var transaction = await context.Database.BeginTransactionAsync(stoppingToken);
         try
         {
             bool isReceivedAndReadyForBusiness = await inboxService.ReceiveAsync(messageId, messageType, result.Message.Value, stoppingToken);
-
             if (isReceivedAndReadyForBusiness)
             {
                 try
@@ -103,17 +112,18 @@ internal sealed class Consumer(IServiceProvider provider, ILogger<Consumer> logg
                         _ => throw new InvalidOperationException($"{MARKER}: Сервис не обрабатывает топик: {result.Topic}")
                     });
 
-                    await inboxService.MarkAsProcessedAsync(messageId, stoppingToken);
+                    await inboxService.MarkAsProcessedAsync(messageId, messageType, stoppingToken);
                 }
                 catch (Exception ex) when (ex is JsonException or InvalidOperationException or DomainException)
                 {
-                    await inboxService.MarkAsFailedAsync(messageId, ex.Message, stoppingToken);
+                    await inboxService.MarkAsFailedAsync(messageId, messageType, ex.Message, stoppingToken);
                     logger.LogWarning(ex, "{Marker} : Бизнес-обработка сообщения {Id} завершилась ошибкой, сбой зафиксирован в Inbox.", MARKER, messageId);
                 }
             }
 
             await context.SaveChangesAsync(stoppingToken);
             await transaction.CommitAsync(stoppingToken);
+            return;
         }
         catch (Exception)
         {
@@ -125,28 +135,51 @@ internal sealed class Consumer(IServiceProvider provider, ILogger<Consumer> logg
     private async Task HandleEventIntegrationAsync(ConsumeResult<string, string> result, IServiceScope scope, CancellationToken stoppingToken)
     {
         var bookingService = scope.ServiceProvider.GetRequiredService<IBookingService>();
-        var readRepository = scope.ServiceProvider.GetRequiredService<IEventReadRepository>();
+        var repo = scope.ServiceProvider.GetRequiredService<IRepositoryManager>();
 
-        var @event = JsonSerializer.Deserialize<IEventIntegration>(result.Message.Value);
+        var @event = JsonSerializer.Deserialize<IIntegrationMessage>(result.Message.Value, Options);
 
-        await (@event switch
+        switch (@event)
         {
-            EventCreatedOrUpdated m => readRepository.AddAsync(new Common.DTO.EventReadDTO(m.EventId, m.StartAt), stoppingToken),
-            EventDeleted m => readRepository.DeleteAsync(m.EventId, stoppingToken),
-            _ => throw new DomainException($"{MARKER}: сообщение неизвестного типа, чтение не выполнено")
-        });
+            case EventCreatedOrUpdated m:
+                logger.LogInformation("{Marker}: Получено сообщение {MessageType}: {@Message}", MARKER, nameof(EventCreatedOrUpdated), m);
+                await repo.EventRead.AddAsync(new Common.DTO.EventReadDTO(m.EventId, m.StartAt), stoppingToken);
+                break;
+
+            case EventDeleted m:
+                logger.LogInformation("{Marker}: Получено сообщение {MessageType}: {@Message}", MARKER, nameof(EventDeleted), m);
+                await bookingService.RemoveByEventAsync(m.EventId, stoppingToken);
+                await repo.EventRead.DeleteAsync(m.EventId, stoppingToken);
+                break;
+            default:
+                logger.LogWarning("{Marker}: пока собственный outbox попадается в собственный inbox {@event}", MARKER, @event);
+                break;
+        }
     }
 
     private async Task HandleBookingProcessingAsync(ConsumeResult<string, string> result, IServiceScope scope, CancellationToken stoppingToken)
     {
         var bookingService = scope.ServiceProvider.GetRequiredService<IBookingService>();
-        var @event = JsonSerializer.Deserialize<IIntegrationMessage>(result.Message.Value);
+        var @event = JsonSerializer.Deserialize<IIntegrationMessage>(result.Message.Value, Options);
 
-       switch (@event)
+        switch (@event)
         {
             case SeatReserved booking:
+                logger.LogInformation("{Marker}: Получено сообщение {MessageType}: {@Message}", MARKER, nameof(SeatReserved), booking);
                 await bookingService.ConfirmBookingAsync(booking.TraceId, booking.BookingId, booking.EventId, booking.UserId, stoppingToken);
                 break;
+            case SeatReservationFailed failed:
+                logger.LogInformation("{Marker}: Получено сообщение {MessageType}: {@Message}", MARKER, nameof(SeatReservationFailed), failed);
+                await bookingService.RejectBooingAsync(traceId: failed.TraceId, bookingId: failed.BookingId, eventId: failed.EventId, userId: failed.UserId, reason: failed.Error,  stoppingToken);
+                break;
+            case SeatReleased released:
+                logger.LogInformation("{Marker}: Получено сообщение {MessageType}: {@Message}", MARKER, nameof(SeatReleased), released);
+                await bookingService.RejectBooingAsync(traceId: released.TraceId, bookingId: released.BookingId, eventId: released.EventId, userId: released.UserId, reason: "Места освобождены по инициативе пользователя", stoppingToken);
+                break;
+            default:
+                logger.LogWarning("{Marker}: пока собственный outbщ попадается в собственный inbox {@event}", MARKER, @event);
+                break;
+
         }
     }
 

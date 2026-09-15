@@ -15,5 +15,6 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
             .ForMember(dest => dest.Status, opt => opt.Ignore())
             .ForMember(dest => dest.ProcessedAt, opt => opt.Ignore());
+
     }
 }

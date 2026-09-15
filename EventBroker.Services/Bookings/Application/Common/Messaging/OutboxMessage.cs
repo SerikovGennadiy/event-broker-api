@@ -2,6 +2,7 @@
 
 public class OutboxMessage
 {
+    public Guid Id { get; set; }
     public Guid TraceId { get; set; }
     public string PartitionKey { get; set; } = null!;
     public string Type { get; set; } = string.Empty;

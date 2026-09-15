@@ -2,7 +2,7 @@
 public interface IInboxService
 {
     /// <summary> Быстрая проверка дубликатов на входе в конвеер </summary>
-    Task<bool> HasBeenProcessedAsync(Guid messageId, CancellationToken cancellationToken = default);
+    Task<bool> HasBeenProcessedAsync(Guid messageId, string messageType, CancellationToken cancellationToken = default);
 
     /// <summary>
     ///  Регистрация начала обработки.
@@ -15,8 +15,8 @@ public interface IInboxService
     Task<bool> ReceiveAsync(Guid messageId, string messageType, string? content, CancellationToken cancellationToken = default);
 
     /// <summary> Фиксация успешного завершения бизнес-логики </summary>
-    Task MarkAsProcessedAsync(Guid messageId, CancellationToken cancellationToken = default);
+    Task MarkAsProcessedAsync(Guid messageId, string messageType, CancellationToken cancellationToken = default);
 
     /// <summary> Фиксация ошибки для последующей  (redelivery - легальной повторной попытки после временного сбоя бизнеса </summary>
-    Task MarkAsFailedAsync(Guid messageId, string errorMessage, CancellationToken cancellationToken = default);
+    Task MarkAsFailedAsync(Guid messageId, string messageType, string errorMessage, CancellationToken cancellationToken = default);
 }

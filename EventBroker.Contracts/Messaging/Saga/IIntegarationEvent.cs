@@ -4,17 +4,23 @@ using System.Text.Json.Serialization;
 
 namespace Messaging.Saga;
 
+[JsonPolymorphic(TypeDiscriminatorPropertyName = "$type")]
+[JsonDerivedType(typeof(EventCreatedOrUpdated), "EventCreatedOrUpdated")]
+[JsonDerivedType(typeof(EventDeleted), "EventDeleted")]
+[JsonDerivedType(typeof(BookingStarted), "BookingStarted")]
+[JsonDerivedType(typeof(BookingConfirmed), "BookingConfirmed")]
+[JsonDerivedType(typeof(BookingRejected), "BookingRejected")]
+[JsonDerivedType(typeof(BookingCancelled), "BookingCancelled")]
+[JsonDerivedType(typeof(SeatReserved), "SeatReserved")]
+[JsonDerivedType(typeof(SeatReleased), "SeatReleased")]
+[JsonDerivedType(typeof(SeatReservationFailed), "SeatReservationFailed")]
 public interface IIntegrationMessage
 {
     public Guid TraceId { get; }
     public string PartitionKey { get; }
 }
 
-[JsonPolymorphic(TypeDiscriminatorPropertyName = "$type")]
-[JsonDerivedType(typeof(BookingStarted), "BookingStarted")]
-[JsonDerivedType(typeof(BookingConfirmed), "BookingConfirmed")]
-[JsonDerivedType(typeof(BookingRejected), "BookingRejected")]
-[JsonDerivedType(typeof(BookingCancelled), "BookingCancelled")]
+
 public interface IBookingProcessing : IIntegrationMessage
 {
     public Guid BookingId { get; }
@@ -24,10 +30,6 @@ public interface IBookingProcessing : IIntegrationMessage
 
 }
 
-
-[JsonPolymorphic(TypeDiscriminatorPropertyName = "$type")]
-[JsonDerivedType(typeof(EventCreatedOrUpdated), "EventCreatedOrUpdated")]
-[JsonDerivedType(typeof(EventDeleted), "EventDeleted")]
 public interface IEventIntegration: IIntegrationMessage
 {
     public Guid EventId { get; }

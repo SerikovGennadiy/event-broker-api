@@ -21,7 +21,7 @@ public static class DIExtensions
             opts.UseNpgsql(connectionString, m => m.MigrationsAssembly("Events.Infrastructure"));
         });
 
-        services.AddDbContext<IAppDbContext, AppDbContext>();
+        services.AddScoped<IAppDbContext>(sp => sp.GetRequiredService<AppDbContext>());
 
         return services;
     }

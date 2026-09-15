@@ -38,7 +38,6 @@ public class EventReadRepository : RepositoryBase<EventRead>, IEventReadReposito
     public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var entity = await FindByCondition(x => x.Id == id).FirstOrDefaultAsync(cancellationToken);
-
         if (entity != null)
         {
             Delete(entity);

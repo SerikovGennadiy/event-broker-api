@@ -10,10 +10,17 @@ public sealed class OutboxMessageConfiguration : IEntityTypeConfiguration<Outbox
     {
         builder.ToTable("OutboxMessages");
 
-        // ПЕРВИЧНЫЙ КЛЮЧ: Наш хронологический UUIDv7
-        builder.HasKey(x => x.TraceId);
+        // ПЕРВИЧНЫЙ КЛЮЧ: суррогатный хронологический UUIDv7.
+        // TraceId key быть не может: один TraceId саги переиспользуется
+        // на нескольких шагах (BookingStarted -> SeatReserved -> ...),
+        // и второе сообщение с тем же TraceId дало бы PK-конфликт.
+        builder.HasKey(x => x.Id);
 
-        // ЗАЩИТА: Говорим EF Core не вмешиваться в генерацию ключа, мы пишем туда готовый UUIDv7
+        builder.Property(x => x.Id)
+               .ValueGeneratedNever()
+               .IsRequired();
+
+        // TraceId - корреляционный идентификатор саги, не ключ.
         builder.Property(x => x.TraceId)
                .ValueGeneratedNever()
                .IsRequired();
@@ -39,7 +46,7 @@ public sealed class OutboxMessageConfiguration : IEntityTypeConfiguration<Outbox
                .HasColumnType("text")
                .IsRequired(false);
 
-        builder.Property(x => x.TimeStampAt)
+        builder.Property(x => x.TimeStampAtUtc)
                .IsRequired();
 
         builder.Property(x => x.ProcessedAtUtc)
@@ -48,7 +55,7 @@ public sealed class OutboxMessageConfiguration : IEntityTypeConfiguration<Outbox
         // СОСТАВНОЙ ИНДЕКС: Критически важен для OutboxWorker'а!
         // Обеспечивает мгновенный SELECT пачек по 50 штук без полного сканирования таблицы (Table Scan)
         // Запрос: .Where(x => x.ProcessedAtUtc == null).OrderBy(x => x.TimeStampAt).Take(50)
-        builder.HasIndex(x => new { x.ProcessedAtUtc, x.TimeStampAt })
+        builder.HasIndex(x => new { x.ProcessedAtUtc, x.TimeStampAtUtc })
                .HasDatabaseName("IX_OutboxMessages_Pending");
     }
 }

@@ -32,6 +32,12 @@ public static class ServiceExtensions
     }
 
     #region основная DI конфигурация сервисов API
+    public static IServiceCollection ConfigureAutoMapper(this IServiceCollection services) =>
+         services.AddAutoMapper(
+             cfg => { },
+             typeof(Bookings.Application.MappingProfile),
+             typeof(Bookings.Infrastructure.Persistence.Messaging.ReadModels.MappingProfile));
+
     public static IServiceCollection ConfigureCors(this IServiceCollection services)
     {
         services.AddCors(options =>

@@ -11,6 +11,7 @@ public class OutboxService(IAppDbContext context) : IOutboxService
     private static readonly JsonSerializerOptions Options = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        PropertyNameCaseInsensitive = true,
         WriteIndented = false,
     };
 
@@ -18,7 +19,8 @@ public class OutboxService(IAppDbContext context) : IOutboxService
     {
         var outboxMessage = new OutboxMessage
         {
-            TraceId = Guid.CreateVersion7(),
+            Id = Guid.CreateVersion7(),
+            TraceId = @event.TraceId,
             Type = @event.GetType().FullName ?? throw new InvalidOperationException("Тип сообщения не определен"),
             Content = JsonSerializer.Serialize<IIntegrationMessage>(@event, Options),
             Topic = topic,

@@ -18,12 +18,14 @@ public interface IBookingService
     #endregion
 
     #region Шаги саги BookingCreated: IBookingProcessing
-    /// <summary></summary>
+    /// <summary>Подтверждение брони, после ответа от сервиса</summary>
     /// <reamrks></reamrks>
     Task ConfirmBookingAsync(Guid traceId, Guid bookingId, Guid eventId, Guid userId, CancellationToken cancellationToken = default);
 
-    /// <summary></summary>
-    /// <reamrks></reamrks>
-    Task RejectBooingAsync(Guid traceId, Guid bookingId, Guid eventId, Guid userId, CancellationToken cancellationToken = default);
+    ///// <summary>Отклонение бронирования</summary>
+    ///// <reamrks></reamrks>
+    Task RejectBooingAsync(Guid traceId, Guid bookingId, Guid eventId, Guid userId, string reason, CancellationToken cancellationToken = default);
     #endregion
+
+    Task<bool> RemoveByEventAsync(Guid eventId, CancellationToken cancellationToken = default);
 }

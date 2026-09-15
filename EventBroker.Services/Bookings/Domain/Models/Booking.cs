@@ -68,9 +68,6 @@ public class Booking : IdEntity
     /// <summary> Отклонение брони </summary>
     public void Reject()
     {
-        if (Status != BookingStatus.Pending)
-            throw new BookingNoReverseStatus(EventId, Id, $"Нельзя отклонить бронь в статусе {Status}");
-
         Status = BookingStatus.Rejected;
         ProcessedAt = DateTime.UtcNow;
     }
@@ -78,6 +75,13 @@ public class Booking : IdEntity
     /// <summary> Отмена брони </summary>
     public void Cancel()
     {
+        // Защита от повторной отмены и некорректных переходов
+        if (Status == BookingStatus.Cancelled)
+            throw new BookingNoReverseStatus(EventId, Id, "Бронь уже отменена");
+
+        if (Status == BookingStatus.Rejected)
+            throw new BookingNoReverseStatus(EventId, Id, $"Нельзя отменить бронь в статусе {Status}");
+
         Status = BookingStatus.Cancelled;
         ProcessedAt = DateTime.UtcNow;
     }

@@ -11,10 +11,11 @@ public sealed class InboxMessageConfiguration : IEntityTypeConfiguration<InboxMe
         // Имя таблицы в PostgreSQL (желательно в snake_case или PascalCase, как принято в проекте)
         builder.ToTable("InboxMessages");
 
-        // ПЕРВИЧНЫЙ КЛЮЧ: Сквозной TraceId сообщения
-        builder.HasKey(x => x.TraceId);
+        builder.HasKey(x => x.Id);
 
-        // ЗАЩИТА: Отключаем автоматическую генерацию ID базой данных, так как ключ всегда пишется руками
+        builder.Property(x => x.Id)
+               .IsRequired();
+
         builder.Property(x => x.TraceId)
                .ValueGeneratedNever()
                .IsRequired();
@@ -43,7 +44,7 @@ public sealed class InboxMessageConfiguration : IEntityTypeConfiguration<InboxMe
         builder.Property(x => x.ProcessedAtUtc)
                .IsRequired(false);
 
-        // ИНДЕКС: Обеспечивает мгновенную фильтрацию дубликатов на Шаге 1 консьюмера
+        // Индекс обеспечивает мгновенную фильтрацию дубликатов на Шаге 1 консьюмера
         // Запрос: .AnyAsync(m => m.TraceId == id && m.ProcessedAtUtc != null)
         builder.HasIndex(x => new { x.TraceId, x.ProcessedAtUtc })
                .HasDatabaseName("IX_InboxMessages_Verification");

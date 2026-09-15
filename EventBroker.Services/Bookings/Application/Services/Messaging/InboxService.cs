@@ -8,17 +8,17 @@ namespace Bookings.Application.Services.Messaging;
 public class InboxService(IAppDbContext context) : IInboxService
 {
     private readonly int MAX_DELIVERY_ATTEMPTS = 5;
-    public async Task<bool> HasBeenProcessedAsync(Guid messageId, CancellationToken cancellationToken = default)
+    public async Task<bool> HasBeenProcessedAsync(Guid messageId, string messageType, CancellationToken cancellationToken = default)
     {
         var message = await context.Inbox.AsNoTracking()
-                                   .FirstOrDefaultAsync(m => m.TraceId == messageId, cancellationToken);
+                                   .FirstOrDefaultAsync(m => m.TraceId == messageId && m.Type == messageType, cancellationToken);
 
         return message?.ProcessedAtUtc is not null;
     }
 
     public async Task<bool> ReceiveAsync(Guid messageId, string messageType, string content, CancellationToken cancellationToken = default)
     {
-        var existingMessage = await context.Inbox.FirstOrDefaultAsync(x => x.TraceId == messageId, cancellationToken);
+        var existingMessage = await context.Inbox.FirstOrDefaultAsync(x => x.TraceId == messageId && x.Type == messageType, cancellationToken);
 
         if (existingMessage is not null)
         {
@@ -46,7 +46,7 @@ public class InboxService(IAppDbContext context) : IInboxService
                 Type = messageType,
                 Content = null, // в при нормально работе в БД ничего пишем
                 ReadAttempts = 1, // рабочая попытка чтения
-                ProcessedAtUtc = DateTime.UtcNow,
+                ReceivedAtUtc = DateTime.UtcNow,
             }, cancellationToken);
 
             return true;
@@ -58,24 +58,33 @@ public class InboxService(IAppDbContext context) : IInboxService
         }
     }
 
-    public async Task MarkAsProcessedAsync(Guid messageId, CancellationToken cancellationToken = default)
+    public async Task MarkAsProcessedAsync(Guid messageId, string messageType, CancellationToken cancellationToken = default)
     {
-        var message = await GetOrThrowAsync(messageId, cancellationToken);
+        var message = await GetOrThrowAsync(messageId, messageType, cancellationToken);
 
         message.ProcessedAtUtc = DateTime.UtcNow;
         message.Error = null;
     }
 
-    public async Task MarkAsFailedAsync(Guid messageId, string errorMessage, CancellationToken cancellationToken = default)
+    public async Task MarkAsFailedAsync(Guid messageId, string messageType, string errorMessage, CancellationToken cancellationToken = default)
     {
-        var message = await GetOrThrowAsync(messageId, cancellationToken);
+        var message = await GetOrThrowAsync(messageId, messageType, cancellationToken);
         message.ProcessedAtUtc = DateTime.UtcNow;
         message.Error = errorMessage;
     }
 
-    private async Task<InboxMessage> GetOrThrowAsync(Guid messageId, CancellationToken cancellationToken)
+    private async Task<InboxMessage> GetOrThrowAsync(Guid messageId, string messageType, CancellationToken cancellationToken)
     {
-        return await context.Inbox.FirstOrDefaultAsync(m => m.TraceId == messageId, cancellationToken)
+        // Transactinoal Inbox save changes перед коммитом всей транзакции
+        // Если мы только что сделали AddAsync на текущем шаге транзакции, Local его мгновенно найдет!
+        var localMessage = context.Inbox.Local.FirstOrDefault(m => m.TraceId == messageId && m.Type == messageType);
+        if (localMessage is not null)
+        {
+            return localMessage;
+        }
+
+        // Если в памяти нет — идем искать в физическую СУБД (для повторных попыток Redelivery)
+        return await context.Inbox.FirstOrDefaultAsync(m => m.TraceId == messageId && m.Type == messageType, cancellationToken)
             ?? throw new InvalidOperationException($"Сообщение {messageId} не найдено в Inbox. Сначала вызовите ReceiveAsync.");
     }
 }

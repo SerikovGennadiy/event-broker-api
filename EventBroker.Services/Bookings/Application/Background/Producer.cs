@@ -84,6 +84,8 @@ internal class Producer : BackgroundService
 
                     if (deliveryResult.Status == PersistenceStatus.Persisted)
                     {
+                        _logger.LogInformation("{MARKER}: сообщение {@Message} отправлено в шину", MARKER, outboxMessage.Content);
+
                         outboxMessage.ProcessedAtUtc = DateTime.UtcNow;
                         outboxMessage.Error = null;
                     }

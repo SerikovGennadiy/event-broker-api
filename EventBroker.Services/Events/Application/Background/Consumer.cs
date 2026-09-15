@@ -3,6 +3,7 @@ using Events.Application.Contracts.Services;
 using Events.Application.Contracts.Services.Messaging;
 using Events.Domain.Exceptions;
 using Messaging.Bookings;
+using Messaging.Events;
 using Messaging.Saga;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -20,6 +21,13 @@ internal class Consumer(IServiceProvider provider, ILogger<Consumer> logger) : B
     private const string MARKER = "Event.API [Consumer]";
     private const string TRACE_HEADER = "trace-id";
 
+    private static readonly JsonSerializerOptions Options = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        PropertyNameCaseInsensitive = true,
+        WriteIndented = false,
+    };
+
     private static readonly string[] TopicsList = [
         Messaging.Topics.BookingProcessing,
         Messaging.Topics.EventIntegration
@@ -27,6 +35,8 @@ internal class Consumer(IServiceProvider provider, ILogger<Consumer> logger) : B
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        await Task.Yield();
+     
         logger.LogInformation("{Marker} : запуск...", MARKER);
         using var consumer = provider.GetRequiredService<IConsumer<string, string>>();
 
@@ -81,17 +91,16 @@ internal class Consumer(IServiceProvider provider, ILogger<Consumer> logger) : B
         var context = scope.ServiceProvider.GetRequiredService<IAppDbContext>();
         var inboxService = scope.ServiceProvider.GetRequiredService<IInboxService>();
 
-        var messageId = ExtractTraceId(result);
+        var messageId = ExtraceMessageId(result);
         var messageType = ExtractMessageType(result);
 
-        if (await inboxService.HasBeenProcessedAsync(messageId, stoppingToken))
+        if (await inboxService.HasBeenProcessedAsync(messageId, messageType, stoppingToken))
             return;
 
         using var transaction = await context.Database.BeginTransactionAsync(stoppingToken);
         try
         {
             bool isReceivedAndReadyForBusiness = await inboxService.ReceiveAsync(messageId, messageType, result.Message.Value, stoppingToken);
-
             if (isReceivedAndReadyForBusiness)
             {
                 try
@@ -102,11 +111,11 @@ internal class Consumer(IServiceProvider provider, ILogger<Consumer> logger) : B
                         _ => throw new InvalidOperationException($"{MARKER}: Сервис не обрабатывает топик: {result.Topic}")
                     });
 
-                    await inboxService.MarkAsProcessedAsync(messageId, stoppingToken);
+                    await inboxService.MarkAsProcessedAsync(messageId, messageType, stoppingToken);
                 }
                 catch (Exception ex) when (ex is JsonException or InvalidOperationException or DomainException)
                 {
-                    await inboxService.MarkAsFailedAsync(messageId, ex.Message, stoppingToken);
+                    await inboxService.MarkAsFailedAsync(messageId, messageType, ex.Message, stoppingToken);
                     logger.LogWarning(ex, "{Marker} : Бизнес-обработка сообщения {Id} завершилась ошибкой, сбой зафиксирован в Inbox.", MARKER, messageId);
                 }
             }
@@ -124,11 +133,12 @@ internal class Consumer(IServiceProvider provider, ILogger<Consumer> logger) : B
     private async Task HandleBookingProcessingAsync(ConsumeResult<string, string> result, IServiceScope scope, CancellationToken stoppingToken)
     {
         var eventService = scope.ServiceProvider.GetRequiredService<IEventService>();
-        var @event = JsonSerializer.Deserialize<IBookingProcessing>(result.Message.Value);
+        var @event = JsonSerializer.Deserialize<IIntegrationMessage>(result.Message.Value, Options);
 
         switch(@event)
         {
             case BookingStarted booking:
+                logger.LogInformation("{Marker}: Получено сообщение {MessageType}: {@Message}", MARKER, nameof(BookingStarted), booking);
                 await eventService.ReserveSeats(traceId: booking.TraceId,
                                                 eventId: booking.EventId,
                                                 bookingId: booking.BookingId,
@@ -136,6 +146,7 @@ internal class Consumer(IServiceProvider provider, ILogger<Consumer> logger) : B
                                                 cancellationToken: stoppingToken);
                 break;
             case BookingRejected booking:
+                logger.LogInformation("{Marker}: Получено сообщение {MessageType}: {@Message}", MARKER, nameof(BookingRejected), booking);
                 await eventService.ReleaseSeats(traceId: booking.TraceId,
                                 eventId: booking.EventId,
                                 bookingId: booking.BookingId,
@@ -145,7 +156,7 @@ internal class Consumer(IServiceProvider provider, ILogger<Consumer> logger) : B
         }
     }
 
-    private static Guid ExtractTraceId(ConsumeResult<string, string> result)
+    private static Guid ExtraceMessageId(ConsumeResult<string, string> result)
     {
         var header = result.Message.Headers.FirstOrDefault(x => x.Key == TRACE_HEADER);
         if (header is not null && Guid.TryParse(Encoding.UTF8.GetString(header.GetValueBytes()), out Guid traceId))

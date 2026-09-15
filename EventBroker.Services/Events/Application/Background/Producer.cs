@@ -57,7 +57,7 @@ internal sealed class Producer : BackgroundService
 
         var outboxMessages = await context.Outbox
             .Where(x => x.ProcessedAtUtc == null)
-            .OrderBy(x => x.TimeStampAt)
+            .OrderBy(x => x.TimeStampAtUtc)
             .Take(50)
             .ToListAsync(stoppingToken);
 
@@ -83,6 +83,7 @@ internal sealed class Producer : BackgroundService
 
                     if (deliveryResult.Status == PersistenceStatus.Persisted)
                     {
+                        _logger.LogInformation("{MARKER}: сообщение {@Message} отправлено в шину", MARKER, outboxMessage.Content);
                         outboxMessage.ProcessedAtUtc = DateTime.UtcNow;
                         outboxMessage.Error = null;
                     }

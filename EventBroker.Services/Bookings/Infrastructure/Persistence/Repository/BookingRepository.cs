@@ -10,6 +10,8 @@ public class BookingRepository : RepositoryBase<Booking>, IBookingRepository
     { }
 
     public async Task<IEnumerable<Booking>> GetAllPendingBookingsAsync() => await FindByCondition(b => b.Status == BookingStatus.Pending).ToListAsync();
+    public async Task<IEnumerable<Booking>> GetAllBookingsByEventdAsync(Guid eventId) => await FindByCondition(b => b.EventId == eventId).ToListAsync();
+
     public async Task<IEnumerable<Booking>> GetAllBookingsByUserIdAsync(Guid userId) =>
         await FindByCondition(b => b.UserId == userId && b.Status != BookingStatus.Cancelled && b.Status != BookingStatus.Rejected).ToListAsync();
     public async Task<Booking?> GetByIdAsync(Guid id) => await Task.FromResult(FindByCondition(x => x.Id == id).SingleOrDefault());

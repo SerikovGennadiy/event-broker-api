@@ -11,11 +11,12 @@ public sealed class InboxMessageConfiguration : IEntityTypeConfiguration<InboxMe
         // Имя таблицы в PostgreSQL (желательно в snake_case или PascalCase, как принято в проекте)
         builder.ToTable("InboxMessages");
 
-        // ПЕРВИЧНЫЙ КЛЮЧ: Сквозной TraceId сообщения
-        builder.HasKey(x => x.TraceId);
+        builder.HasKey(x => x.Id);
 
-        // ЗАЩИТА: Отключаем автоматическую генерацию ID базой данных, так как ключ всегда пишется руками
-        builder.Property(x => x.TraceId)
+        builder.Property(x => x.Id)
+               .IsRequired();
+
+        builder.Property(x => x.TraceId) 
                .ValueGeneratedNever()
                .IsRequired();
 
