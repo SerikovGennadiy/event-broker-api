@@ -21,7 +21,7 @@ public static class DIExtensions
             opts.UseNpgsql(connectionString, m => m.MigrationsAssembly("Bookings.Infrastructure"));
         });
 
-        services.AddScoped<IAppDbContext, AppDbContext>();
+        services.AddScoped<IAppDbContext>(sp => sp.GetRequiredService<AppDbContext>());
 
         return services;
     }
@@ -29,7 +29,6 @@ public static class DIExtensions
     public static IServiceCollection ConfigureRepositoryManager(this IServiceCollection services)
     {
         services.AddScoped<IRepositoryManager, RepositoryManager>();
-        services.AddScoped<IAppDbContext>(sp => sp.GetRequiredService<AppDbContext>());
         return services;
     }
 }

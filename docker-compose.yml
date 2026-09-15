@@ -1,13 +1,6 @@
-# PostgreSQL для EventApi — совпадает с ConnectionStrings:DefaultConnection в appsettings.json
-# Запуск из корня репозитория: docker compose up -d
-# Остановка: docker compose down
-# Данные сохраняются в именованном томе eventapi_pgdata
 version: '3.8'
 
 services:
-  # ---------------------------------------------------------------------------
-  # ИНФРАСТРУКТУРА: Базы Данных PostgreSQL (Разделение Database-per-Service)
-  # ---------------------------------------------------------------------------
   users-db:
     image: postgres:16-alpine
     container_name: users-db
@@ -31,7 +24,12 @@ services:
       - "127.0.0.1:7051:5432"
     volumes:
       - events_db_data:/var/lib/postgresql/data
-
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d events_db"]
+      interval: 3s
+      timeout: 3s
+      retries: 5
+  
   bookings-db:
     image: postgres:16-alpine
     container_name: bookings-db
@@ -40,13 +38,15 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: bookings_db
     ports:
-      - "127.0.0.1:7052:5433"
+      - "127.0.0.1:7052:5432"
     volumes:
       - bookings_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d bookings_db"]
+      interval: 3s
+      timeout: 3s
+      retries: 5
 
-  # ---------------------------------------------------------------------------
-  # ИНФРАСТРУКТУРА: Брокер сообщений Kafka (KRaft режим без Zookeeper)
-  # ---------------------------------------------------------------------------
   kafka:
     image: confluentinc/cp-kafka:7.5.0
     container_name: kafka-broker
@@ -59,7 +59,7 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
-      KAFKA_TRANSACTION_STATE_LOG_REREPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1 
       KAFKA_PROCESS_ROLES: 'broker,controller'
       KAFKA_CONTROLLER_QUORUM_VOTERS: '1@kafka:29093'
       KAFKA_LISTENERS: 'PLAINTEXT://0.0.0.0:29092,CONTROLLER://0.0.0.0:29093,PLAINTEXT_HOST://0.0.0.0:9092'
@@ -68,9 +68,6 @@ services:
       KAFKA_LOG_DIRS: '/tmp/kraft-combined-logs'
       CLUSTER_ID: 'MkU3OEVBNTcwNTJENDM2Qk'
 
-  # ---------------------------------------------------------------------------
-  # МИКРОСЕРВИСЫ ПРИЛОЖЕНИЯ
-  # ---------------------------------------------------------------------------
   users-service:
     image: users-service:latest
     build:
@@ -92,11 +89,15 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ConnectionStrings__DefaultConnection=Host=events-db;Port=5432;Database=events_db;Username=postgres;Password=postgres
-      - Kafka__BootstrapServers=kafka:29092 # Настройка сети для докера
+      - Kafka__BootstrapServers=kafka:29092
       - Kafka__GroupId=events-service-group
     depends_on:
-      - events-db
-      - kafka
+      events-db:
+        condition: service_healthy 
+      kafka:
+        condition: service_started
+      kafka-init:
+        condition: service_completed_successfully
 
   bookings-service:
     image: bookings-service:latest
@@ -107,11 +108,15 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ConnectionStrings__DefaultConnection=Host=bookings-db;Port=5432;Database=bookings_db;Username=postgres;Password=postgres
-      - Kafka__BootstrapServers=kafka:29092 # Настройка сети для докера
+      - Kafka__BootstrapServers=kafka:29092
       - Kafka__GroupId=bookings-service-group
     depends_on:
-      - bookings-db
-      - kafka
+      bookings-db:
+        condition: service_healthy 
+      kafka:
+        condition: service_started
+      kafka-init:
+        condition: service_completed_successfully
 
   api-gateway:
     image: api-gateway:latest
@@ -120,13 +125,30 @@ services:
       dockerfile: EventBroker.API/Dockerfile
     container_name: api-gateway
     ports:
-      - "5000:8080" # Единственный публичный порт системы во внешний мир!
+      - "5000:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
     depends_on:
-      - users-service
-      - events-service
-      - bookings-service
+      users-service:
+        condition: service_started
+      events-service:
+        condition: service_started
+      bookings-service:
+        condition: service_started
+
+  kafka-init:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: kafka-init
+    depends_on:
+      - kafka
+    entrypoint: [ '/bin/bash', '-c' ]
+    command:
+      - |
+        cub kafka-ready 1 40 -b kafka:29092 &&
+        kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists --topic event-booking --partitions 1 --replication-factor 1 &&
+        kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists --topic event-integration --partitions 1 --replication-factor 1 &&
+        kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists --topic booking-processing --partitions 1 --replication-factor 1 &&
+        echo 'All topics created successfully.'
 
 volumes:
   users_db_data:
