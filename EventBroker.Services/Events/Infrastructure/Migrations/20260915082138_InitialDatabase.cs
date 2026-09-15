@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace Bookings.Infrastructure.Migrations
+namespace Events.Infrastructure.Migrations
 {
     /// <inheritdoc />
     public partial class InitialDatabase : Migration
@@ -12,72 +12,58 @@ namespace Bookings.Infrastructure.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "Bookings",
+                name: "Events",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    EventId = table.Column<Guid>(type: "uuid", nullable: false),
-                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    Status = table.Column<string>(type: "text", nullable: false),
-                    ProcessedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                    Title = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    StartAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    EndAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    Description = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
+                    TotalSeats = table.Column<int>(type: "integer", nullable: false),
+                    AvailableSeats = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Bookings", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "EventReads",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    StartAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_EventReads", x => x.Id);
+                    table.PrimaryKey("PK_Events", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
                 name: "InboxMessages",
                 columns: table => new
                 {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
                     TraceId = table.Column<Guid>(type: "uuid", nullable: false),
                     Type = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
+                    Error = table.Column<string>(type: "text", nullable: true),
                     Content = table.Column<string>(type: "text", nullable: true),
-                    ReceivedAtUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    ProcessedAtUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     ReadAttempts = table.Column<int>(type: "integer", nullable: false, defaultValue: 0),
-                    Error = table.Column<string>(type: "text", nullable: true)
+                    ReceivedAtUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    ProcessedAtUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_InboxMessages", x => x.TraceId);
+                    table.PrimaryKey("PK_InboxMessages", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
                 name: "OutboxMessages",
                 columns: table => new
                 {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
                     TraceId = table.Column<Guid>(type: "uuid", nullable: false),
                     PartitionKey = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
                     Type = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
-                    Topic = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
                     Content = table.Column<string>(type: "text", nullable: false),
-                    TimeStampUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    Topic = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
+                    TimeStampAtUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     ProcessedAtUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     Error = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_OutboxMessages", x => x.TraceId);
+                    table.PrimaryKey("PK_OutboxMessages", x => x.Id);
                 });
-
-            migrationBuilder.CreateIndex(
-                name: "IX_EventReads_StartAt",
-                table: "EventReads",
-                column: "StartAt");
 
             migrationBuilder.CreateIndex(
                 name: "IX_InboxMessages_Verification",
@@ -87,17 +73,14 @@ namespace Bookings.Infrastructure.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_OutboxMessages_Pending",
                 table: "OutboxMessages",
-                columns: new[] { "ProcessedAtUtc", "TimeStampUtc" });
+                columns: new[] { "ProcessedAtUtc", "TimeStampAtUtc" });
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "Bookings");
-
-            migrationBuilder.DropTable(
-                name: "EventReads");
+                name: "Events");
 
             migrationBuilder.DropTable(
                 name: "InboxMessages");

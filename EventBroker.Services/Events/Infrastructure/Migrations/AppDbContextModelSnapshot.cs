@@ -24,7 +24,8 @@ namespace Events.Infrastructure.Migrations
 
             modelBuilder.Entity("Events.Application.Common.Messaging.InboxMessage", b =>
                 {
-                    b.Property<Guid>("TraceId")
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<string>("Content")
@@ -44,12 +45,15 @@ namespace Events.Infrastructure.Migrations
                     b.Property<DateTime>("ReceivedAtUtc")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<Guid>("TraceId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("Type")
                         .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
-                    b.HasKey("TraceId");
+                    b.HasKey("Id");
 
                     b.HasIndex("TraceId", "ProcessedAtUtc")
                         .HasDatabaseName("IX_InboxMessages_Verification");
@@ -59,7 +63,7 @@ namespace Events.Infrastructure.Migrations
 
             modelBuilder.Entity("Events.Application.Common.Messaging.OutboxMessage", b =>
                 {
-                    b.Property<Guid>("TraceId")
+                    b.Property<Guid>("Id")
                         .HasColumnType("uuid");
 
                     b.Property<string>("Content")
@@ -77,7 +81,7 @@ namespace Events.Infrastructure.Migrations
                     b.Property<DateTime?>("ProcessedAtUtc")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime>("TimeStampAt")
+                    b.Property<DateTime>("TimeStampAtUtc")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Topic")
@@ -85,14 +89,17 @@ namespace Events.Infrastructure.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
+                    b.Property<Guid>("TraceId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("Type")
                         .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
-                    b.HasKey("TraceId");
+                    b.HasKey("Id");
 
-                    b.HasIndex("ProcessedAtUtc", "TimeStampAt")
+                    b.HasIndex("ProcessedAtUtc", "TimeStampAtUtc")
                         .HasDatabaseName("IX_OutboxMessages_Pending");
 
                     b.ToTable("OutboxMessages", (string)null);

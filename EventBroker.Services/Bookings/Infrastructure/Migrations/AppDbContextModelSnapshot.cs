@@ -24,7 +24,8 @@ namespace Bookings.Infrastructure.Migrations
 
             modelBuilder.Entity("Bookings.Application.Common.Messaging.InboxMessage", b =>
                 {
-                    b.Property<Guid>("TraceId")
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<string>("Content")
@@ -44,12 +45,15 @@ namespace Bookings.Infrastructure.Migrations
                     b.Property<DateTime>("ReceivedAtUtc")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<Guid>("TraceId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("Type")
                         .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
-                    b.HasKey("TraceId");
+                    b.HasKey("Id");
 
                     b.HasIndex("TraceId", "ProcessedAtUtc")
                         .HasDatabaseName("IX_InboxMessages_Verification");
@@ -59,7 +63,7 @@ namespace Bookings.Infrastructure.Migrations
 
             modelBuilder.Entity("Bookings.Application.Common.Messaging.OutboxMessage", b =>
                 {
-                    b.Property<Guid>("TraceId")
+                    b.Property<Guid>("Id")
                         .HasColumnType("uuid");
 
                     b.Property<string>("Content")
@@ -85,12 +89,15 @@ namespace Bookings.Infrastructure.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
+                    b.Property<Guid>("TraceId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("Type")
                         .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
-                    b.HasKey("TraceId");
+                    b.HasKey("Id");
 
                     b.HasIndex("ProcessedAtUtc", "TimeStampUtc")
                         .HasDatabaseName("IX_OutboxMessages_Pending");
