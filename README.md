@@ -90,14 +90,12 @@ use case прост (с возможным овербукингом):
 2. *SemaphoreSlim* - ограничение количества одновременно выполняемых асинхронных операций. Метод WaitAsync не блокирует поток — позволяет эффективно ждать в асинхронном коде.
 
 ## 🏯 Архитектура
-Приложение построено по принципам Clean Archtiecture. И организовано на проектах-слоях:
-- **Domain.csproj** - ядро системы (хранение бизнес-сущностей) системы обработки мероприятий (Event и Booking)
-- **Infrastruture.csproj** - техническая реализация подсистемы хранения, получения данных, управление схемой БД
-- **Application.csproj** - содержит контракты к системе доступа к данным и сервисов (и реализации этих контрактов) (usecases') приложения, также фоновая обработка бронирования на мероприятия
-- **Presentation.csporj** - точка входа в приложение, конфигурирование DI, запуск миграций и енд-пойнтов (контроллеров) прилодения
+Приложение построено по принципам Clean Architecture и организовано как микросервисы (решение `event-broker-api.sln`):
+- **EventBroker.Services/Users**, **Events**, **Bookings** - независимые сервисы, каждый со слоями Domain / Application / Infrastructure / Presentation
+- **EventBroker.Contracts** (`Messaging`, `Enums`) - общие контракты сообщений (Kafka-топики `event-booking`, `event-integration`) и перечисления
+- **EventBroker.API** - API-gateway (YARP) с агрегированной OpenAPI/Scalar-документацией
 ----------------
-- **EventBrokerAPI.IntegrationTests.csproj** - интеграционные тесты
-- **EventBrokerAPI.Test.csproj** - unit-тестирование
+Монолитные проекты `Application`, `Domain`, `Infrastructure`, `Presentation` удалены из репозитория (код перенесён в `EventBroker.Services` и `EventBroker.Contracts`). Вместе с ними удалены старые тестовые проекты `EventBroker.Tests` (были привязаны к коду монолита и не входили в sln).
 
 ## 📦 Модели данных
 
@@ -166,12 +164,10 @@ API использует docker-контейнер СУБД PostgreSQL (Unit-т�
 5. выполните **docker compose up -d** (команда ищет по умолчанию файл конфигурации и выполняет развертывание и запуск контейнера c СУБД PostgreSQL)
 6. выполните **docker ps --filter "name=eventapi-postgres"** (убедитесь, что контейнер работает, тоже самое можно легко проверить, Docker Desktop)
 
-## Unit-тестирование
-1. выполните запуск **dotnet test ./EventBrokerAPI.Tests/EventBrokerAPI.Tests.csproj**
-
-## Интеграционные тесты репозиториев
-1. выполните запуск **dotnet test ./EventBrokerAPI.IntegrationTests/EventBrokerAPI.IntegrationTests.csproj**
+## Тестирование
+Старые тестовые проекты удалены вместе с кодом монолита. Актуальный набор тестов — в разработке.
 
 ## Запуск API
-1. убедитесь, что порт указанный в настройках запуска свободен
-2. выполните **dotnet run --project ./Presentation/Presentation.csproj**
+1. убедитесь, что порты, указанные в настройках запуска и `docker-compose.yml`, свободны
+2. выполните **docker compose up --build** (поднимает Kafka, PostgreSQL, микросервисы и API-gateway)
+3. либо запустите нужный микросервис/шлюз отдельно, например **dotnet run --project ./EventBroker.API/EventBroker.API.csproj**
