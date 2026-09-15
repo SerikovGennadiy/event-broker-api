@@ -153,6 +153,15 @@ internal class Consumer(IServiceProvider provider, ILogger<Consumer> logger) : B
                                 userId: booking.UserId,
                                 cancellationToken: stoppingToken);
                 break;
+            case BookingCancelled booking:
+                logger.LogInformation("{Marker}: Получено сообщение {MessageType}: {@Message}", MARKER, nameof(BookingCancelled), booking);
+                await eventService.ReleaseSeats(traceId: booking.TraceId,
+                                eventId: booking.EventId,
+                                bookingId: booking.BookingId,
+                                userId: booking.UserId,
+                                cancellationToken: stoppingToken);
+                break;
+
         }
     }
 
