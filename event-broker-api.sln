@@ -3,11 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "deploy", "deploy", "{754FC069-D67B-A9D7-50A1-8D1CA196D8F1}"
-	ProjectSection(SolutionItems) = preProject
-		docker-compose.yml = docker-compose.yml
-	EndProjectSection
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "EventBroker.Services", "EventBroker.Services", "{36D591C7-65C7-A0D1-1CBC-10CDE441BDC8}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Bookings", "Bookings", "{F938BB52-8E0A-49B7-B0E7-049A53290B0C}"
@@ -47,6 +42,11 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Enums", "EventBroker.Contracts\Enums\Enums.csproj", "{F53EA46E-D6D9-4903-8FED-424106F7BF43}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventBroker.API", "EventBroker.API\EventBroker.API.csproj", "{51F391CA-72B8-4C28-A06B-F337B0831F75}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Элементы решения", "Элементы решения", "{8AA86CD4-411C-4EC2-888B-F49D0CF8FF5A}"
+	ProjectSection(SolutionItems) = preProject
+		deploy\docker-compose.yml = deploy\docker-compose.yml
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
