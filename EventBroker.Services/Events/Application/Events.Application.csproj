@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net9.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="../Domain/Events.Domain.csproj" />
+		<ProjectReference Include="..\..\..\EventBroker.Contracts\Enums\Enums.csproj" />
+		<ProjectReference Include="..\..\..\EventBroker.Contracts\Messaging\Messaging.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="AutoMapper" Version="16.1.1" />
+		<PackageReference Include="Confluent.Kafka" Version="2.15.0" />
+		<PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.3.12" />
+		<PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="9.0.20" />
+		<PackageReference Include="Microsoft.Extensions.Identity.Core" Version="10.0.11" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.17" />
+	</ItemGroup>
+
+</Project>

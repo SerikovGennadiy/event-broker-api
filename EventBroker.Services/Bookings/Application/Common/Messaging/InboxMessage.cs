@@ -1,0 +1,16 @@
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace Bookings.Application.Common.Messaging;
+
+public class InboxMessage
+{
+    [Key]
+    public Guid Id { get; set; }
+    public Guid TraceId { get; set; }
+    public string Type { get; set; } = string.Empty;
+    public string? Content { get; set; } = string.Empty;
+    public DateTime ReceivedAtUtc { get; set; }
+    public DateTime? ProcessedAtUtc { get; set; }
+    public int ReadAttempts { get; set; }
+    public string? Error { get; set; }
+}
