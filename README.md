@@ -31,6 +31,7 @@ API позволяет создавать, читать, обновлять и �
 | Метод | URL | Описание | Payload |
 |-------|-------|-------|-------|
 | **GET**         | /events |получение списка всех событий           |-|
+| **GET**         | /events/top |получение списка 10 самых продаваемых событий           | процент проданных билетов (TotalSeats - AvailableSeats) / TotalSeats|
 | **GET**         | /bookings/{bookingId:guid} |получение информации о бронировании на событие           |-|
 | **DELETE/{id}** | /bookings/delete/{booking:guid} | удаление (полная отмена, даже утвержденной брони | доступна Администратору |
 | **POST**        | /bookings/book/{eventId:guid} |создание неподтвержденного бронирования на мероприятие |json модель бронирования (см ниже)|
@@ -182,7 +183,8 @@ use case прост (с возможным овербукингом):
 1. откройте терминал
 2. клонируйте проект **git clone -b sprint_9 https://github.com/SerikovGennadiy/event-broker-api.git**
 3. перейдите в директорию **cd event-broker-api (содержащую sln файл решения)**
-
+4. создайте файл **.env** (рядом с файлом docker-compose.yml) добавьте строку ***REDIS_PASSWORD=<ваш парол от кеш-сервиса>***
+   
 ## Тестирование
 Проект `EventBroker.Tests/Events.Tests.csproj` (xUnit + Moq + EF InMemory), запуск:
 1. выполните **dotnet test ./EventBroker.Tests/Events.Tests.csproj**
