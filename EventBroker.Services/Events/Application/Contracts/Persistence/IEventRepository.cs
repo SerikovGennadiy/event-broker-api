@@ -5,9 +5,10 @@ namespace Events.Application.Contracts.Persistence;
 
 public interface IEventRepository
 {
-    Task<PaginatedList<Event>> GetAllEventsAsync(EventParameters eventParameters);
     Task<Event?> GetByIdAsync(Guid id);
-
+    Task<PaginatedList<Event>> GetAllEventsAsync(EventParameters eventParameters);
+    Task<IReadOnlyList<Event>> GetTop10SellingEventsAsync();
     void CreateEvent(Event entity);
     void DeleteEvent(Event entity);
+    Task InvalidateEventCacheAsync(Guid id);
 }

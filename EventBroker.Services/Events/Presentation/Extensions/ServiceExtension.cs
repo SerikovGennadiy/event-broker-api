@@ -26,6 +26,8 @@ public static class ServiceExtensions
                     settings.BootstrapServers = configuration["Kafka:BootstrapServers"] ?? "localhost:9092";
                     settings.GroupId = configuration["Kafka:GroupId"] ?? "bookings-service-group";
                 })
+                .ConfigureRedisOptions(configuration)
+                .ConfigureRedis()
                 .AddControllers();
 
         return services;
@@ -88,5 +90,5 @@ public static class ServiceExtensions
         return services;
     }
     #endregion
-
+ 
 }
