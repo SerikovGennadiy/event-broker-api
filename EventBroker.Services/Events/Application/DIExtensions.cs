@@ -86,6 +86,8 @@ public static class DIExtensions
             return ConnectionMultiplexer.Connect(redisOptions);
         });
 
+        services.AddSingleton(sp => sp.GetRequiredService<IConnectionMultiplexer>().GetDatabase());
+
         return services;
     }
 }

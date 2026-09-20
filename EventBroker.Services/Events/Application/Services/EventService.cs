@@ -31,6 +31,12 @@ public class EventService(IRepositoryManager repositoryManager, IMapper mapper, 
         return mapper.Map<EventInfo>(entity);
     }
 
+    public async Task<IEnumerable<EventInfo>> GetTop10SellingEventsAsync()
+    {
+        var events = await repositoryManager.Event.GetTop10SellingEventsAsync();
+        return mapper.Map<IEnumerable<EventInfo>>(events);
+    }
+
     public async Task<EventInfo> CreateEventAsync(CreateEvent eventDTO, CancellationToken stoppingToken = default)
     {
         ValidateEvent(eventDTO);
@@ -43,8 +49,6 @@ public class EventService(IRepositoryManager repositoryManager, IMapper mapper, 
                                                          Title: entity.Title,
                                                          StartAt: entity.StartAt,
                                                          EndAt: entity.EndAt);
-        await outboxService.EnqueueMessageAsync(integrationEvent, Topics.EventIntegration, stoppingToken);
-
         await repositoryManager.SaveAsync();
 
         return mapper.Map<EventInfo>(entity);
@@ -66,6 +70,7 @@ public class EventService(IRepositoryManager repositoryManager, IMapper mapper, 
         await outboxService.EnqueueMessageAsync(integrationEvent, Topics.EventIntegration, stoppingToken);
 
         await repositoryManager.SaveAsync();
+        await repositoryManager.Event.InvalidateEventCacheAsync(entity.Id);
     }
 
     public async Task DeleteEventAsync(Guid eventId, CancellationToken stoppingToken = default)
@@ -77,6 +82,7 @@ public class EventService(IRepositoryManager repositoryManager, IMapper mapper, 
         await outboxService.EnqueueMessageAsync(integrationEvent, Topics.EventIntegration, stoppingToken);
 
         await repositoryManager.SaveAsync();
+        await repositoryManager.Event.InvalidateEventCacheAsync(entity.Id);
     }
 
     public async Task ReserveSeats(Guid traceId, Guid eventId, Guid bookingId, Guid userId, CancellationToken stoppingToken)
@@ -95,11 +101,12 @@ public class EventService(IRepositoryManager repositoryManager, IMapper mapper, 
                                                                                       EventId: eventId,
                                                                                       UserId: userId,
                                                                                       Error: "Нет доступного кол-ва мест"),
-                                                    topic: Topics.BookingProcessing,
-                                                    cancellationToken: stoppingToken);
+                                                     topic: Topics.BookingProcessing,
+                                                     cancellationToken: stoppingToken);
 
 
         await repositoryManager.SaveAsync();
+        await repositoryManager.Event.InvalidateEventCacheAsync(eventId);
     }
 
     public async Task ReleaseSeats(Guid traceId, Guid eventId, Guid bookingId, Guid userId,  CancellationToken stoppingToken)
@@ -111,10 +118,11 @@ public class EventService(IRepositoryManager repositoryManager, IMapper mapper, 
                                                                          BookingId: bookingId,
                                                                          EventId: eventId,
                                                                          UserId: userId),
-                                                topic: Topics.BookingProcessing,
-                                                cancellationToken: stoppingToken);
+                                                 topic: Topics.BookingProcessing,
+                                                 cancellationToken: stoppingToken);
 
         await repositoryManager.SaveAsync();
+        await repositoryManager.Event.InvalidateEventCacheAsync(eventId);
     }
 
     #region Обертки с валидацей 

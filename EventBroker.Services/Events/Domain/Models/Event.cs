@@ -1,5 +1,6 @@
 ﻿using Events.Domain.Models.Contracts;
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace Events.Domain.Models;
 
@@ -30,7 +31,10 @@ public class Event : IdEntity, IReadOnlyEvent
     /// <summary>Навигация — брони на мероприятие</summary>
     // public ICollection<Booking> Bookings { get; set; } = new List<Booking>();
 
-    // приватный конструктор под EFCore
+    // приватный конструктор под EFCore.
+    // JsonConstructor нужен десериализатору кеша (System.Text.Json):
+    // публичного конструктора у агрегата нет.
+    [JsonConstructor]
     private Event() { }
 
     public static Event Create(string title, DateTime startAt, DateTime endAt, string? description, int totalSeats)
