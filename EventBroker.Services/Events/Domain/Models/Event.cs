@@ -26,6 +26,12 @@ public class Event : IdEntity, IReadOnlyEvent
     public required int TotalSeats { get; set; }
 
     /// <summary>Количество оставшихся свободных мест на мероприятии</summary>
+    /// <remarks>
+    /// JsonInclude нужен десериализатору кеша (System.Text.Json):
+    /// свойства с непубличным сеттером по умолчанию пропускаются при чтении,
+    /// без атрибута закэшированная сущность возвращалась бы с AvailableSeats = 0.
+    /// </remarks>
+    [JsonInclude]
     public int AvailableSeats { get; internal set; }
 
     /// <summary>Навигация — брони на мероприятие</summary>
