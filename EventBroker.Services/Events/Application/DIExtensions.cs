@@ -6,6 +6,7 @@ using Events.Application.Services;
 using Events.Application.Services.Messaging;
 using Events.Domain.Options;
 using Microsoft.Extensions.DependencyInjection;
+using StackExchange.Redis;
 
 namespace Events.Application;
 
@@ -62,6 +63,28 @@ public static class DIExtensions
         // 4. Фоновые воркеры 
         services.AddHostedService<Producer>();
         services.AddHostedService<Consumer>();
+
+        return services;
+    }
+
+    public static IServiceCollection ConfigureRedis(this IServiceCollection services, Action<RedisSettings> configure)
+    {
+        var redisSettings = new RedisSettings();
+        configure(redisSettings);
+
+        var redisOptions = new ConfigurationOptions
+        {
+            EndPoints = { redisSettings.EndPoint },
+            Password = redisSettings.Password,
+            ConnectTimeout = redisSettings.ConnectTimeout,
+            SyncTimeout = redisSettings.SyncTimeout,
+            AbortOnConnectFail = redisSettings.AbortOnConnectFail,
+        };
+
+        services.AddSingleton<IConnectionMultiplexer>(sp =>
+        {
+            return ConnectionMultiplexer.Connect(redisOptions);
+        });
 
         return services;
     }

@@ -77,8 +77,11 @@ services:
     image: redis:7
     ports:
       - "6379:6379"
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD}"]
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD-SHELL", "REDISCLI_AUTH=\"$$REDIS_PASSWORD\" redis-cli PING | grep -q PONG"]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -108,6 +111,7 @@ services:
       - ConnectionStrings__DefaultConnection=Host=events-db;Port=5432;Database=events_db;Username=postgres;Password=postgres
       - Kafka__BootstrapServers=kafka:29092
       - Kafka__GroupId=events-service-group
+      - Redis__Password=${REDIS_PASSWORD}
     depends_on:
       events-db:
         condition: service_healthy 
