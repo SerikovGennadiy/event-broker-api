@@ -69,14 +69,13 @@ public static class DIExtensions
         return services;
     }
     public static IServiceCollection ConfigureRedisOptions(this IServiceCollection services, IConfiguration configuration) =>
-         services.Configure<RedisSettings>(configuration.GetSection(nameof(RedisSettings.Section)));
+         services.Configure<RedisSettings>(configuration.GetSection(RedisSettings.Section));
 
-    public static IServiceCollection ConfigureRedis(this IServiceCollection services, Action<RedisSettings> configure)
+    public static IServiceCollection ConfigureRedis(this IServiceCollection services)
     {
         services.AddSingleton<IConnectionMultiplexer>(sp =>
         {
             var redisSettings = sp.GetRequiredService<IOptions<RedisSettings>>().Value;
-            configure(redisSettings);
 
             var redisOptions = new ConfigurationOptions
             {

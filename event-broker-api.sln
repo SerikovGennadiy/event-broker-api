@@ -45,7 +45,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventBroker.API", "EventBro
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Элементы решения", "Элементы решения", "{8AA86CD4-411C-4EC2-888B-F49D0CF8FF5A}"
 	ProjectSection(SolutionItems) = preProject
-		.env = .env
 		deploy\docker-compose.yml = deploy\docker-compose.yml
 		README.md = README.md
 	EndProjectSection

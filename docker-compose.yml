@@ -13,7 +13,7 @@ services:
     volumes:
       - users_db_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d eventapi"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d users_db"]
       interval: 3s
       timeout: 3s
       retries: 5
@@ -52,20 +52,6 @@ services:
       timeout: 3s
       retries: 5
 
-  redis:
-    image: redis:7-alpine
-    container_name: events-redis
-    ports:
-      - "127.0.0.1:6379:6379"
-    command: ["redis-server", "--requirepass", "redisSecret12345", "--appendonly", "yes"]
-    volumes:
-      - redis_data:/data
-    healthcheck:
-      test: ["CMD", "redis-cli", "-a", "redisSecret12345", "ping"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
-
   kafka:
     image: confluentinc/cp-kafka:7.5.0
     container_name: kafka-broker
@@ -86,6 +72,21 @@ services:
       KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
       KAFKA_LOG_DIRS: '/tmp/kraft-combined-logs'
       CLUSTER_ID: 'MkU3OEVBNTcwNTJENDM2Qk'
+  
+  redis:
+    image: redis:7.2-alpine
+    container_name: eventapi-redis
+    ports:
+      - "6379:6379"
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD}"]
+    healthcheck:
+      test: ["CMD-SHELL", "REDISCLI_AUTH=\"$$REDIS_PASSWORD\" redis-cli PING | grep -q PONG"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
 
   users-service:
     image: users-service:latest
@@ -111,17 +112,17 @@ services:
       - ConnectionStrings__DefaultConnection=Host=events-db;Port=5432;Database=events_db;Username=postgres;Password=postgres
       - Kafka__BootstrapServers=kafka:29092
       - Kafka__GroupId=events-service-group
-      - Redis__EndPoint=redis:6379
-      - Redis__Password=redisSecret12345
+      - Redis__EndPoint=eventapi-redis:6379
+      - Redis__Password=${REDIS_PASSWORD}
     depends_on:
       events-db:
         condition: service_healthy 
-      redis:
-        condition: service_healthy
       kafka:
         condition: service_started
       kafka-init:
         condition: service_completed_successfully
+      redis:
+        condition: service_healthy
 
   bookings-service:
     image: bookings-service:latest
@@ -178,5 +179,4 @@ volumes:
   users_db_data:
   events_db_data:
   bookings_db_data:
-  redis_data:
 
