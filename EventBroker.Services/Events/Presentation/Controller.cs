@@ -33,6 +33,14 @@ public class EventController(IEventService eventService) : ControllerBase
         return Ok(eventDTO);
     }
 
+    [HttpGet("top", Name = "TopEvents")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetTopEvents()
+    {
+        var events = await eventService.GetTop10SellingEventsAsync();
+        return Ok(events);
+    }
+
     [HttpPost]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> CreateEvent([FromBody] CreateEvent eventDTO, CancellationToken stoppingToken = default)
