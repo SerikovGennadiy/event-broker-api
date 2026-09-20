@@ -74,7 +74,8 @@ services:
       CLUSTER_ID: 'MkU3OEVBNTcwNTJENDM2Qk'
   
   redis:
-    image: redis:7
+    image: redis:7.2-alpine
+    container_name: eventapi-redis
     ports:
       - "6379:6379"
     environment:
@@ -111,6 +112,7 @@ services:
       - ConnectionStrings__DefaultConnection=Host=events-db;Port=5432;Database=events_db;Username=postgres;Password=postgres
       - Kafka__BootstrapServers=kafka:29092
       - Kafka__GroupId=events-service-group
+      - Redis__EndPoint=eventapi-redis:6379
       - Redis__Password=${REDIS_PASSWORD}
     depends_on:
       events-db:

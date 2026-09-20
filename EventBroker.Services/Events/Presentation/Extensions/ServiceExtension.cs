@@ -28,11 +28,8 @@ public static class ServiceExtensions
                 })
                 .ConfigureRedis(settings =>
                 {
-                    settings.EndPoint =  configuration["Redis:EndPoint"] ?? "localhost:6379";
+                    settings.EndPoint = configuration["Redis:EndPoint"] ?? "localhost:6379";
                     settings.Password = configuration["Redis:Password"] ?? string.Empty;
-                    settings.ConnectTimeout = 5000;
-                    settings.SyncTimeout = 3000;
-                    settings.AbortOnConnectFail = false;
                 })
                 .AddControllers();
 

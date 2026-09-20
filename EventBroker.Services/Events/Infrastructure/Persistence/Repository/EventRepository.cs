@@ -1,6 +1,7 @@
 ﻿using Events.Application.Common.RequestSpecification;
 using Events.Application.Contracts.Persistence;
 using Events.Domain.Models;
+using Events.Domain.Options;
 using Events.Infrastructure.Persistence.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -24,13 +25,18 @@ public class EventRepository : RepositoryBase<Event>, IEventRepository
     private const string TopEventsKey = "events:top10";
     private const int TopEventsCount = 10;
 
-    private static readonly TimeSpan EventTtl = TimeSpan.FromMinutes(5);
-    private static readonly TimeSpan TopEventsTtl = TimeSpan.FromMinutes(1);
+    private const int DefaultEventTtlMinutes = 5;
+    private const int DefaultTopEventsTtlMinutes = 1;
 
-    public EventRepository(AppDbContext context, IDatabase cache, ILogger<EventRepository> logger) : base(context)
+    private readonly TimeSpan _eventTtl;
+    private readonly TimeSpan _topEventsTtl;
+
+    public EventRepository(AppDbContext context, IDatabase cache, ILogger<EventRepository> logger, RedisSettings cacheSettings) : base(context)
     {
         _cache = cache;
         _logger = logger;
+        _eventTtl = TimeSpan.FromMinutes(cacheSettings.EventTtlMinutes > 0 ? cacheSettings.EventTtlMinutes : DefaultEventTtlMinutes);
+        _topEventsTtl = TimeSpan.FromMinutes(cacheSettings.TopEventsTtlMinutes > 0 ? cacheSettings.TopEventsTtlMinutes : DefaultTopEventsTtlMinutes);
     }
 
     /// <summary>Cache-Aside: сначала кеш event:{id}, при промахе — БД с прогревом кеша.</summary>
@@ -56,7 +62,7 @@ public class EventRepository : RepositoryBase<Event>, IEventRepository
 
         var fromDb = await FindByCondition(x => x.Id == eventId).FirstOrDefaultAsync();
         if (fromDb is not null)
-            await TrySetAsync(key, JsonSerializer.Serialize(fromDb, JsonOptions), EventTtl);
+            await TrySetAsync(key, JsonSerializer.Serialize(fromDb, JsonOptions), _eventTtl);
 
         return fromDb;
     }
@@ -90,7 +96,7 @@ public class EventRepository : RepositoryBase<Event>, IEventRepository
             .Take(TopEventsCount)
             .ToListAsync();
 
-        await TrySetAsync(TopEventsKey, JsonSerializer.Serialize(fromDb, JsonOptions), TopEventsTtl);
+        await TrySetAsync(TopEventsKey, JsonSerializer.Serialize(fromDb, JsonOptions), _topEventsTtl);
 
         return fromDb;
     }

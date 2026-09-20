@@ -5,7 +5,9 @@ using Events.Application.Contracts.Services.Messaging;
 using Events.Application.Services;
 using Events.Application.Services.Messaging;
 using Events.Domain.Options;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using StackExchange.Redis;
 
 namespace Events.Application;
@@ -66,23 +68,25 @@ public static class DIExtensions
 
         return services;
     }
+    public static IServiceCollection ConfigureRedisOptions(this IServiceCollection services, IConfiguration configuration) =>
+         services.Configure<RedisSettings>(configuration.GetSection(nameof(RedisSettings.Section)));
 
     public static IServiceCollection ConfigureRedis(this IServiceCollection services, Action<RedisSettings> configure)
     {
-        var redisSettings = new RedisSettings();
-        configure(redisSettings);
-
-        var redisOptions = new ConfigurationOptions
-        {
-            EndPoints = { redisSettings.EndPoint },
-            Password = redisSettings.Password,
-            ConnectTimeout = redisSettings.ConnectTimeout,
-            SyncTimeout = redisSettings.SyncTimeout,
-            AbortOnConnectFail = redisSettings.AbortOnConnectFail,
-        };
-
         services.AddSingleton<IConnectionMultiplexer>(sp =>
         {
+            var redisSettings = sp.GetRequiredService<IOptions<RedisSettings>>().Value;
+            configure(redisSettings);
+
+            var redisOptions = new ConfigurationOptions
+            {
+                EndPoints = { redisSettings.EndPoint },
+                Password = redisSettings.Password,
+                ConnectTimeout = redisSettings.ConnectTimeout,
+                SyncTimeout = redisSettings.SyncTimeout,
+                AbortOnConnectFail = redisSettings.AbortOnConnectFail,
+            };
+
             return ConnectionMultiplexer.Connect(redisOptions);
         });
 
