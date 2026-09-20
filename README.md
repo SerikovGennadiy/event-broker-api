@@ -183,9 +183,7 @@ use case прост (с возможным овербукингом):
 1. откройте терминал
 2. клонируйте проект **git clone -b sprint_9 https://github.com/SerikovGennadiy/event-broker-api.git**
 3. перейдите в директорию **cd event-broker-api (содержащую sln файл решения)**
-
-[!IMPORTANT]
-4. создайте файл **.env** (рядом с файлом docker-compose.yml) добавьте строку ***REDIS_PASSWORD=<ваш парол от кеш-сервиса>***
+4. <mark>создайте файл **.env** (рядом с файлом docker-compose.yml) добавьте строку ***REDIS_PASSWORD=<ваш парол от кеш-сервиса>***</mark>
    
 ## Тестирование
 Проект `EventBroker.Tests/Events.Tests.csproj` (xUnit + Moq + EF InMemory), запуск:
