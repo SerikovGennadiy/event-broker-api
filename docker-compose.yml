@@ -52,6 +52,20 @@ services:
       timeout: 3s
       retries: 5
 
+  redis:
+    image: redis:7-alpine
+    container_name: events-redis
+    ports:
+      - "127.0.0.1:6379:6379"
+    command: ["redis-server", "--requirepass", "redisSecret12345", "--appendonly", "yes"]
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "redisSecret12345", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
   kafka:
     image: confluentinc/cp-kafka:7.5.0
     container_name: kafka-broker
@@ -97,9 +111,13 @@ services:
       - ConnectionStrings__DefaultConnection=Host=events-db;Port=5432;Database=events_db;Username=postgres;Password=postgres
       - Kafka__BootstrapServers=kafka:29092
       - Kafka__GroupId=events-service-group
+      - Redis__EndPoint=redis:6379
+      - Redis__Password=redisSecret12345
     depends_on:
       events-db:
         condition: service_healthy 
+      redis:
+        condition: service_healthy
       kafka:
         condition: service_started
       kafka-init:
@@ -160,4 +178,5 @@ volumes:
   users_db_data:
   events_db_data:
   bookings_db_data:
+  redis_data:
 
