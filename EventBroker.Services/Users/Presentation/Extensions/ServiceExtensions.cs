@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using OpenTelemetry.Resources;
+using System.Reflection;
 using System.Security.Claims;
 using System.Text;
 using Users.Application;
@@ -85,4 +87,16 @@ public static class ServiceExtensions
     }
     #endregion
 
+    #region Observability (Телеметрия)
+    public static IServiceCollection ConfigureObservability(this IServiceCollection services, IHostEnvironment environment)
+    {
+        services.AddOpenTelemetry()
+            .ConfigureResource(resource => resource.AddService(
+                serviceName: environment.ApplicationName,
+                serviceVersion: Assembly.GetEntryAssembly()?.GetName().Version?.ToString() ?? "0.0.1"
+            ));
+
+        return services;
+    }
+    #endregion
 }

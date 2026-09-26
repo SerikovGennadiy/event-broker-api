@@ -3,6 +3,8 @@ using Bookings.Domain.Options;
 using Bookings.Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using OpenTelemetry.Resources;
+using System.Reflection;
 using System.Security.Claims;
 using System.Text;
 
@@ -95,4 +97,16 @@ public static class ServiceExtensions
     }
     #endregion
 
+    #region Observability (Телеметрия)
+    public static IServiceCollection ConfigureObservability(this IServiceCollection services, IHostEnvironment environment)
+    {
+        services.AddOpenTelemetry()
+            .ConfigureResource(resource => resource.AddService(
+                serviceName: environment.ApplicationName,
+                serviceVersion: Assembly.GetEntryAssembly()?.GetName().Version?.ToString() ?? "0.0.1"
+            ));
+
+        return services;
+    }
+    #endregion
 }
