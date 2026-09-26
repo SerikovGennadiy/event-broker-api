@@ -4,6 +4,7 @@ using Events.Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
 using System.Reflection;
 using System.Security.Claims;
 using System.Text;
@@ -94,13 +95,19 @@ public static class ServiceExtensions
     #endregion
 
     #region Observability (Телеметрия)
-    public static IServiceCollection ConfigureObservability(this IServiceCollection services, IHostEnvironment environment)
+    public static IServiceCollection ConfigureObservability(this IServiceCollection services, IHostEnvironment environment, IConfiguration configuration)
     {
         services.AddOpenTelemetry()
-            .ConfigureResource(resource => resource.AddService(
-                serviceName: environment.ApplicationName,
-                serviceVersion: Assembly.GetEntryAssembly()?.GetName().Version?.ToString() ?? "0.0.1"
-            ));
+            .ConfigureResource(source =>
+                source.AddService(
+                    serviceName: environment.ApplicationName,
+                    serviceVersion: Assembly.GetEntryAssembly()?.GetName().Version?.ToString() ?? "0.0.1"
+            ))
+            .WithTracing(tracing =>
+                tracing.AddAspNetCoreInstrumentation()
+                       .AddHttpClientInstrumentation()
+                       .AddEntityFrameworkCoreInstrumentation()
+                       .AddOtlpExporter(o => o.Endpoint = new Uri(configuration["Otlp:Endpoint"]!)));
 
         return services;
     }
