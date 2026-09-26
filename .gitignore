@@ -62,7 +62,7 @@ nunit-*.xml
 
 # Локальные файлы конфигурации Docker Compose (секреты, переопределения)
 docker-compose.override.yml
-*.env
+.env
 
 # Скрытая техническая папка Visual Studio для контейнерной отладки Fast Mode
 .dockerignore

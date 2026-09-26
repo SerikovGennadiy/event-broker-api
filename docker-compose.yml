@@ -13,7 +13,7 @@ services:
     volumes:
       - users_db_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d eventapi"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d users_db"]
       interval: 3s
       timeout: 3s
       retries: 5
@@ -72,6 +72,21 @@ services:
       KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
       KAFKA_LOG_DIRS: '/tmp/kraft-combined-logs'
       CLUSTER_ID: 'MkU3OEVBNTcwNTJENDM2Qk'
+  
+  redis:
+    image: redis:7.2-alpine
+    container_name: eventapi-redis
+    ports:
+      - "6379:6379"
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD}"]
+    healthcheck:
+      test: ["CMD-SHELL", "REDISCLI_AUTH=\"$$REDIS_PASSWORD\" redis-cli PING | grep -q PONG"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
 
   users-service:
     image: users-service:latest
@@ -97,6 +112,8 @@ services:
       - ConnectionStrings__DefaultConnection=Host=events-db;Port=5432;Database=events_db;Username=postgres;Password=postgres
       - Kafka__BootstrapServers=kafka:29092
       - Kafka__GroupId=events-service-group
+      - Redis__EndPoint=eventapi-redis:6379
+      - Redis__Password=${REDIS_PASSWORD}
     depends_on:
       events-db:
         condition: service_healthy 
@@ -104,6 +121,8 @@ services:
         condition: service_started
       kafka-init:
         condition: service_completed_successfully
+      redis:
+        condition: service_healthy
 
   bookings-service:
     image: bookings-service:latest

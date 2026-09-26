@@ -11,6 +11,9 @@ public interface IEventService
     /// <summary>Получить событие по идентификатору</summary>
     Task<EventInfo> GetEventByIdAsync(Guid Id);
 
+    /// <summary>Топ-10 событий с наибольшим процентом проданных мест</summary>
+    Task<IEnumerable<EventInfo>> GetTop10SellingEventsAsync();
+
     #region Старты саг IEventIntegration
     /// <summary>Создать событие</summary>
     /// <remarks>СТАРТ САГИ: EventCreatedOrUpdated: IEventIntegration</remarks>
