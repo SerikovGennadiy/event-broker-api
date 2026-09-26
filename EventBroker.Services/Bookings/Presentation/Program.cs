@@ -2,6 +2,8 @@ using Bookings.API.Extensions;
 using Bookings.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.OpenApi.Models;
+using Serilog;
+using Serilog.Formatting.Compact;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -41,7 +43,9 @@ builder.Services.AddOpenApi(options =>
     });
 }).ConfigureObservability(builder.Environment, builder.Configuration);
 
-
+builder.Host.UseSerilog((ctx, cfg) =>
+    cfg.ReadFrom.Configuration(ctx.Configuration)
+       .WriteTo.Console(new CompactJsonFormatter()));
 
 builder.Services.AddAuthorization();
 
