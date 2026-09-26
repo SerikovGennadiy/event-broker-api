@@ -39,7 +39,7 @@ builder.Services.AddOpenApi(options =>
         document.SecurityRequirements = new List<OpenApiSecurityRequirement> { requirement };
         return Task.CompletedTask;
     });
-}).ConfigureObservability(builder.Environment);
+}).ConfigureObservability(builder.Environment, builder.Configuration);
 
 builder.Services.AddAuthorization();
 

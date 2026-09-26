@@ -3,6 +3,7 @@ using Bookings.Domain.Options;
 using Bookings.Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using System.Reflection;
@@ -107,12 +108,17 @@ public static class ServiceExtensions
                     serviceName: environment.ApplicationName,
                     serviceVersion: Assembly.GetEntryAssembly()?.GetName().Version?.ToString() ?? "0.0.1"
             ))
-            .WithTracing(tracing =>  
+            .WithTracing(tracing =>
                 tracing.AddAspNetCoreInstrumentation()
                        .AddHttpClientInstrumentation()
                        .AddEntityFrameworkCoreInstrumentation()
-                       .AddOtlpExporter(o => o.Endpoint = new Uri(configuration["Otlp:Endpoint"]!)));
-                       
+                       .AddOtlpExporter(o =>
+                            o.Endpoint = new Uri(configuration["Otlp:Endpoint"]!)))
+            .WithMetrics(metrics =>
+                metrics.AddAspNetCoreInstrumentation()
+                       .AddRuntimeInstrumentation()
+                       .AddPrometheusExporter());
+
         return services;
     }
     #endregion

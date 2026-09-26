@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using System.Reflection;
@@ -101,7 +102,12 @@ public static class ServiceExtensions
                 tracing.AddAspNetCoreInstrumentation()
                        .AddHttpClientInstrumentation()
                        .AddEntityFrameworkCoreInstrumentation()
-                       .AddOtlpExporter(o => o.Endpoint = new Uri(configuration["Otlp:Endpoint"]!)));
+                       .AddOtlpExporter(o => 
+                            o.Endpoint = new Uri(configuration["Otlp:Endpoint"]!)))
+            .WithMetrics(metrics =>
+                metrics.AddAspNetCoreInstrumentation()
+                       .AddRuntimeInstrumentation()
+                       .AddPrometheusExporter());
 
         return services;
     }
