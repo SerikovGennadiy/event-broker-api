@@ -9,6 +9,7 @@ using Messaging.Saga;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using System.Diagnostics;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -20,6 +21,7 @@ internal sealed class Consumer(IServiceProvider provider, ILogger<Consumer> logg
     private const int BAD_READING_PAUSE_SEC = 2;
     private const string MARKER = "Booking.API:[Consumer]";
     private const string TRACE_HEADER = "trace-id";
+    private const string TRACEPARENT_HEADER = "traceparent";
 
     private static readonly JsonSerializerOptions Options = new()
     {
@@ -91,8 +93,13 @@ internal sealed class Consumer(IServiceProvider provider, ILogger<Consumer> logg
         var context = scope.ServiceProvider.GetRequiredService<IAppDbContext>();
         var inboxService = scope.ServiceProvider.GetRequiredService<IInboxService>();
 
+        using var activity = StartConsumeActivity(result);
+
         var messageId = ExtractTraceId(result);
         var messageType = ExtractMessageType(result);
+
+        activity?.SetTag("saga.trace_id", messageId.ToString());
+        activity?.SetTag("messaging.message_type", messageType);
 
         if (await inboxService.HasBeenProcessedAsync(messageId, messageType, stoppingToken))
             return;
@@ -181,6 +188,23 @@ internal sealed class Consumer(IServiceProvider provider, ILogger<Consumer> logg
                 break;
 
         }
+    }
+
+    /// <summary>
+    /// Consume-спан саги: родитель восстанавливается из хедера traceparent,
+    /// чей trace-id равен бизнес-TraceId (см. Producer). Без хедера — корневой спан.
+    /// </summary>
+    private static Activity? StartConsumeActivity(ConsumeResult<string, string> result)
+    {
+        var parent = default(ActivityContext);
+
+        if (result.Message.Headers.TryGetLastBytes(TRACEPARENT_HEADER, out var bytes) && bytes is not null)
+            ActivityContext.TryParse(Encoding.UTF8.GetString(bytes), null, out parent);
+
+        return MessagingActivities.Source.StartActivity(
+            $"consume {result.Topic}",
+            ActivityKind.Consumer,
+            parent);
     }
 
     private static Guid ExtractTraceId(ConsumeResult<string, string> result)

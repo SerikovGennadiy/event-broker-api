@@ -1,4 +1,5 @@
 ﻿using Events.Application;
+using Events.Application.Background;
 using Events.Domain.Options;
 using Events.Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -108,6 +109,7 @@ public static class ServiceExtensions
                 tracing.AddAspNetCoreInstrumentation()
                        .AddHttpClientInstrumentation()
                        .AddEntityFrameworkCoreInstrumentation()
+                       .AddSource(MessagingActivities.SourceName)
                        .AddOtlpExporter(o =>
                             o.Endpoint = new Uri(configuration["Otlp:Endpoint"]!)))
             .WithMetrics(metrics =>

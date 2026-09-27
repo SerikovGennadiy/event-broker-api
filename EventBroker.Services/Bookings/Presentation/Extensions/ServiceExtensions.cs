@@ -1,4 +1,5 @@
 ﻿using Bookings.Application;
+using Bookings.Application.Background;
 using Bookings.Domain.Options;
 using Bookings.Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -112,6 +113,7 @@ public static class ServiceExtensions
                 tracing.AddAspNetCoreInstrumentation()
                        .AddHttpClientInstrumentation()
                        .AddEntityFrameworkCoreInstrumentation()
+                       .AddSource(MessagingActivities.SourceName)
                        .AddOtlpExporter(o =>
                             o.Endpoint = new Uri(configuration["Otlp:Endpoint"]!)))
             .WithMetrics(metrics =>

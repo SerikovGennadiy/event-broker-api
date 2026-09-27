@@ -9,6 +9,7 @@ using Events.Domain.Exceptions;
 using Events.Domain.Models;
 using Messaging;
 using Messaging.Events;
+using System.Diagnostics;
 
 namespace Events.Application.Services;
 
@@ -44,7 +45,10 @@ public class EventService(IRepositoryManager repositoryManager, IMapper mapper, 
         var entity = Event.Create(eventDTO.Title, eventDTO.StartAt, eventDTO.EndAt, eventDTO.Description, eventDTO.TotalSeats);
         repositoryManager.Event.CreateEvent(entity);
 
-        var integrationEvent = new EventCreatedOrUpdated(TraceId: Guid.CreateVersion7(),
+        var traceId = Guid.CreateVersion7();
+        Activity.Current?.SetTag("saga.trace_id", traceId.ToString());
+
+        var integrationEvent = new EventCreatedOrUpdated(TraceId: traceId,
                                                          EventId: entity.Id,
                                                          Title: entity.Title,
                                                          StartAt: entity.StartAt,
@@ -62,7 +66,10 @@ public class EventService(IRepositoryManager repositoryManager, IMapper mapper, 
 
         mapper.Map(eventDTO, entity);
 
-        var integrationEvent = new EventCreatedOrUpdated(TraceId: Guid.CreateVersion7(),
+        var traceId = Guid.CreateVersion7();
+        Activity.Current?.SetTag("saga.trace_id", traceId.ToString());
+
+        var integrationEvent = new EventCreatedOrUpdated(TraceId: traceId,
                                                          EventId: entity.Id,
                                                          Title: entity.Title,
                                                          StartAt: entity.StartAt,
@@ -78,7 +85,10 @@ public class EventService(IRepositoryManager repositoryManager, IMapper mapper, 
         var entity = await GetEvent(eventId);
         repositoryManager.Event.DeleteEvent(entity);
 
-        var integrationEvent = new EventDeleted(TraceId: Guid.CreateVersion7(), EventId: entity.Id);
+        var traceId = Guid.CreateVersion7();
+        Activity.Current?.SetTag("saga.trace_id", traceId.ToString());
+
+        var integrationEvent = new EventDeleted(TraceId: traceId, EventId: entity.Id);
         await outboxService.EnqueueMessageAsync(integrationEvent, Topics.EventIntegration, stoppingToken);
 
         await repositoryManager.SaveAsync();

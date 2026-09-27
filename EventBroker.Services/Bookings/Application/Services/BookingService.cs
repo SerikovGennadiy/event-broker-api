@@ -9,6 +9,7 @@ using Enums.Users;
 using Messaging;
 using Messaging.Bookings;
 using Microsoft.Extensions.Logging;
+using System.Diagnostics;
 using System.ComponentModel.Design.Serialization;
 using System.Threading;
 
@@ -46,12 +47,15 @@ public class BookingService(IRepositoryManager repositoryManager, IOutboxService
             Booking booking = new Booking(eventId, currentUser.UserId);
             repositoryManager.Booking.CreateBooking(booking);
 
-            await outboxService.EnqueueMessageAsync(@event: new BookingStarted(TraceId: Guid.CreateVersion7(),
+            var traceId = Guid.CreateVersion7();
+            Activity.Current?.SetTag("saga.trace_id", traceId.ToString());
+
+            await outboxService.EnqueueMessageAsync(@event: new BookingStarted(TraceId: traceId,
                                                                                BookingId: booking.Id,
                                                                                EventId: booking.EventId,
                                                                                UserId: booking.UserId),
-                                                    topic: Topics.BookingProcessing,
-                                                    stoppingToken);
+                                                     topic: Topics.BookingProcessing,
+                                                     stoppingToken);
 
             await repositoryManager.SaveAsync();
 
@@ -168,12 +172,15 @@ public class BookingService(IRepositoryManager repositoryManager, IOutboxService
        
         if (currentUser.Role == Role.Admin || currentUser.UserId == booking.UserId)
         {
-            await outboxService.EnqueueMessageAsync(@event: new BookingCancelled(TraceId: Guid.CreateVersion7(),
+            var traceId = Guid.CreateVersion7();
+            Activity.Current?.SetTag("saga.trace_id", traceId.ToString());
+
+            await outboxService.EnqueueMessageAsync(@event: new BookingCancelled(TraceId: traceId,
                                                                                  BookingId: bookingId,
                                                                                  EventId: booking.EventId,
                                                                                  UserId: booking.UserId),
-                                                    topic: Topics.BookingProcessing,
-                                                    cancellationToken: stoppingToken);
+                                                     topic: Topics.BookingProcessing,
+                                                     cancellationToken: stoppingToken);
             booking.Cancel();
 
             await repositoryManager.SaveAsync();
