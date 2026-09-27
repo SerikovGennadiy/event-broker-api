@@ -1,11 +1,31 @@
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
+using System.Reflection;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. Èíèöèàëèçèðóåì ïðîêñè YARP èç appsettings.json
+// 1. ÐºÐ¾Ð½Ñ„Ð¸Ð³ÑƒÑ€Ð¸Ñ€ÑƒÐµÐ¼ Ð½Ð°ÑÑ‚Ñ€Ð¾Ð¹ÐºÐ¸ YARP Ð¸Ð· appsettings.json
 builder.Services.AddReverseProxy()
     .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"))
     .AddOpenApiForYarp();
 
-// 2. Íàñòðàèâàåì ãëîáàëüíûé CORS (òåïåðü â ìèêðîñåðâèñàõ åãî ìîæíî îòêëþ÷èòü!)
+// 1.1. Ð¢ÐµÐ»ÐµÐ¼ÐµÑ‚Ñ€Ð¸Ñ ÑˆÐ»ÑŽÐ·Ð°: Ñ‚Ñ€ÐµÐ¹ÑÑ‹ Ð² Jaeger (OTLP), Ð¼ÐµÑ‚Ñ€Ð¸ÐºÐ¸ Ð´Ð»Ñ Prometheus.
+builder.Services.AddOpenTelemetry()
+    .ConfigureResource(source => source.AddService(
+        serviceName: "event-broker-api-gateway",
+        serviceVersion: Assembly.GetEntryAssembly()?.GetName().Version?.ToString() ?? "0.0.1"))
+    .WithTracing(tracing => tracing
+        .AddAspNetCoreInstrumentation()
+        .AddHttpClientInstrumentation()
+        .AddOtlpExporter(o => o.Endpoint = new Uri(builder.Configuration["Otlp:Endpoint"]!)))
+    .WithMetrics(metrics => metrics
+        .AddAspNetCoreInstrumentation()
+        .AddHttpClientInstrumentation()
+        .AddRuntimeInstrumentation()
+        .AddPrometheusExporter());
+
+// 2. CORS-Ð¿Ð¾Ð»Ð¸Ñ‚Ð¸ÐºÐ° Ð¿Ð¾ ÑƒÐ¼Ð¾Ð»Ñ‡Ð°Ð½Ð¸ÑŽ (Ð¾Ð±ÑÐ·Ð°Ñ‚ÐµÐ»ÑŒÐ½Ð¾ Ð´Ð»Ñ Ð²Ñ‹Ð·Ð¾Ð²Ð¾Ð² Ñ localhost:5000)
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
@@ -20,8 +40,9 @@ var app = builder.Build();
 
 app.UseCors();
 
-app.MapReverseProxy();   
+app.MapReverseProxy();
 app.MapOpenApiForYarp();
 app.MapScalarForYarp();
+app.MapPrometheusScrapingEndpoint();
 
 app.Run();
