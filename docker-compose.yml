@@ -223,10 +223,11 @@ services:
     environment:
       GF_SECURITY_ADMIN_PASSWORD: admin
       GF_SERVER_ROOT_URL: http://localhost:5000/grafana/
-      # Graphana за API-Gateay
+      # Graphana за API-Gateay необходимы следующие донастройки
       GF_SERVER_SERVE_FROM_SUB_PATH: "true"
       GF_AUTH_ANONYMOUS_ENABLED: "true"
       GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+      GF_SECURITY_CSRF_TRUSTED_ORIGINS: http://localhost:3000,http://localhost:5000,http://127.0.0.1:3000,http://127.0.0.1:5000
     volumes: #ccылка на provisioning (по рекомендациям в задании)
       - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
       - grafana-data:/var/lib/grafana
