@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  # Database-Per-Service (���������� �� �������������)
+  # Database-Per-Service
   users-db:
     image: postgres:16-alpine
     container_name: users-db
@@ -53,7 +53,7 @@ services:
       timeout: 3s
       retries: 5
 
-  # ������������ (API ������������ �����������)
+  # Основные микросервисы API бронирования мест и авторизации
   users-service:
     image: users-service:latest
     build:
@@ -112,7 +112,7 @@ services:
       kafka-init:
         condition: service_completed_successfully
   
-  # �������������� ��� - ������ 
+  # Распределенный кеш - сервис
   redis:
     image: redis:7.2-alpine
     container_name: eventapi-redis
@@ -140,6 +140,7 @@ services:
       - "5000:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
+      - Otlp__Endpoint=http://jaeger:4317
     depends_on:
       users-service:
         condition: service_started
@@ -147,8 +148,14 @@ services:
         condition: service_started
       bookings-service:
         condition: service_started
+      jaeger:
+        condition: service_started
+      prometheus:
+        condition: service_started
+      grafana:
+        condition: service_started
 
-  # ���� ��������� AMQP (eventually consistency)
+  # Шина сообщений (Kafka) и ее инициализация
   kafka:
     image: confluentinc/cp-kafka:7.5.0
     container_name: kafka-broker
@@ -184,32 +191,44 @@ services:
         kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists --topic booking-processing --partitions 1 --replication-factor 1 &&
         echo 'All topics created successfully.'
 
-  #����������
+  #Телеметрия с правками портов под EventBroker.API (API-Gateway)
   prometheus:
     image: prom/prometheus:v2.51.0
     container_name: eventapi-prometheus
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    # сервис работает по подпути (subpath) в не в корне ()
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --web.external-url=http://localhost:5000/prometheus
+      - --web.route-prefix=/
     ports:
-      - "9090:9090"
+      - "9090:9090" # прямой доступ (для прода под expose); через шлюз: :5000/prometheus
 
   jaeger:
     image: jaegertracing/all-in-one:1.56
     container_name: eventapi-jaeger
     ports:
-      - "16686:16686"   # UI
+      - "16686:16686"   # UI (прямой доступ; через шлюз: :5000/jaeger)
       - "4317:4317"     # OTLP gRPC
     environment:
       COLLECTOR_OTLP_ENABLED: "true"
+    command: ["--query.base-path=/jaeger"]
 
   grafana:
     image: grafana/grafana:10.4.2
     container_name: eventapi-grafana
     ports:
-      - "3000:3000"
+      - "3000:3000" # прямой доступ; через шлюз: :5000/grafana
     environment:
       GF_SECURITY_ADMIN_PASSWORD: admin
-    volumes:
+      GF_SERVER_ROOT_URL: http://localhost:5000/grafana/
+      # Graphana за API-Gateay
+      GF_SERVER_SERVE_FROM_SUB_PATH: "true"
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+    volumes: #ccылка на provisioning (по рекомендациям в задании)
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
       - grafana-data:/var/lib/grafana
 
 volumes:
