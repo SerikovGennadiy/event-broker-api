@@ -129,7 +129,7 @@ use case прост (с возможным овербукингом):
 
 **Особенности API-Gateway.** Единая точка входа — `localhost:5000`: продуктовое API (`/auth`, `/events`, `/bookings`, Scalar-документация), а UI наблюдаемости — по под путям `/jaeger`, `/prometheus`, `/grafana` (YARP-маршруты; префикс снимается только у Prometheus). Метрики смотрят в Prometheus (`:5000/prometheus` → Status → Targets, все 5 целей должны быть `up`) и в Grafana.
 
-**Provisioning.** Папка `monitoring/grafana/provisioning/` (`datasources/` — Prometheus по умолчанию, `dashboards/` — провайдер + JSON дашбордов) применяется Grafana автоматически при старте. Чтобы завести свой дашборд в репозиторий: собрать в UI → Share → Export → сохранить JSON в `monitoring/grafana/provisioning/dashboards/json/` → перезапустить Grafana (`docker compose up -d grafana`).
+**Provisioning.** Папка `monitoring/grafana/provisioning/` (`datasources/` — Prometheus по умолчанию, `dashboards/` — провайдер + JSON дашбордов) применяется Grafana автоматически при старте. Чтобы завести свой дашборд в репозиторий: собрать в UI → Share → Export → сохранить JSON в `monitoring/grafana/provisioning/dashboards/json/` → перезапустить Grafana (`docker compose up -d grafana`). <mark>При обновлений конфига dashboard'а grafana или первом запуске обновите кеш браузера (Ctrl+F5)</mark>
 
 | Что открыть | Адрес |
 |-------------|-------|
