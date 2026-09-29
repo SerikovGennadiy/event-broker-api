@@ -127,7 +127,7 @@ use case прост (с возможным овербукингом):
 
 Микросервисы и шлюз инструментированы OpenTelemetry: трейсы идут в Jaeger по OTLP (`Otlp:Endpoint`, в Docker — `Otlp__Endpoint=http://jaeger:4317`), метрики скрейпит Prometheus с `/metrics` каждого сервиса. Сага видна сквозным трейсом: `trace-id` распределённого трейса равен бизнес-`TraceId` (GUID 128 бит совместим с W3C), контекст едет в Kafka-хедере `traceparent`.
 
-**Особенности API-Gateway.** Единая точка входа — `localhost:5000`: продуктовое API (`/auth`, `/events`, `/bookings`, Scalar-документация), а UI наблюдаемости — по под путям `/jaeger`, `/prometheus`, `/grafana` (YARP-маршруты; префикс снимается только у Prometheus). Эндпоинт `/metrics` в Scalar **скрыт намеренно** (`ExcludeFromDescription`): это инфраструктура, обычным пользователям API он не нужен — метрики смотрят в Prometheus (`:5000/prometheus` → Status → Targets, все 5 целей должны быть `up`) и в Grafana.
+**Особенности API-Gateway.** Единая точка входа — `localhost:5000`: продуктовое API (`/auth`, `/events`, `/bookings`, Scalar-документация), а UI наблюдаемости — по под путям `/jaeger`, `/prometheus`, `/grafana` (YARP-маршруты; префикс снимается только у Prometheus). Метрики смотрят в Prometheus (`:5000/prometheus` → Status → Targets, все 5 целей должны быть `up`) и в Grafana.
 
 **Provisioning.** Папка `monitoring/grafana/provisioning/` (`datasources/` — Prometheus по умолчанию, `dashboards/` — провайдер + JSON дашбордов) применяется Grafana автоматически при старте. Чтобы завести свой дашборд в репозиторий: собрать в UI → Share → Export → сохранить JSON в `monitoring/grafana/provisioning/dashboards/json/` → перезапустить Grafana (`docker compose up -d grafana`).
 
