@@ -123,6 +123,22 @@ use case прост (с возможным овербукингом):
 
 **Конфигурация.** Секция `Redis` в `appsettings.json` events-сервиса: `ConnectionString` (локально `localhost:6379`), `EventTtlMinutes`, `TopEventsTtlMinutes`. В Docker строка подключения задаётся переменной окружения `Redis__ConnectionString=redis:6379` (по имени контейнера, не localhost) — она переопределяет значение из JSON. Контейнер `eventapi-redis` (`redis:7.2-alpine`) описан в `docker-compose.yml` с healthcheck и томом `redis_data`.
 
+## 📊 Телеметрия (Jaeger + Prometheus + Grafana)
+
+Микросервисы и шлюз инструментированы OpenTelemetry: трейсы идут в Jaeger по OTLP (`Otlp:Endpoint`, в Docker — `Otlp__Endpoint=http://jaeger:4317`), метрики скрейпит Prometheus с `/metrics` каждого сервиса. Сага видна сквозным трейсом: `trace-id` распределённого трейса равен бизнес-`TraceId` (GUID 128 бит совместим с W3C), контекст едет в Kafka-хедере `traceparent`.
+
+**Особенности API-Gateway.** Единая точка входа — `localhost:5000`: продуктовое API (`/auth`, `/events`, `/bookings`, Scalar-документация), а UI наблюдаемости — по под путям `/jaeger`, `/prometheus`, `/grafana` (YARP-маршруты; префикс снимается только у Prometheus). Метрики смотрят в Prometheus (`:5000/prometheus` → Status → Targets, все 5 целей должны быть `up`) и в Grafana.
+
+**Provisioning.** Папка `monitoring/grafana/provisioning/` (`datasources/` — Prometheus по умолчанию, `dashboards/` — провайдер + JSON дашбордов) применяется Grafana автоматически при старте. Чтобы завести свой дашборд в репозиторий: собрать в UI → Share → Export → сохранить JSON в `monitoring/grafana/provisioning/dashboards/json/` → перезапустить Grafana (`docker compose up -d grafana`). <mark>При обновлений конфига dashboard'а grafana или первом запуске обновите кеш браузера (Ctrl+F5)</mark>
+
+| Что открыть | Адрес |
+|-------------|-------|
+| Scalar (API) | `localhost:5000/scalar` |
+| Grafana (`admin`/`admin`, есть анонимный Viewer) | `localhost:5000/grafana` |
+| Prometheus | `localhost:5000/prometheus` |
+| Jaeger (поиск по тегу `saga.trace_id`) | `localhost:5000/jaeger` |
+| Метрики шлюза | `localhost:5000/metrics` |
+
 ## 📦 Модели данных
 
 ## User (Пользователь)
@@ -181,7 +197,7 @@ use case прост (с возможным овербукингом):
 
 ## Клонирование репозитория API
 1. откройте терминал
-2. клонируйте проект **git clone -b sprint_10 https://github.com/SerikovGennadiy/event-broker-api.git**
+2. клонируйте проект **git clone -b sprint_11 https://github.com/SerikovGennadiy/event-broker-api.git**
 3. перейдите в директорию **cd event-broker-api (содержащую sln файл решения)**
 4. <mark>создайте (необязательно, просто иначе кеш-сервис будет без пароля) файл **.env** (рядом с файлом docker-compose.yml) добавьте строку ***REDIS_PASSWORD=<ваш парол от кеш-сервиса>***</mark>
    

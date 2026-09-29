@@ -45,8 +45,30 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventBroker.API", "EventBro
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Элементы решения", "Элементы решения", "{8AA86CD4-411C-4EC2-888B-F49D0CF8FF5A}"
 	ProjectSection(SolutionItems) = preProject
-		deploy\docker-compose.yml = deploy\docker-compose.yml
+		docker-compose.yml = docker-compose.yml
+		prometheus.yml = prometheus.yml
 		README.md = README.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "monitoring", "monitoring", "{A11CE000-AAAA-4A1A-8B1B-000000000001}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "grafana", "grafana", "{A11CE000-BBBB-4B2B-8C2C-000000000002}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "provisioning", "provisioning", "{A11CE000-CCCC-4C3C-8D3D-000000000003}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "datasources", "datasources", "{A11CE000-DDDD-4D4D-8E4E-000000000004}"
+	ProjectSection(SolutionItems) = preProject
+		monitoring\grafana\provisioning\datasources\datasource.yaml = monitoring\grafana\provisioning\datasources\datasource.yaml
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "dashboards", "dashboards", "{A11CE000-EEEE-4E5E-8F5F-000000000005}"
+	ProjectSection(SolutionItems) = preProject
+		monitoring\grafana\provisioning\dashboards\dashboard.yaml = monitoring\grafana\provisioning\dashboards\dashboard.yaml
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "json", "json", "{A11CE000-FFFF-4F6F-8A6A-000000000006}"
+	ProjectSection(SolutionItems) = preProject
+		monitoring\grafana\provisioning\dashboards\json\eventbroker-overview.json = monitoring\grafana\provisioning\dashboards\json\eventbroker-overview.json
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "EventBroker.Tests", "EventBroker.Tests", "{8829940F-8E03-1BA3-ABE2-E8422CBE3114}"
@@ -278,6 +300,12 @@ Global
 		{69E10229-BA48-C7A5-CE49-53891FE818EB} = {F938BB52-8E0A-49B7-B0E7-049A53290B0C}
 		{F53EA46E-D6D9-4903-8FED-424106F7BF43} = {1AF9B27E-332E-4E37-A698-A39DD6705E0D}
 		{95882C43-0A32-43DE-8A6C-3CEBAB6A2662} = {8829940F-8E03-1BA3-ABE2-E8422CBE3114}
+		{A11CE000-AAAA-4A1A-8B1B-000000000001} = {8AA86CD4-411C-4EC2-888B-F49D0CF8FF5A}
+		{A11CE000-BBBB-4B2B-8C2C-000000000002} = {A11CE000-AAAA-4A1A-8B1B-000000000001}
+		{A11CE000-CCCC-4C3C-8D3D-000000000003} = {A11CE000-BBBB-4B2B-8C2C-000000000002}
+		{A11CE000-DDDD-4D4D-8E4E-000000000004} = {A11CE000-CCCC-4C3C-8D3D-000000000003}
+		{A11CE000-EEEE-4E5E-8F5F-000000000005} = {A11CE000-CCCC-4C3C-8D3D-000000000003}
+		{A11CE000-FFFF-4F6F-8A6A-000000000006} = {A11CE000-EEEE-4E5E-8F5F-000000000005}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {415B115A-A1CC-4159-A63E-80B2DE2CC430}

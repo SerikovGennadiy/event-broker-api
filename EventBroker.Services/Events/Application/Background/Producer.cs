@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using System.Diagnostics;
 using System.Text;
 
 namespace Events.Application.Background;
@@ -16,6 +17,7 @@ internal sealed class Producer : BackgroundService
 
     private const int ITERATION_DELAY_SEC = 2;
     private const string MARKER = "Event.API [Producer]";
+    private const string TRACEPARENT_HEADER = "traceparent";
 
     public Producer(
         IServiceProvider serviceProvider,
@@ -79,6 +81,8 @@ internal sealed class Producer : BackgroundService
                         }
                     };
 
+                    using var activity = StartPublishActivity(outboxMessage.Topic, outboxMessage.TraceId, kafkaMessage.Headers);
+
                     var deliveryResult = await _kafkaProducer.ProduceAsync(outboxMessage.Topic, kafkaMessage, stoppingToken);
 
                     if (deliveryResult.Status == PersistenceStatus.Persisted)
@@ -103,6 +107,35 @@ internal sealed class Producer : BackgroundService
         {
             _logger.LogError(ex, "{Marker}: общая системная ошибка при обработке пачки.", MARKER);
         }
+    }
+
+    /// <summary>
+    /// Publish-спан саги + W3C-контекст в хедеры.
+    /// trace-id распределённого трейса = бизнес-TraceId (GUID 128 бит совместим с форматом W3C).
+    /// Строится из строки outbox'а: в фоновом воркере ambient Activity нет
+    /// (бизнес-операция уже завершена), поэтому контекст родителя взять неоткуда — и он не нужен.
+    /// </summary>
+    private static Activity? StartPublishActivity(string topic, Guid traceId, Headers headers)
+    {
+        // Контекст саги: "00-{trace-id}-{новый span-id}-01" (sampled).
+        var sagaContext = ActivityContext.TryParse(
+            $"00-{traceId:N}-{ActivitySpanId.CreateRandom().ToHexString()}-01", null, out var parsed)
+            ? parsed
+            : default;
+
+        var activity = MessagingActivities.Source.StartActivity($"publish {topic}", ActivityKind.Producer, sagaContext);
+        if (activity is null)
+            return null;
+
+        activity.SetTag("messaging.destination", topic);
+        activity.SetTag("saga.trace_id", traceId.ToString());
+
+        // В хедер едет контекст именно publish-спана: консьюмер станет его ребёнком.
+        var context = activity.Context;
+        headers.Add(TRACEPARENT_HEADER, Encoding.UTF8.GetBytes(
+            $"00-{context.TraceId.ToHexString()}-{context.SpanId.ToHexString()}-{(context.TraceFlags.HasFlag(ActivityTraceFlags.Recorded) ? "01" : "00")}"));
+
+        return activity;
     }
 
     public override void Dispose()

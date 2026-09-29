@@ -2,6 +2,8 @@ using Events.API.Extensions;
 using Events.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.OpenApi.Models;
+using Serilog;
+using Serilog.Formatting.Compact;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -39,7 +41,11 @@ builder.Services.AddOpenApi(options =>
         document.SecurityRequirements = new List<OpenApiSecurityRequirement> { requirement };
         return Task.CompletedTask;
     });
-});
+}).ConfigureObservability(builder.Environment, builder.Configuration);
+
+builder.Host.UseSerilog((ctx, cfg) =>
+    cfg.ReadFrom.Configuration(ctx.Configuration)
+       .WriteTo.Console(new CompactJsonFormatter()));
 
 builder.Services.AddAuthorization();
 
@@ -55,5 +61,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapPrometheusScrapingEndpoint();
 
 app.MigrateDatabase().Run();
